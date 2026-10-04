@@ -1,0 +1,17 @@
+{
+    "version": 8,
+    "configurePresets": [
+        {
+            "name": "Clang-cl 22.1.8 x86_64-pc-windows-msvc",
+            "displayName": "Clang-cl 22.1.8 x86_64-pc-windows-msvc",
+            "description": "Using compilers: C = /usr/bin/clang-cl, CXX = /usr/bin/clang-cl",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "/usr/bin/clang-cl",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang-cl",
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        }
+    ]
+}
