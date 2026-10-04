@@ -1,4 +1,0 @@
-#pragma once
-
-#define ERR_WINDOW_CREATION_FAILED 0x01
-#define ERR_GLAD_GL_LOAD_FAILED 0x02

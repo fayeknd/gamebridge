@@ -54,10 +54,3 @@ target_include_directories(gamebridge PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/includ
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
-
-
-#add_custom_command(TARGET gamebridge POST_BUILD
-#    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#    "${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw3.dll"
-#    $<TARGET_FILE_DIR:gamebridge>
-#)
