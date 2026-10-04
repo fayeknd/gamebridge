@@ -23,6 +23,12 @@ elseif(UNIX AND NOT APPLE)
 endif()
 
 project(gamebridge VERSION 0.1.0 LANGUAGES C CXX)
+add_library(glad STATIC 
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/glad.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/glad/glad.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/KHR/khrplatform.h"
+)
+target_include_directories(glad PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 # add any folders with source files here
 file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS 
@@ -42,6 +48,8 @@ target_link_libraries(gamebridge PRIVATE glfw)
 
 include(CTest)
 enable_testing()
+
+target_include_directories(gamebridge PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
