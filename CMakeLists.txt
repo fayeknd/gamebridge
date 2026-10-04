@@ -2,13 +2,22 @@ cmake_minimum_required(VERSION 3.10.0)
 
 set(CMAKE_SYSTEM_NAME Windows)
 set(CMAKE_SYSTEM_PROCESSOR x86_64)
+set(CMAKE_C_COMPILER clang)
+set(CMAKE_CXX_COMPILER clang++)
 
-set(CMAKE_C_COMPILER "clang;--target=x86_64-w64-windows-gnu;-fuse-ld=lld")
-set(CMAKE_CXX_COMPILER "clang++;--target=x86_64-w64-windows-gnu;-fuse-ld=lld")
+set(FLAGS "
+    -static
+    -static-libgcc
+    -static-libstdc++
+    -lwinpthread
+    -l/lib/glfw3
+")
 
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+if(UNIX)
+    set(CMAKE_C_FLAGS "-target x86_64-w64-windows-gnu -fuse-ld=lld")
+    set(CMAKE_CXX_FLAGS "-target x86_64-w64-windows-gnu -fuse-ld=lld")
+    set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++ -lwinpthread")
+endif()
 
 project(gamebridge VERSION 0.1.0 LANGUAGES C CXX)
 
@@ -30,3 +39,10 @@ enable_testing()
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
+
+
+add_custom_command(TARGET gamebridge POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw3.dll"
+    $<TARGET_FILE_DIR:gamebridge>
+)
