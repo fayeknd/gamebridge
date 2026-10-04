@@ -12,6 +12,26 @@
                 "CMAKE_CXX_COMPILER": "/usr/bin/clang-cl",
                 "CMAKE_BUILD_TYPE": "Debug"
             }
+        },
+        {
+            "name": "Clang 22.1.8 x86_64-pc-linux-gnu",
+            "displayName": "Clang 22.1.8 x86_64-pc-linux-gnu",
+            "description": "Using compilers: C = /usr/bin/clang, CXX = /usr/bin/clang++",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "/usr/bin/clang",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "Linux",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "Clang 22.1.8 x86_64-pc-linux-gnu"
         }
     ]
 }
