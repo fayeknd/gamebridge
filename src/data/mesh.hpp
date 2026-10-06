@@ -21,7 +21,6 @@ namespace Engine {
         GLuint m_vbo;
         GLuint m_ebo;
         GLuint m_vao;
-        GLsizei m_indexCount;
         GLuint m_topology = GL_TRIANGLES;
 
     public:
@@ -29,6 +28,8 @@ namespace Engine {
         ~Mesh();
         static std::shared_ptr<Mesh> createPrimitiveMesh(std::string mesh);
         static std::shared_ptr<Mesh> createMeshWithData(std::vector<Vertex>* vertices, std::vector<GLushort>* indices, GLuint topology = GL_TRIANGLES);
+
+        void bindMesh();
 
         GLuint const getVBO() { return m_vbo; } 
         GLuint const getEBO() { return m_ebo; }

@@ -5,8 +5,6 @@ using namespace Engine;
 
 std::shared_ptr<Mesh> Mesh::createMeshWithData(std::vector<Vertex>* vertices, std::vector<GLushort>* indices, GLuint topology) {
 
-    // it genuinely took me 2 years to realise that meshes did not need to store their vertices/indices as a class member
-
     auto mesh = std::shared_ptr<Mesh>(new Mesh());
 
     glGenBuffers(1, &mesh->m_vbo);
@@ -38,9 +36,13 @@ std::shared_ptr<Mesh> Mesh::createMeshWithData(std::vector<Vertex>* vertices, st
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     mesh->m_topology = topology;
-    mesh->m_indexCount = indices->size(); 
 
     return mesh;
+}
+
+void Mesh::bindMesh() {
+    if (GLContext::get().glState.m_currentMesh == m_vao) return;
+    glBindVertexArray(m_vao);
 }
 
 std::shared_ptr<Mesh> Mesh::createPrimitiveMesh(std::string mesh) {

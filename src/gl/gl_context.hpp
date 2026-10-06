@@ -25,6 +25,15 @@ namespace Engine {
 
         ~GLContext();
 
+
+        // the GLState is responsible for efficiently tracking different
+        // bound objects without the use of glGetIntegeriv.
+        // (afaik glGetIntegeriv isn't very efficient.)
+        struct GLState {
+            GLuint m_currentProgram;
+            GLuint m_currentMesh; 
+        } glState;
+
     };
 
 }
