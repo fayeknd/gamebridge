@@ -5,6 +5,7 @@
 #include <string>
 #include <filesystem>
 #include <unordered_map>
+#include <memory>
 
 #define UNNAMED_SHADER "0"
 
@@ -33,7 +34,7 @@ namespace Engine {
         bool m_registered = false;
         std::string m_key;
 
-        static std::unordered_map<std::string, std::weak_ptr<ShaderProgram>> s_programCache; 
+        static inline std::unordered_map<std::string, std::weak_ptr<ShaderProgram>> s_programCache; 
         int _compileProgram(std::filesystem::path shaderSource);
         static const char* _getShaderCompileErrors(GLuint shader);
         
