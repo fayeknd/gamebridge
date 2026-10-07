@@ -4,6 +4,7 @@
 #include "../include/fm/fmath.hpp"
 #include <string>
 
+
 namespace Engine {
 
     enum FullscreenMode {

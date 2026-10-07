@@ -9,6 +9,5 @@ int main(int, char** args){
     
     // whaetever goes here
 
-
     Window::get().beginGameLoop();
 }

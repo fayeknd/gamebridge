@@ -18,22 +18,27 @@ namespace Engine {
         // the vertex data is if they were modifying the mesh, which is an expensive task anyway and can 
         // be done in a vertex shader.
 
+        // TODO : better caching
+
         GLuint m_vbo;
         GLuint m_ebo;
         GLuint m_vao;
         GLuint m_topology = GL_TRIANGLES;
+        GLuint m_indexCount;
 
     public:
 
         ~Mesh();
         static std::shared_ptr<Mesh> createPrimitiveMesh(std::string mesh);
-        static std::shared_ptr<Mesh> createMeshWithData(std::vector<Vertex>* vertices, std::vector<GLushort>* indices, GLuint topology = GL_TRIANGLES);
+        static std::shared_ptr<Mesh> createMeshWithData(std::vector<Vertex>& vertices, std::vector<GLushort>& indices, GLuint topology = GL_TRIANGLES);
 
         void bindMesh();
 
         GLuint const getVBO() { return m_vbo; } 
         GLuint const getEBO() { return m_ebo; }
         GLuint const getVAO() { return m_vao; }
+        GLuint const getTopology() { return m_topology; }
+        GLuint const getIndexCount() { return m_indexCount; }
 
     };
 }

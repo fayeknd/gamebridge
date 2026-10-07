@@ -17,9 +17,35 @@ namespace Engine {
     constexpr uint8_t shaderVertexAttrib_UV             = 0x02;
     constexpr uint8_t shaderVertexAttrib_Normal         = 0x03;
     
-    const std::string shader_VertexIdentifier = "#VERTEX";
-    const std::string shader_FragmentIdentifier = "#FRAGMENT";
-    const std::string shader_GLVersion = "#version 460 core\n";
+    constexpr const char* shader_VertexIdentifier = "#VERTEX";
+    constexpr const char* shader_FragmentIdentifier = "#FRAGMENT";
+
+    constexpr const char* shader_vertexLayouts = {
+        "#version 460 core\n"
+        "layout (location = 0) in vec3 v_position;\n"
+        "layout (location = 1) in vec4 v_colour;\n"
+        "layout (location = 2) in vec2 v_uv;\n"
+        "layout (location = 3) in vec3 v_normal;\n"
+        "out vec3 _transpilerID_position;\n"
+        "out vec4 _transpilerID_colour;\n"
+        "out vec2 _transpilerID_uv;\n"
+        "out vec3 _transpilerID_normal;\n"
+    };
+    constexpr const char* shader_fragmentLayouts = {
+        "#version 460 core\n"
+        "layout (location = 0) out vec4 fragCol;\n"
+        "in vec3 _transpilerID_position;\n"
+        "in vec4 _transpilerID_colour;\n"
+        "in vec2 _transpilerID_uv;\n"
+        "in vec3 _transpilerID_normal;\n"
+    };
+    constexpr const char* shader_vertexOut = {
+        "\n    _transpilerID_position = v_position;\n"
+        "    _transpilerID_colour = v_colour;\n"
+        "    _transpilerID_uv = v_uv;\n"
+        "    _transpilerID_normal = v_normal;\n"
+    };
+    const std::string shader_transpilerIdentifier = {"v_"};
 
     // lowkey id be lying if i said i fully grasped what weak_ptrs were and why they work
     // this design is based off of cocos2d-x. the cleanup() function will find any shaders 
@@ -39,17 +65,19 @@ namespace Engine {
         static inline std::unordered_map<std::string, std::weak_ptr<ShaderProgram>> s_programCache; 
         std::unordered_map<std::string, int> m_uniformCache;
 
-        int _compileProgram(std::filesystem::path shaderSource);
+        int _compileProgram(std::stringstream& shaderSource);
         static const char* _getShaderCompileErrors(GLuint shader);
         
         void _registerProgram();
         void _unregisterProgram();
+        static std::shared_ptr<ShaderProgram> _createProgramFromStringStream(std::stringstream& ss, std::string shaderKey = UNNAMED_SHADER);
 
     public:
         
         static void cleanup();
 
-        static std::shared_ptr<ShaderProgram> createProgram(std::filesystem::path shaderSource, std::string shaderKey = UNNAMED_SHADER);
+        static std::shared_ptr<ShaderProgram> createProgramFromPath(std::filesystem::path shaderSource, std::string shaderKey = UNNAMED_SHADER);
+        static std::shared_ptr<ShaderProgram> createProgramFromData(unsigned char* data, std::string shaderKey = UNNAMED_SHADER);
         static std::shared_ptr<ShaderProgram> getShaderViaKey(std::string shaderKey);
 
         void useProgram();
@@ -59,6 +87,7 @@ namespace Engine {
         }
 
         int getUniformLoc(const std::string& uniformLoc);
+        GLuint getProgramID() { return m_programID; }
         
         void setUniform(const std::string& uniformLoc, float uniform);
         void setUniform(const std::string& uniformLoc, int uniform);

@@ -18,8 +18,11 @@ FetchContent_MakeAvailable(glfw)
 # resource packing
 # rsc_source is /resources/ in the project directory
 # rsc_out is the output. (in the binary directory.)
+
+set(RSC_FILE "resources")
+
 set(RSC_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/resources")
-set(RSC_TARGET "${CMAKE_CURRENT_BINARY_DIR}/resources")
+set(RSC_TARGET "${CMAKE_CURRENT_BINARY_DIR}/${RSC_FILE}")
 file(GLOB_RECURSE RESOURCES_OUT CONFIGURE_DEPENDS "${RSC_SOURCE}/*")
 
 add_custom_command(
@@ -27,15 +30,13 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E tar "cf" "${RSC_TARGET}" --format=zip "."
     WORKING_DIRECTORY "${RSC_SOURCE}"
     DEPENDS ${RESOURCES_OUT}
-    COMMENT "Compressing project resources into 'resources' archive..."
+    COMMENT "Compressing project resources into '${RSC_FILE}' archive..."
 )
 add_custom_target(resources DEPENDS "${RSC_TARGET}")
 
 if(WIN32)
     if(MINGW)
         set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++ -lwinpthread -ldwmapi")
-    else()
-        set(CMAKE_EXE_LINKER_FLAGS "-ldwmapi")
     endif()
 
 elseif(UNIX AND NOT APPLE)
@@ -65,7 +66,8 @@ file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
 
 add_executable(gamebridge ${PROJECT_SOURCES})
 add_dependencies(gamebridge resources)
-target_link_libraries(gamebridge PRIVATE glfw)
+find_package(libzip REQUIRED)
+target_link_libraries(gamebridge PRIVATE glfw libzip::zip)
 
 include(CTest)
 enable_testing()

@@ -1,7 +1,8 @@
 #include "window.hpp"
 
 #include "../include/GLFW/glfw3native.h"
-
+#include "../data/resources.hpp"
+#include "../data/shader.hpp"
 using namespace Engine;
 
 GLFWwindow* Window::getWndHandle() const {
@@ -90,6 +91,8 @@ void Window::setFullscreenMode(FullscreenMode fm) {
 #include "../data/shader.hpp"
 
 std::shared_ptr<Mesh> mesh;
+std::shared_ptr<ShaderProgram> program;
+
 
 int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMode, GLFWmonitor *monitor, GLFWwindow *share, void(*extra_window_hints)()) {
     if (GLContext::get().isGLReady()) return ERR_CONTEXT_EXISTS;
@@ -121,12 +124,21 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     setFullscreenMode(fsMode);
 
     auto v = std::vector<Vertex>() = {
-        {{ 0.0,  0.5, 0.0}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{ 0.5f, 0.0, 0.0}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{-0.5f, 0.5, 0.0}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}}
+        {{ 0.0f,  0.5f, 0.0f}, {1.0,1.0,1.0,0.0}, {0.0,0.0}, {0.0,0.0,0.0}},
+        {{ 0.5f, -0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
+        {{-0.5f, -0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}}
     };
     auto i = std::vector<unsigned short>() = {0, 1, 2};
-    mesh = Mesh::createMeshWithData(&v, &i);
+    mesh = Mesh::createMeshWithData(v, i);
+
+
+    auto file = ResourceManager::get().loadRaw("resources=>shaders/shader.glsl");
+    
+    if (file.size() > 0) {
+        program = ShaderProgram::createProgramFromData(file.data(), "testshader");
+        program->useProgram();
+    }
+    ResourceManager::get().unloadArchives();
     
 
     return WINDOW_CREATION_SUCCESS;
@@ -157,9 +169,10 @@ void Window::_framebuffer_resize_callback(GLFWwindow* wnd, int w, int h) {
 void Window::beginGameLoop() {
     while (!glfwWindowShouldClose(m_wnd)) {
         
-        
         glClear(GL_COLOR_BUFFER_BIT);
-        
+        program->useProgram();
+        mesh->bindMesh();
+        glDrawElements(mesh->getTopology(), mesh->getIndexCount(), GL_UNSIGNED_SHORT, 0);
         
         glfwSwapBuffers(m_wnd); 
         glfwPollEvents();

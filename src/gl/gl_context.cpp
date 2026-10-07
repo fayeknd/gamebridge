@@ -23,6 +23,7 @@ int GLContext::destroyGLContext() {
 
     glfwDestroyWindow(Window::get().getWndHandle());
     glfwTerminate();
+    m_glInit = false;
     return 0;
 }
 

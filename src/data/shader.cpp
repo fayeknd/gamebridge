@@ -5,13 +5,17 @@
 
 using namespace Engine;
 
-std::shared_ptr<ShaderProgram> ShaderProgram::createProgram(std::filesystem::path shaderSource, std::string shaderKey) {
+std::shared_ptr<ShaderProgram> ShaderProgram::createProgramFromPath(std::filesystem::path shaderSource, std::string shaderKey) {
     
     std::error_code ec;    
     if (!std::filesystem::exists(shaderSource, ec)) {
         std::cerr << "ShaderProgram file read error! -> " << ec.message() << std::endl;
         return nullptr;
     }
+    std::ifstream file(shaderSource);
+    std::stringstream buf;
+    buf << file.rdbuf();
+    file.close();
 
     if (shaderKey == UNNAMED_SHADER) {
         shaderKey = shaderSource.filename().string();
@@ -20,17 +24,33 @@ std::shared_ptr<ShaderProgram> ShaderProgram::createProgram(std::filesystem::pat
     }
 
     auto _ = getShaderViaKey(shaderKey);
-
     if (_) return _; 
 
-    auto program = std::make_shared<ShaderProgram>();
+    return _createProgramFromStringStream(buf, shaderKey);
+
+}
+
+std::shared_ptr<ShaderProgram> ShaderProgram::createProgramFromData(unsigned char* data, std::string shaderKey) {
+    
+    auto _ = getShaderViaKey(shaderKey);
+    if (_) return _;
+
+    std::stringstream buf;
+    buf << data;
+
+    return _createProgramFromStringStream(buf, shaderKey);
+
+}
+
+std::shared_ptr<ShaderProgram> ShaderProgram::_createProgramFromStringStream(std::stringstream& ss, std::string shaderKey) {
+    auto program = std::shared_ptr<ShaderProgram>(new ShaderProgram);
     program->m_key = shaderKey; 
-    if (program->_compileProgram(shaderSource) == SHADER_COMPILE_SUCCESS) {
+    if (program->_compileProgram(ss) == SHADER_COMPILE_SUCCESS) {
         program->_registerProgram();
+        return program;
     }
 
     return nullptr;
-
 }
 
 void ShaderProgram::useProgram() {
@@ -57,34 +77,41 @@ void ShaderProgram::_unregisterProgram() {
     if (getShaderViaKey(m_key)) s_programCache.erase(m_key);
 }
 
-int ShaderProgram::_compileProgram(std::filesystem::path shaderSource) {
+int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
     std::string vCode = "";
     std::string fCode = "";
-
-    std::ifstream file(shaderSource);
-
-    if (!file) {
-        std::cerr << "Shader file '" << shaderSource << "' unable to be opened." << std::endl;
-        return ERR_SHADER_FILE_NOT_FOUND;
-    }
 
     std::string line;
     std::string* writeBuf; 
     size_t index = 0;
 
-    while (std::getline(file, line)) {
+    while (std::getline(shaderSource, line)) {
         
         if (line == shader_VertexIdentifier) {
             writeBuf = &vCode; 
-            line = shader_GLVersion;
+            line = shader_vertexLayouts;
         }
 
         if (line == shader_FragmentIdentifier) {
             writeBuf = &fCode; 
-            line = shader_GLVersion;
+            line = shader_fragmentLayouts;
         }
 
-        if (writeBuf && index != 0) {
+        if (line.find("main()") != std::string::npos && writeBuf == &vCode) {
+            line += shader_vertexOut;
+        }
+
+        if (writeBuf == &fCode) {
+            size_t index = line.find(shader_transpilerIdentifier);
+
+            while (index != std::string::npos) {
+                line.erase(line.begin() + index, line.begin() + index + 1);
+                line.insert(index, "_transpilerID");
+                index = line.find(shader_transpilerIdentifier, index + shader_transpilerIdentifier.length());
+            }
+        }
+
+        if (writeBuf) {
             *writeBuf += line + "\n";
         }
 
@@ -140,7 +167,6 @@ std::shared_ptr<ShaderProgram> ShaderProgram::getShaderViaKey(std::string shader
         auto shader = iterator->second.lock();
         return shader;
     }
-    std::cerr << "ShaderProgram with key '" << shaderKey << "' not found." << std::endl;
     return nullptr;
 }
 
