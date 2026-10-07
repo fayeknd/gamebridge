@@ -64,7 +64,7 @@ int ShaderProgram::_compileProgram(std::filesystem::path shaderSource) {
     std::ifstream file(shaderSource);
 
     if (!file) {
-        std::cerr << "Shader file unable to be opened." << std::endl;
+        std::cerr << "Shader file '" << shaderSource << "' unable to be opened." << std::endl;
         return ERR_SHADER_FILE_NOT_FOUND;
     }
 
@@ -107,7 +107,7 @@ int ShaderProgram::_compileProgram(std::filesystem::path shaderSource) {
     const char* ferror = _getShaderCompileErrors(frag);
     if (verror || ferror) {
         std::cerr << "Shader dump:\nVertex:\n\n" << vCode << "\n\nFragment:\n\n" << fCode << std::endl; 
-        std::cerr << "ShaderProgram compilation errors!\nVertex Error(s):\n" << verror << "Fragment Error(s):\n" << ferror << std::endl;
+        std::cerr << "ShaderProgram with key '" << m_key << "' has compilation errors!\nVertex Error(s):\n" << verror << "Fragment Error(s):\n" << ferror << std::endl;
         return ERR_SHADER_COMPILATION_FAILED;
     }
 
@@ -140,6 +140,53 @@ std::shared_ptr<ShaderProgram> ShaderProgram::getShaderViaKey(std::string shader
         auto shader = iterator->second.lock();
         return shader;
     }
-    std::cerr << "ShaderProgram with key " << shaderKey << " not found." << std::endl;
+    std::cerr << "ShaderProgram with key '" << shaderKey << "' not found." << std::endl;
     return nullptr;
+}
+
+int ShaderProgram::getUniformLoc(const std::string &uniformLoc) {
+    if (m_uniformCache.find(uniformLoc) != m_uniformCache.end()) {
+        return m_uniformCache[uniformLoc];
+    }
+
+    int loc = glGetUniformLocation(m_programID, uniformLoc.c_str());
+    if (loc == -1) {
+        std::cerr << "ShaderProgram with key '" << m_key << "' Uniform '" << uniformLoc << "' doesn't exist!\n";
+    } 
+    m_uniformCache.emplace(uniformLoc, loc);
+    return loc;
+}
+
+void ShaderProgram::setUniform(const std::string& uniformLoc, float uniform) {
+    glUniform1fv(getUniformLoc(uniformLoc), 1, &uniform);
+}
+
+void ShaderProgram::setUniform(const std::string& uniformLoc, int uniform) {
+    glUniform1iv(getUniformLoc(uniformLoc), 1, &uniform);
+}
+
+void ShaderProgram::setUniform(const std::string& uniformLoc, bool uniform) {
+    setUniform(uniformLoc, (int)uniform);
+}
+
+void ShaderProgram::setUniform(const std::string& uniformLoc, double uniform) {
+    glUniform1dv(getUniformLoc(uniformLoc), 1, &uniform);
+}
+
+void ShaderProgram::setUniform(const std::string& uniformLoc, unsigned int uniform) {
+    glUniform1uiv(getUniformLoc(uniformLoc), 1, &uniform);
+}
+
+
+void ShaderProgram::setUniform(const std::string& uniformLoc, const fm::_vec2<float>& uniform) {
+    glUniform2fv(getUniformLoc(uniformLoc), 1, &uniform.x);
+}
+void ShaderProgram::setUniform(const std::string& uniformLoc, const fm::_vec3<float>& uniform) {
+    glUniform3fv(getUniformLoc(uniformLoc), 1, &uniform.x); 
+}
+void ShaderProgram::setUniform(const std::string& uniformLoc, const fm::_vec4<float>& uniform) {
+    glUniform4fv(getUniformLoc(uniformLoc), 1, &uniform.x); 
+}
+void ShaderProgram::setUniform(const std::string& uniformLoc, const fm::_mat4x4<float>& uniform) {
+    glUniformMatrix4fv(getUniformLoc(uniformLoc), 1, GL_FALSE, uniform.data()); 
 }

@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.10.0)
+set(CMAKE_CXX_STANDARD 20)
+
+# i fucking hate working with cmake shit but it's also so useful
+
 
 include(FetchContent)
 FetchContent_Declare(
@@ -11,7 +15,21 @@ set(GLFW_BUILD_TESTS OFF CACHE INTERNAL "")
 set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "")
 FetchContent_MakeAvailable(glfw)
 
-set(CMAKE_CXX_STANDARD 20)
+# resource packing
+# rsc_source is /resources/ in the project directory
+# rsc_out is the output. (in the binary directory.)
+set(RSC_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/resources")
+set(RSC_TARGET "${CMAKE_CURRENT_BINARY_DIR}/resources")
+file(GLOB_RECURSE RESOURCES_OUT CONFIGURE_DEPENDS "${RSC_SOURCE}/*")
+
+add_custom_command(
+    OUTPUT "${RSC_TARGET}"
+    COMMAND ${CMAKE_COMMAND} -E tar "cf" "${RSC_TARGET}" --format=zip "."
+    WORKING_DIRECTORY "${RSC_SOURCE}"
+    DEPENDS ${RESOURCES_OUT}
+    COMMENT "Compressing project resources into 'resources' archive..."
+)
+add_custom_target(resources DEPENDS "${RSC_TARGET}")
 
 if(WIN32)
     if(MINGW)
@@ -46,6 +64,7 @@ file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
 )
 
 add_executable(gamebridge ${PROJECT_SOURCES})
+add_dependencies(gamebridge resources)
 target_link_libraries(gamebridge PRIVATE glfw)
 
 include(CTest)

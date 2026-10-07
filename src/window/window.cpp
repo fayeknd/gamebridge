@@ -86,6 +86,11 @@ void Window::setFullscreenMode(FullscreenMode fm) {
     m_fsMode = fm;
 }
 
+#include "../data/mesh.hpp"
+#include "../data/shader.hpp"
+
+std::shared_ptr<Mesh> mesh;
+
 int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMode, GLFWmonitor *monitor, GLFWwindow *share, void(*extra_window_hints)()) {
     if (GLContext::get().isGLReady()) return ERR_CONTEXT_EXISTS;
     if (GLContext::get().createGLContext(_default_window_hints, extra_window_hints) != GL_CREATE_CONTEXT_SUCCESS)
@@ -114,6 +119,16 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     }
     glViewport(0, 0, size.x, size.y);
     setFullscreenMode(fsMode);
+
+    auto v = std::vector<Vertex>() = {
+        {{ 0.0,  0.5, 0.0}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
+        {{ 0.5f, 0.0, 0.0}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
+        {{-0.5f, 0.5, 0.0}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}}
+    };
+    auto i = std::vector<unsigned short>() = {0, 1, 2};
+    mesh = Mesh::createMeshWithData(&v, &i);
+    
+
     return WINDOW_CREATION_SUCCESS;
 }
 

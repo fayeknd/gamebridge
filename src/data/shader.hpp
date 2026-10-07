@@ -1,6 +1,7 @@
 #pragma once
 #include "../engine.h"
 #include "../gl/gl_context.hpp"
+#include "../../include/fm/fmath.hpp"
 
 #include <string>
 #include <filesystem>
@@ -27,6 +28,7 @@ namespace Engine {
     // option. Alternatively, if you were certain you wanted an object to be destroyed when
     // it's references drop to zero, you can just use a shared_ptr.
 
+    
     class ShaderProgram : public std::enable_shared_from_this<ShaderProgram> {
     private:
 
@@ -35,6 +37,8 @@ namespace Engine {
         std::string m_key;
 
         static inline std::unordered_map<std::string, std::weak_ptr<ShaderProgram>> s_programCache; 
+        std::unordered_map<std::string, int> m_uniformCache;
+
         int _compileProgram(std::filesystem::path shaderSource);
         static const char* _getShaderCompileErrors(GLuint shader);
         
@@ -54,6 +58,21 @@ namespace Engine {
             _unregisterProgram(); 
         }
 
+        int getUniformLoc(const std::string& uniformLoc);
+        
+        void setUniform(const std::string& uniformLoc, float uniform);
+        void setUniform(const std::string& uniformLoc, int uniform);
+        void setUniform(const std::string& uniformLoc, bool uniform);
+        void setUniform(const std::string& uniformLoc, double uniform);
+        void setUniform(const std::string& uniformLoc, unsigned int uniform);
+        
+        void setUniform(const std::string& uniformLoc, const fm::vec2& uniform);
+        void setUniform(const std::string& uniformLoc, const fm::vec3& uniform);
+        void setUniform(const std::string& uniformLoc, const fm::vec4& uniform);
+        void setUniform(const std::string& uniformLoc, const fm::mat4& uniform);
+
+        //void setUniform(std::string uniformLoc, Texture2D uniform); later
+         
     };
 
 }

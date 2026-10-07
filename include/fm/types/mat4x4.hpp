@@ -19,7 +19,7 @@ namespace fm {
             T i12, T i13, T i14, T i15
         );
         inline static _mat4x4<T> identity() { return _mat4x4<T>(1); };
-        T* data();
+        const T* data() const;
 
         _mat4x4<T> translated(_vec3<T> vec);
         _mat4x4<T>& translate(_vec3<T> vec);
@@ -83,7 +83,7 @@ namespace fm {
         m_data[3][0] = i12; m_data[3][1] = i13; m_data[3][2] = i14; m_data[3][3] = i15;
     }
     template <typename T>
-    inline T* _mat4x4<T>::data() {
+    inline const T* _mat4x4<T>::data() const {
         return &m_data[0][0];
     } 
 
