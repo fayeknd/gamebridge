@@ -33,15 +33,15 @@ namespace Engine {
         IDPool() : m_nextID(0) {};
 
         // self-explanitory. just clear the whole pool. 
-        void clear(); //(idpool.hpp:8)
+        void clear(); //(idpool.cpp:8)
 
         // return the value of currently assigned IDs. 
-        size_t count() const; //(idpool.hpp:17)
+        size_t count() const; //(idpool.cpp:17)
 
         // get a unique ID from the pool. 
-        T getID(); //(idpool.hpp:25)
+        T getID(); //(idpool.cpp:25)
 
         // free an ID. this should be called in the destructors of anything that uses an IDPool.
-        void releaseID(T uid); //(idpool.hpp:42)
+        void releaseID(T uid); //(idpool.cpp:42)
     };
 }
