@@ -15,8 +15,6 @@ namespace Engine {
 
         zip* m_zip;
         std::string m_arPath;
-        
-        static inline std::unordered_map<std::string, std::shared_ptr<Archive>> s_archiveCache;
 
     public:
 
@@ -34,19 +32,16 @@ namespace Engine {
     class ResourceManager {
     protected:
 
-        std::filesystem::path m_binaryDir = "none";
+        static inline std::filesystem::path s_binaryDir = "none";
 
     public:
-        const std::filesystem::path& getBinaryDir();
-        static ResourceManager& get() {
-            static ResourceManager instance;
-            return instance;
-        }
 
-        void unloadArchives();
-        std::shared_ptr<Archive> getArchiveInPath(const std::string& path, std::string* outPath);
-        std::string getFileFromArchive(std::shared_ptr<Archive> archive, const std::string& path);
-        std::vector<unsigned char> loadRaw(const std::string& path, bool keepArchive = true);
+        static inline std::unordered_map<std::string, std::shared_ptr<Archive>> s_archiveCache;
+        static const std::filesystem::path& getBinaryDir();
+        static void freeArchives();
+        static std::shared_ptr<Archive> getArchiveInPath(const std::string& path, std::string* outPath);
+        static std::string getFileFromArchive(std::shared_ptr<Archive> archive, const std::string& path);
+        static std::vector<unsigned char> loadRaw(const std::string& path, bool keepArchive = true);
 
     };
 

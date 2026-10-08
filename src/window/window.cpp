@@ -91,7 +91,6 @@ void Window::setFullscreenMode(FullscreenMode fm) {
 #include "../data/shader.hpp"
 
 std::shared_ptr<Mesh> mesh;
-std::shared_ptr<ShaderProgram> program;
 
 
 int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMode, GLFWmonitor *monitor, GLFWwindow *share, void(*extra_window_hints)()) {
@@ -131,14 +130,9 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     auto i = std::vector<unsigned short>() = {0, 1, 2};
     mesh = Mesh::createMeshWithData(v, i);
 
+    auto program = ShaderProgram::createProgramFromPath("resources=>shaders/shader.glsl");
 
-    auto file = ResourceManager::get().loadRaw("resources=>shaders/shader.glsl");
-    
-    if (file.size() > 0) {
-        program = ShaderProgram::createProgramFromData(file.data(), "testshader");
-        program->useProgram();
-    }
-    ResourceManager::get().unloadArchives();
+    ResourceManager::freeArchives();
     
 
     return WINDOW_CREATION_SUCCESS;
@@ -170,7 +164,7 @@ void Window::beginGameLoop() {
     while (!glfwWindowShouldClose(m_wnd)) {
         
         glClear(GL_COLOR_BUFFER_BIT);
-        program->useProgram();
+        ShaderProgram::getShaderViaKey("shader")->useProgram();
         mesh->bindMesh();
         glDrawElements(mesh->getTopology(), mesh->getIndexCount(), GL_UNSIGNED_SHORT, 0);
         

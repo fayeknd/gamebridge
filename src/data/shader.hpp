@@ -47,13 +47,7 @@ namespace Engine {
     };
     const std::string shader_transpilerIdentifier = {"v_"};
 
-    // lowkey id be lying if i said i fully grasped what weak_ptrs were and why they work
-    // this design is based off of cocos2d-x. the cleanup() function will find any shaders 
-    // with no references and destroy them. a garbage collector. In some instances, 
-    // you might not want shaders to be completely wiped out, so it's good top have the
-    // option. Alternatively, if you were certain you wanted an object to be destroyed when
-    // it's references drop to zero, you can just use a shared_ptr.
-
+    // FUCK WEAK_PTR
     
     class ShaderProgram : public std::enable_shared_from_this<ShaderProgram> {
     private:
@@ -62,7 +56,7 @@ namespace Engine {
         bool m_registered = false;
         std::string m_key;
 
-        static inline std::unordered_map<std::string, std::weak_ptr<ShaderProgram>> s_programCache; 
+        static inline std::unordered_map<std::string, std::shared_ptr<ShaderProgram>> s_programCache; 
         std::unordered_map<std::string, int> m_uniformCache;
 
         int _compileProgram(std::stringstream& shaderSource);
@@ -79,6 +73,8 @@ namespace Engine {
         static std::shared_ptr<ShaderProgram> createProgramFromPath(std::filesystem::path shaderSource, std::string shaderKey = UNNAMED_SHADER);
         static std::shared_ptr<ShaderProgram> createProgramFromData(unsigned char* data, std::string shaderKey = UNNAMED_SHADER);
         static std::shared_ptr<ShaderProgram> getShaderViaKey(std::string shaderKey);
+
+        std::string getKey(); 
 
         void useProgram();
         

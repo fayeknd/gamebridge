@@ -1,30 +1,40 @@
 #include "shader.hpp"
 #include <iostream>
 #include <fstream>
-
+#include "resources.hpp"
 
 using namespace Engine;
 
+std::string ShaderProgram::getKey() {
+    return m_key; 
+}
+
 std::shared_ptr<ShaderProgram> ShaderProgram::createProgramFromPath(std::filesystem::path shaderSource, std::string shaderKey) {
     
-    std::error_code ec;    
-    if (!std::filesystem::exists(shaderSource, ec)) {
-        std::cerr << "ShaderProgram file read error! -> " << ec.message() << std::endl;
-        return nullptr;
-    }
-    std::ifstream file(shaderSource);
-    std::stringstream buf;
-    buf << file.rdbuf();
-    file.close();
-
     if (shaderKey == UNNAMED_SHADER) {
         shaderKey = shaderSource.filename().string();
         size_t ind = shaderKey.find_last_of('.');
         shaderKey = shaderKey.substr(0, ind);
     }
+    
+    auto rcFile = ResourceManager::loadRaw(shaderSource.string()); 
+    if (rcFile.size() > 0) {
+        return createProgramFromData(rcFile.data(), shaderKey);
+    }
+
+    std::error_code ec;    
+    if (!std::filesystem::exists(shaderSource, ec)) {
+        std::cerr << "ShaderProgram file read error! -> " << ec.message() << std::endl;
+        return nullptr;
+    }
 
     auto _ = getShaderViaKey(shaderKey);
     if (_) return _; 
+
+    std::ifstream file(shaderSource);
+    std::stringstream buf;
+    buf << file.rdbuf();
+    file.close();
 
     return _createProgramFromStringStream(buf, shaderKey);
 
@@ -47,6 +57,7 @@ std::shared_ptr<ShaderProgram> ShaderProgram::_createProgramFromStringStream(std
     program->m_key = shaderKey; 
     if (program->_compileProgram(ss) == SHADER_COMPILE_SUCCESS) {
         program->_registerProgram();
+
         return program;
     }
 
@@ -60,7 +71,7 @@ void ShaderProgram::useProgram() {
 
 void ShaderProgram::cleanup() {
     for (auto iterator = s_programCache.begin(); iterator != s_programCache.end();) {
-        if (iterator->second.expired()) {
+        if (iterator->second.use_count() == 1) {
             iterator = s_programCache.erase(iterator);
         }
         else {
@@ -164,8 +175,7 @@ const char* ShaderProgram::_getShaderCompileErrors(GLuint shader) {
 std::shared_ptr<ShaderProgram> ShaderProgram::getShaderViaKey(std::string shaderKey) {
     auto iterator = s_programCache.find(shaderKey);
     if (iterator != s_programCache.end()) {
-        auto shader = iterator->second.lock();
-        return shader;
+        return iterator->second;
     }
     return nullptr;
 }

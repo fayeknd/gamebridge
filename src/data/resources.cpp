@@ -16,9 +16,9 @@ const std::string& Archive::getPath() {
 
 std::shared_ptr<Archive> Archive::getArchive(const std::string& path) {
 
-    auto iterator = s_archiveCache.find(path);
-    if (iterator != s_archiveCache.end()) {
-        return s_archiveCache[path];
+    auto iterator = ResourceManager::s_archiveCache.find(path);
+    if (iterator != ResourceManager::s_archiveCache.end()) {
+        return ResourceManager::s_archiveCache[path];
     }
 
     auto ar = std::shared_ptr<Archive>(new Archive);
@@ -29,7 +29,7 @@ std::shared_ptr<Archive> Archive::getArchive(const std::string& path) {
         return nullptr;
     }
     ar->m_arPath = path;
-    s_archiveCache.emplace(ar->m_arPath, ar);
+    ResourceManager::s_archiveCache.emplace(ar->m_arPath, ar);
     return ar;
 }
 
@@ -37,26 +37,24 @@ Archive::~Archive() {
     zip_close(m_zip);
 }
 
-void ResourceManager::unloadArchives() {
-    Archive::s_archiveCache.clear();
+void ResourceManager::freeArchives() {
+    s_archiveCache.clear();
 }
 
 const std::filesystem::path& ResourceManager::getBinaryDir() {
     
-    if (m_binaryDir != "none") return m_binaryDir;
+    if (s_binaryDir != "none") return s_binaryDir;
 
 #ifdef _WIN32
     wchar_t path[MAX_PATH] = { 0 };
     GetModuleFileNameW(NULL, path, MAX_PATH);
-    m_binaryDir = path;
+    s_binaryDir = path;
 #else
-    char result[PATH_MAX];
-    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
-    m_binaryDir = std::string(result, (count > 0) ? count : 0);
+    s_binaryDir = std::filesystem::canonical("/proc/self/exe");
 #endif
     
-    m_binaryDir = m_binaryDir.parent_path();
-    return m_binaryDir;
+    s_binaryDir = s_binaryDir.parent_path();
+    return s_binaryDir;
 }
 
 std::shared_ptr<Archive> ResourceManager::getArchiveInPath(const std::string &path, std::string* outPath) {
@@ -110,13 +108,13 @@ std::string ResourceManager::getFileFromArchive(std::shared_ptr<Archive> archive
 std::vector<unsigned char> ResourceManager::loadRaw(const std::string& path, bool keepArchive) {
     std::string file = "";
     std::string _internalPath;
-    auto archive = ResourceManager::get().getArchiveInPath(path, &_internalPath);
+    auto archive = getArchiveInPath(path, &_internalPath);
     if (archive) {
-        file = ResourceManager::get().getFileFromArchive(archive, _internalPath);
+        file = getFileFromArchive(archive, _internalPath);
     }
 
     if (!keepArchive) {
-        Archive::s_archiveCache.erase(archive->m_arPath);
+        s_archiveCache.erase(archive->m_arPath);
     }
 
     std::vector<unsigned char> buf(file.begin(), file.end());
