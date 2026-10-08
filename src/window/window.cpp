@@ -123,11 +123,12 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     setFullscreenMode(fsMode);
 
     auto v = std::vector<Vertex>() = {
-        {{ 0.0f,  0.5f, 0.0f}, {1.0,1.0,1.0,0.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{ 0.5f, -0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{-0.5f, -0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}}
+        {{ 0.5f,  0.5f, 0.0f}, {1.0,1.0,1.0,0.0}, {0.0,0.0}, {0.0,0.0,0.0}},
+        {{ 0.7f, -0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
+        {{-0.7f, -0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
+        {{-0.5f,  0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}}
     };
-    auto i = std::vector<unsigned short>() = {0, 1, 2};
+    auto i = std::vector<unsigned short>() = {0, 1, 2, 2, 3, 0};
     mesh = Mesh::createMeshWithData(v, i);
 
     auto program = ShaderProgram::createProgramFromPath("resources=>shaders/shader.glsl");
