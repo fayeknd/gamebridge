@@ -19,6 +19,8 @@
         https://glad.dav1d.de/#profile=core&language=c&specification=gl&loader=on&api=gl%3D4.6
 */
 
+// tuhis was generated and not written by me. do not expect me to comment this lol.
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

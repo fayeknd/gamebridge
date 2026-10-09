@@ -65,7 +65,7 @@ std::shared_ptr<ShaderProgram> ShaderProgram::_createProgramFromStringStream(std
 }
 
 void ShaderProgram::useProgram() {
-    if (GLContext::get().glState.m_currentProgram == m_programID) return;
+    if (GLContext::get().glState.m_currentProgram == m_programID || !m_registered) return;
     glUseProgram(m_programID);
 }
 
