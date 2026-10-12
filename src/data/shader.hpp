@@ -158,7 +158,7 @@ namespace Engine {
         static void cleanup();
 
         // create program from a file on the disk.
-        // can also be used to get a file from an archive
+        // can also be used to get a program from an archive
         // on the disk with the help of the resource manager.
         // the shader source is the path to the shader,
         // the shader key is the name to use to find the shader

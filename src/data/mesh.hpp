@@ -8,32 +8,52 @@
 #include "vertex.hpp"
 
 namespace Engine {
+
+    // the mesh class is responsible for holding all of the
+    // annjoying verbose opengl boilerplate.
+
     class Mesh {
     private:
 
-        // okay so a mesh class doesn't actually NEED to store the vertex and index data to render anything,
-        // thats the job of the vertex buffer / vertex array / element buffer. 
-        // if you NEED to know the specific vertices, you probably don't. if you REALLY need to know them,
-        // store them separately for the mesh you need. The only time I could think of somebody needing 
-        // the vertex data is if they were modifying the mesh, which is an expensive task anyway and can 
-        // be done in a vertex shader.
-
-        // TODO : better caching
-
+        // vertex buffer id
         GLuint m_vbo;
+
+        // element/index buffer id
         GLuint m_ebo;
+
+        // vertex array id
         GLuint m_vao;
+
+        // this mesh's topology. used in glDrawElements.
+        // this is GL_TRIANGLES by default, it's best
+        // to leave it as it is if you don't know
+        // what it's really for.
         GLuint m_topology = GL_TRIANGLES;
+
+        // get the amount of indices in the mesh. 
+        // useful for drawing with glDrawArrays
+        // without having to store a separate 
+        // buffer/vector of indices to get the
+        // count from.
         GLuint m_indexCount;
 
     public:
 
+        // deconstructor, just destroys the various buffers.
         ~Mesh();
+
+        // create a primitive mesh using an identifier. 
+        // CURRENTLY DOESN'T DO ANYTHING!
         static std::shared_ptr<Mesh> createPrimitiveMesh(std::string mesh);
+
+        // create a mesh with any valid mesh data.
+        // vertices and indices. and also topology.
         static std::shared_ptr<Mesh> createMeshWithData(std::vector<Vertex>& vertices, std::vector<GLushort>& indices, GLuint topology = GL_TRIANGLES);
 
+        // bind this as the active mesh to be drawn.
         void bindMesh();
 
+        // getters for the private variables.
         GLuint const getVBO() { return m_vbo; } 
         GLuint const getEBO() { return m_ebo; }
         GLuint const getVAO() { return m_vao; }
