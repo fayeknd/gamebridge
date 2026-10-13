@@ -29,6 +29,7 @@ int GLContext::createGLFWContext(void(*window_hints)(), void(*extra_window_hints
 
     // glInit is now true.
     m_glInit = true;
+    return GL_CREATE_CONTEXT_SUCCESS;
 }
 // this one is annoying. the GLAD context is actually responsible for creating the GL context and ideally would have
 // been created with the createGLFWContext function, combining into the createGLContext function.

@@ -115,8 +115,10 @@ namespace Engine {
         // if you don't need any of the unused shaders, just call ShaderProgram::cleanup()
         // to dispose of unused shaders.
 
-        // the s_programCache stores a shared_ptr to the shader, and a string as an identifier. (m_key)
-        static inline std::unordered_map<std::string, std::shared_ptr<ShaderProgram>> s_programCache; 
+        // the program cache stores a shared_ptr to the shader, and a string as an identifier. (m_key)
+        // we ensure the program cache is a reference so that it is deleted AFTER anything that 
+        // references any shaders get deleted to prevent a segfault.
+        static std::unordered_map<std::string, std::shared_ptr<ShaderProgram>>& getProgramCache();
 
         // a cache of this shader's used uniforms. only a performance thing really.
         // glGetUniformLoc is an expensive function and storing the uniform locations
@@ -151,7 +153,6 @@ namespace Engine {
 
         // create program from a string stream. this string stream gets passed right through to _compileProgram().
         static std::shared_ptr<ShaderProgram> _createProgramFromStringStream(std::stringstream& ss, std::string shaderKey = UNNAMED_SHADER);
-
     public:
         
         // cleanup expired shader refs (shader programs that are currently unreferenced by anything)

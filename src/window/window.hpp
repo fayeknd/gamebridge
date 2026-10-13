@@ -100,5 +100,8 @@ namespace Engine {
         // begins the program rendering and logic loop. in main(), this should come last unless you have
         // any cleanup stuff to perform after the program stops.
         void beginGameLoop();
+
+        // clean up the program after exiting.
+        void cleanup();
     };
 }

@@ -5,6 +5,19 @@
 
 using namespace Engine;
 
+// the program cache stores a shared_ptr to the shader, and a string as an identifier. (m_key)
+std::unordered_map<std::string, std::shared_ptr<Engine::ShaderProgram>>& Engine::ShaderProgram::getProgramCache() {
+    // create program cache instance
+    // this is actually purposefully leaking memory
+    // but it's okay because it will be deallocated
+    // when the program terminates.
+    // it leaks to MAKE SURE it is deleted after
+    // other objects.
+    // this is kind of evil though and i hate it
+    static auto* cache = new std::unordered_map<std::string, std::shared_ptr<Engine::ShaderProgram>>();
+    return *cache;
+}
+
 // returns this shader's key (or name)
 std::string ShaderProgram::getKey() {
     return m_key; 
@@ -121,7 +134,7 @@ void ShaderProgram::useProgram() {
 // cleanup expired shader refs (shader programs that are currently unreferenced by anything)
 void ShaderProgram::cleanup() {
     // loop through all the programs in the cache
-    for (auto iterator = s_programCache.begin(); iterator != s_programCache.end();) {
+    for (auto iterator = getProgramCache().begin(); iterator != getProgramCache().end();) {
         // if the shader's total references is less than or equal to 1,
         // (that 1 being the cache itself)
         // then nothing is referencing and it is viable for cleanup.
@@ -130,7 +143,7 @@ void ShaderProgram::cleanup() {
             // this forces the count to drop to 0
             // and the smart pointer automatically
             // deletes the program. 
-            iterator = s_programCache.erase(iterator);
+            iterator = getProgramCache().erase(iterator);
         }
         else {
             // this program instance is in use,
@@ -142,12 +155,12 @@ void ShaderProgram::cleanup() {
 
 // add this shaderprogram to the program cache.
 void ShaderProgram::_registerProgram() {
-    s_programCache.emplace(m_key, shared_from_this());
+    getProgramCache().emplace(m_key, shared_from_this());
 }
 
 // remove this shaderprogram from the program cache.
 void ShaderProgram::_unregisterProgram() {
-    if (getShaderViaKey(m_key)) s_programCache.erase(m_key);
+    if (getShaderViaKey(m_key)) getProgramCache().erase(m_key);
 }
 
 // compile the program via stringstream.
@@ -309,8 +322,8 @@ const char* ShaderProgram::_getShaderCompileErrors(GLuint shader) {
 // (if that shader exists, that is.)
 std::shared_ptr<ShaderProgram> ShaderProgram::getShaderViaKey(std::string shaderKey) {
     // loop through cache, try find shader matching key
-    auto iterator = s_programCache.find(shaderKey);
-    if (iterator != s_programCache.end()) {
+    auto iterator = getProgramCache().find(shaderKey);
+    if (iterator != getProgramCache().end()) {
         // found shader, return that.
         return iterator->second;
     }

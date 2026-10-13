@@ -74,9 +74,12 @@ namespace Engine {
     // gigabytes of items, but until then we should be okay.
 
 
-    // the ResourceManager is a singleton class responsible for the loading
+    // the ResourceManager is a static class responsible for the loading
     // and unloading of any sort of data stored in an archive, 
     // and general management for archives.
+
+    // it is not a singleton with a get() function, simply because
+    // it feels wrong to type ResourceManager::get().loadRaw();
 
     class ResourceManager {
     protected:

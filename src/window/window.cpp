@@ -3,6 +3,8 @@
 #include "../include/GLFW/glfw3native.h"
 #include "../data/resources.hpp"
 #include "../data/shader.hpp"
+#include "../data/entity.hpp"
+
 using namespace Engine;
 
 // returns the glfw window handle. (different from the HWND window handle.)
@@ -203,6 +205,8 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     auto program = ShaderProgram::createProgramFromPath("resources=>shaders/shader.glsl");
 
     ResourceManager::freeArchives();
+    auto entity = Entity::create("Awesome managed entity");
+    std::cout << "Entity ID: " << entity->getID() << ", Entity name: " << entity->m_name << std::endl;
     // end of temp stuff
 
     // window creation succeeded!!
@@ -267,4 +271,12 @@ void Window::beginGameLoop() {
         // update window.
         glfwPollEvents();
     }
+    // we have left the loop, so the program is attempting to close.
+    cleanup();
+}
+
+// clean up the program after exiting
+void Window::cleanup() {
+    ResourceManager::freeArchives();
+    GLContext::get().destroyGLContext();
 }
