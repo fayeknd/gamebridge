@@ -13,7 +13,7 @@ std::unordered_map<std::string, std::shared_ptr<Engine::ShaderProgram>>& Engine:
     // when the program terminates.
     // it leaks to MAKE SURE it is deleted after
     // other objects.
-    // this is kind of evil though and i hate it
+    // this is kind of evil though and i hate it and im sorry
     static auto* cache = new std::unordered_map<std::string, std::shared_ptr<Engine::ShaderProgram>>();
     return *cache;
 }

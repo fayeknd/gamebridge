@@ -75,7 +75,7 @@ namespace Engine {
         
         ~Entity();
 
-        // the root entity. by default, this will be an object's parent
+        // the root entity. this will be an object's parent
         // by default. keep in mind, while the entity system is designed
         // to ensure every entity has a parent (except the root), we 
         // should still write code that handles an instance where the
