@@ -1,16 +1,16 @@
-#include "component.hpp"
-#include "entity.hpp"
+#include <component.hpp>
+#include <entity.hpp>
 
 using namespace Engine;
 
-template <typename T>
-ComponentTypeID EntityComponent::getComponentTypeID() {
+Entity& EntityComponent::getEntity() {
+    return *m_entity;
+}
 
-    if (!std::is_base_of<EntityComponent, T>::value) {
-        std::cerr << "Provided class is not a component!\n"; 
-        return -1;
-    }
-    ComponentTypeID id = s_componentTypePool.getNewID();
-    return id;
+const Entity& EntityComponent::getEntity() const {
+    return *m_entity;
+}
 
+const ComponentTypeID EntityComponent::getTypeID() const {
+    return m_typeID;
 }

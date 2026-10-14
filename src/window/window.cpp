@@ -1,9 +1,10 @@
 #include "window.hpp"
 
-#include "../include/GLFW/glfw3native.h"
-#include "../data/resources.hpp"
-#include "../data/shader.hpp"
-#include "../data/entity.hpp"
+#include <GLFW/glfw3native.h>
+#include <resources.hpp>
+#include <shader.hpp>
+#include <entity.hpp>
+#include <main_comp.hpp>
 
 using namespace Engine;
 
@@ -129,12 +130,6 @@ void Window::setFullscreenMode(FullscreenMode fm) {
     m_fsMode = fm;
 }
 
-// temp stuff ignore
-#include "../data/mesh.hpp"
-#include "../data/shader.hpp"
-
-std::shared_ptr<Mesh> mesh;
-
 // creates the window. this should be the first function to run.
 // a run through of what the parameters defaults are for:
 
@@ -192,22 +187,10 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     // set fullscreen mode passed in
     setFullscreenMode(fsMode);
 
-    // temp stuff ignore
-    auto v = std::vector<Vertex>() = {
-        {{ 0.5f,  0.5f, 0.0f}, {1.0,1.0,1.0,0.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{ 0.7f, -0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{-0.7f, -0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{-0.5f,  0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}}
-    };
-    auto i = std::vector<unsigned short>() = {0, 1, 2, 2, 3, 0};
-    mesh = Mesh::createMeshWithData(v, i);
-
-    auto program = ShaderProgram::createProgramFromPath("resources=>shaders/shader.glsl");
-
-    ResourceManager::freeArchives();
-    auto entity = Entity::create("Awesome managed entity");
-    std::cout << "Entity ID: " << entity->getID() << ", Entity name: " << entity->m_name << std::endl;
-    // end of temp stuff
+    if (!Entity::s_root) {
+        return ERR_NO_ROOT_ENTITY;
+    }
+    Entity::s_root->addComponent<MainComponent>();
 
     // window creation succeeded!!
     return WINDOW_CREATION_SUCCESS;
@@ -258,12 +241,12 @@ void Window::beginGameLoop() {
     // while glfw believes the window should not close
     while (!glfwWindowShouldClose(m_wnd)) {
         
-        // test stuff ignore
-        glClear(GL_COLOR_BUFFER_BIT);
-        ShaderProgram::getShaderViaKey("shader")->useProgram();
-        mesh->bindMesh();
-        glDrawElements(mesh->getTopology(), mesh->getIndexCount(), GL_UNSIGNED_SHORT, 0);
-        // end test stuff
+        for (const auto& e : Entity::s_entityList) {
+            e.second->updateComponents(0);
+        }
+        for (const auto& e : Entity::s_entityList) {
+            e.second->lateUpdateComponents(0);
+        }
 
         // cycle the glfw front and back buffers
         glfwSwapBuffers(m_wnd); 

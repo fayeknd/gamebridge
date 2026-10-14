@@ -1,7 +1,7 @@
-#include "shader.hpp"
+#include <shader.hpp>
 #include <iostream>
 #include <fstream>
-#include "resources.hpp"
+#include <resources.hpp>
 
 using namespace Engine;
 

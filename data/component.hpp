@@ -1,7 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include <iostream>
-#include "idpool.hpp"
+#include <idpool.hpp>
 #include <memory>
 
 namespace Engine {
@@ -14,7 +14,6 @@ namespace Engine {
     class EntityComponent {
     private:
 
-        const char* m_typename; 
         ComponentTypeID m_typeID;
         
         Entity* m_entity;
@@ -31,12 +30,22 @@ namespace Engine {
 
         const ComponentTypeID getTypeID() const;
         template <typename T>
-        static ComponentTypeID getComponentTypeID();
+        static ComponentTypeID getComponentTypeID() {
 
-        virtual void init();
-        virtual void update(float delta);
-        virtual void lateUpdate(float delta);
-        virtual void onDestroy(float delta);
+            if (!std::is_base_of<EntityComponent, T>::value) {
+                std::cerr << "Provided class is not a component!\n"; 
+                return -1;
+            }
+            ComponentTypeID id = s_componentTypePool.getNewID();
+            return id;
+
+        }
+
+
+        virtual void init() {};
+        virtual void update(float delta) {};
+        virtual void lateUpdate(float delta) {};
+        virtual void onDestroy() {};
     
 
         friend class Entity;

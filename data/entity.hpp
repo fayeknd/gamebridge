@@ -1,8 +1,8 @@
 #pragma once
-#include "component.hpp"
+#include <component.hpp>
 
 namespace Engine {
- 
+    
     // an alias so we don't have to keep typing "uint32_t"
     // a uint is definitely large enough btw.
     using EntityID = uint32_t;
@@ -67,8 +67,11 @@ namespace Engine {
         // constructor with name, copied
         Entity(std::string name) : m_name(std::move(name)) {};
 
+        bool m_enabled = true;
+        bool m_enabledDirty = false;
 
-         
+        void _updateEnabled();
+
         std::unordered_map<ComponentTypeID, std::shared_ptr<EntityComponent>> m_componentMap;
 
 
@@ -119,16 +122,55 @@ namespace Engine {
         void setParent(Entity* e);
 
         template <typename T, typename ... Args>
-        T& addComponent(Args&& ... targs);
+        T& addComponent(Args&& ... targs) {
+            
+            auto component = std::make_unique<T>(std::forward<Args>(targs)...);
+            component->m_entity = this;
+
+            ComponentTypeID id = EntityComponent::getComponentTypeID<T>();
+            component->m_typeID = id;
+
+            T& ref = *component;
+            m_componentMap[id] = std::move(component);
+            if (m_enabled) ref.init();
+            return ref;
+        }
 
         template <typename T>
-        T* getComponent();
+        T* getComponent() {
 
-        template <typename T>
-        void removeComponent();
+            auto it = m_componentMap.find(EntityComponent::getComponentTypeID<T>());
+            if (it != m_componentMap.end()) {
+
+                // we know what type of component this is
+                // (static cast is much cheaper than dynamic_cast)
+                return static_cast<T*>(it->second.get());
+            }
+
+            return nullptr;
+        }
+
+        template <typename T> 
+        void removeComponent() {
+
+            auto it = m_componentMap.find(EntityComponent::getComponentTypeID<T>());
+            if (it != m_componentMap.end()) {
+
+                auto component = m_componentMap[it];
+                component->onDestroy();
+                // just in case 
+                component->m_entity = nullptr;
+                m_componentMap.erase(it);
+            }
+        }
 
         void updateComponents(float delta);
         void lateUpdateComponents(float delta);
+
+        bool isEnabled();
+        void setEnabled(bool enabled);
+
+        friend class Window; 
 
     };
 

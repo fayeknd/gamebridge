@@ -1,5 +1,5 @@
 #pragma once
-#include "../../include/fm/fmath.hpp"
+#include <fm/fmath.hpp>
 
 namespace Engine {
 

@@ -72,7 +72,7 @@ target_link_libraries(gamebridge PRIVATE glfw libzip::zip)
 include(CTest)
 enable_testing()
 
-target_include_directories(gamebridge PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(gamebridge PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/data)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

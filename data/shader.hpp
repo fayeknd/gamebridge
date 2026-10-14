@@ -1,7 +1,7 @@
 #pragma once
-#include "../engine.h"
-#include "../gl/gl_context.hpp"
-#include "../../include/fm/fmath.hpp"
+#include <engine.h>
+#include <gl_context.hpp>
+#include <fm/fmath.hpp>
 
 #include <string>
 #include <filesystem>

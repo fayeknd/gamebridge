@@ -1,6 +1,6 @@
 #pragma once
-#include "../engine.h"
-#include "../gl/gl_context.hpp"
+#include <engine.h>
+#include <gl_context.hpp>
 
 #include <iostream>
 #include <memory>

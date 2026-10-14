@@ -1,5 +1,5 @@
-#include "mesh.hpp"
-#include "shader.hpp"
+#include <mesh.hpp>
+#include <shader.hpp>
 
 using namespace Engine;
 

@@ -1,4 +1,4 @@
-#include "resources.hpp"
+#include <resources.hpp>
 #include <vector>
 
 #ifdef _WIN32

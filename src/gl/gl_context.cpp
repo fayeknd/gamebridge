@@ -1,5 +1,5 @@
 #include "gl_context.hpp"
-#include "../window/window.hpp"
+#include <window.hpp>
 using namespace Engine;
 
 

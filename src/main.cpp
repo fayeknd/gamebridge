@@ -1,5 +1,5 @@
 #include <iostream>
-#include "window/window.hpp"
+#include <window.hpp>
 
 using namespace Engine;
 

@@ -1,4 +1,4 @@
-#include "entity.hpp"
+#include <entity.hpp>
 #include <algorithm>
 
 using namespace Engine;
@@ -207,56 +207,32 @@ void Entity::setParent(Entity* e) {
     m_parent = s_entityList[e->m_id];
 }
 
-template <typename T, typename ... Args>
-T& Entity::addComponent(Args&& ... targs) {
-    
-    auto component = std::make_unique<T>(std::forward<Args>(targs)...);
-    component->m_entity = this;
-
-    ComponentTypeID id = EntityComponent::getComponentTypeID<T>();
-    component->m_typeID = id;
-
-    m_componentMap[id] = std::move(component);
-    component->init();
-    return *component;
-}
-
-template <typename T>
-T* Entity::getComponent() {
-
-    auto it = m_componentMap.find(EntityComponent::getComponentTypeID<T>());
-    if (it != m_componentMap.end()) {
-
-        // we know what type of component this is
-        // (static cast is much cheaper than dynamic_cast)
-        return static_cast<T*>(it->second.get());
-    }
-
-    return nullptr;
-}
-
-template <typename T> 
-void Entity::removeComponent() {
-
-    auto it = m_componentMap.find(EntityComponent::getComponentTypeID<T>());
-    if (it != m_componentMap.end()) {
-
-        auto component = m_componentMap[it];
-        component->onDestroy();
-        // just in case 
-        component->m_entity = nullptr;
-        m_componentMap.erase(it);
-    }
-}
-
 void Entity::updateComponents(float delta) {
+    if (!m_enabled) return; 
     for (const auto& component : m_componentMap) {
         component.second->update(delta);
     }
+    _updateEnabled();
 }
 
 void Entity::lateUpdateComponents(float delta) {
+    if (!m_enabled) return;
     for (const auto& component : m_componentMap) {
         component.second->lateUpdate(delta);
     }
+    _updateEnabled();
+}
+
+bool Entity::isEnabled() {
+    return m_enabled;
+}
+
+void Entity::setEnabled(bool enabled) {
+    if (m_enabled != enabled) m_enabledDirty = true;
+}
+
+void Entity::_updateEnabled() {
+    if (!m_enabledDirty) return;
+    m_enabledDirty = false;
+    m_enabled = !m_enabled;
 }
