@@ -206,3 +206,57 @@ void Entity::setParent(Entity* e) {
     // (O(logN))
     m_parent = s_entityList[e->m_id];
 }
+
+template <typename T, typename ... Args>
+T& Entity::addComponent(Args&& ... targs) {
+    
+    auto component = std::make_unique<T>(std::forward<Args>(targs)...);
+    component->m_entity = this;
+
+    ComponentTypeID id = EntityComponent::getComponentTypeID<T>();
+    component->m_typeID = id;
+
+    m_componentMap[id] = std::move(component);
+    component->init();
+    return *component;
+}
+
+template <typename T>
+T* Entity::getComponent() {
+
+    auto it = m_componentMap.find(EntityComponent::getComponentTypeID<T>());
+    if (it != m_componentMap.end()) {
+
+        // we know what type of component this is
+        // (static cast is much cheaper than dynamic_cast)
+        return static_cast<T*>(it->second.get());
+    }
+
+    return nullptr;
+}
+
+template <typename T> 
+void Entity::removeComponent() {
+
+    auto it = m_componentMap.find(EntityComponent::getComponentTypeID<T>());
+    if (it != m_componentMap.end()) {
+
+        auto component = m_componentMap[it];
+        component->onDestroy();
+        // just in case 
+        component->m_entity = nullptr;
+        m_componentMap.erase(it);
+    }
+}
+
+void Entity::updateComponents(float delta) {
+    for (const auto& component : m_componentMap) {
+        component.second->update(delta);
+    }
+}
+
+void Entity::lateUpdateComponents(float delta) {
+    for (const auto& component : m_componentMap) {
+        component.second->lateUpdate(delta);
+    }
+}

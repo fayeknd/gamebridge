@@ -1,8 +1,5 @@
 #pragma once
-#include <unordered_map>
-#include <iostream>
-#include "idpool.hpp"
-#include <memory>
+#include "component.hpp"
 
 namespace Engine {
  
@@ -70,6 +67,11 @@ namespace Engine {
         // constructor with name, copied
         Entity(std::string name) : m_name(std::move(name)) {};
 
+
+         
+        std::unordered_map<ComponentTypeID, std::shared_ptr<EntityComponent>> m_componentMap;
+
+
     public:
 
         
@@ -115,6 +117,18 @@ namespace Engine {
 
         // set this entity's parent
         void setParent(Entity* e);
+
+        template <typename T, typename ... Args>
+        T& addComponent(Args&& ... targs);
+
+        template <typename T>
+        T* getComponent();
+
+        template <typename T>
+        void removeComponent();
+
+        void updateComponents(float delta);
+        void lateUpdateComponents(float delta);
 
     };
 
