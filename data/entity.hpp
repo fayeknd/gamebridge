@@ -1,5 +1,6 @@
 #pragma once
-#include <component.hpp>
+#include <component/component.hpp>
+#include <idpool.hpp>
 
 namespace Engine {
     
@@ -72,12 +73,13 @@ namespace Engine {
 
         void _updateEnabled();
 
-        std::unordered_map<ComponentTypeID, std::shared_ptr<EntityComponent>> m_componentMap;
+        std::unordered_map<ComponentTypeID, std::shared_ptr<IComponent>> m_componentMap;
 
 
     public:
+    
+        Transform transform;
 
-        
         ~Entity();
 
         // the root entity. this will be an object's parent
@@ -122,26 +124,25 @@ namespace Engine {
         void setParent(Entity* e);
 
         template <typename T, typename ... Args>
-        T& addComponent(Args&& ... targs) {
+        T* addComponent(Args&& ... targs) {
             
             auto component = std::make_unique<T>(std::forward<Args>(targs)...);
             component->m_entity = this;
 
-            ComponentTypeID id = EntityComponent::getComponentTypeID<T>();
+            ComponentTypeID id = IComponent::getComponentTypeID<T>();
             component->m_typeID = id;
 
-            T& ref = *component;
             m_componentMap[id] = std::move(component);
-            if (m_enabled) ref.init();
-            return ref;
+            if (m_enabled) m_componentMap[id]->init();
+            return static_cast<T*>(m_componentMap[id].get());
         }
 
         template <typename T>
         T* getComponent() {
 
-            auto it = m_componentMap.find(EntityComponent::getComponentTypeID<T>());
+            auto it = m_componentMap.find(IComponent::getComponentTypeID<T>());
             if (it != m_componentMap.end()) {
-
+                
                 // we know what type of component this is
                 // (static cast is much cheaper than dynamic_cast)
                 return static_cast<T*>(it->second.get());
@@ -153,7 +154,7 @@ namespace Engine {
         template <typename T> 
         void removeComponent() {
 
-            auto it = m_componentMap.find(EntityComponent::getComponentTypeID<T>());
+            auto it = m_componentMap.find(IComponent::getComponentTypeID<T>());
             if (it != m_componentMap.end()) {
 
                 auto component = m_componentMap[it];

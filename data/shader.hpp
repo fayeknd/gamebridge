@@ -34,6 +34,13 @@ namespace Engine {
     // a constant for the identifier for the "fragment" part of the shader.
     constexpr const char* shader_FragmentIdentifier = "#FRAGMENT";
 
+    // a constant for the model matrix
+    constexpr const char* shader_ModelMatrix = "model_matrix";
+
+    // a constant for the view/projection matrix
+    constexpr const char* shader_ViewProjectionMatrix = "vp_matrix";
+
+
     // some pregenerated code.
 
     // the reason for the _transpilerID is significant.
@@ -61,10 +68,14 @@ namespace Engine {
         "layout (location = 1) in vec4 v_colour;\n"
         "layout (location = 2) in vec2 v_uv;\n"
         "layout (location = 3) in vec3 v_normal;\n"
+
         "out vec3 _transpilerID_position;\n"
         "out vec4 _transpilerID_colour;\n"
         "out vec2 _transpilerID_uv;\n"
         "out vec3 _transpilerID_normal;\n"
+
+        "uniform mat4 model_matrix;\n"
+        "uniform mat4 vp_matrix;\n"
     };
 
 
@@ -143,7 +154,7 @@ namespace Engine {
         // auto vertexError = _getShaderCompileErrors(vshader);
         // if (vertexError) { //an error }
         // else { // no error }
-        static const char* _getShaderCompileErrors(GLuint shader);
+        static std::string _getShaderCompileErrors(GLuint shader);
         
         // add this shaderprogram to the program cache.
         void _registerProgram();

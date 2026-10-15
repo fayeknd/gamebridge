@@ -4,7 +4,7 @@
 #include <resources.hpp>
 #include <shader.hpp>
 #include <entity.hpp>
-#include <main_comp.hpp>
+#include <component/main_comp.hpp>
 
 using namespace Engine;
 
@@ -241,6 +241,9 @@ void Window::beginGameLoop() {
     // while glfw believes the window should not close
     while (!glfwWindowShouldClose(m_wnd)) {
         
+        glClear(GLContext::get().glState.m_clearFlags);
+
+        // update all the components of all the entities 
         for (const auto& e : Entity::s_entityList) {
             e.second->updateComponents(0);
         }

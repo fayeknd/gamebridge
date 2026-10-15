@@ -1,9 +1,9 @@
 #pragma once
-#include <component.hpp>
+#include <component/component.hpp>
 
 namespace Engine {
     
-    class MainComponent : public EntityComponent {
+    class MainComponent : public IComponent {
 
     public:
 

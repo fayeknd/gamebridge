@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <resources.hpp>
+#include <engine.h>
 
 using namespace Engine;
 
@@ -125,7 +126,7 @@ std::shared_ptr<ShaderProgram> ShaderProgram::_createProgramFromStringStream(std
 void ShaderProgram::useProgram() {
 
     // if this program is already bound or was not registered, return early.
-    if (GLContext::get().glState.m_currentProgram == m_programID || !m_registered) return;
+    //if (GLContext::get().glState.m_currentProgram == m_programID || !m_registered) return;
 
     // bind the program.
     glUseProgram(m_programID);
@@ -181,7 +182,7 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
     std::string line;
 
     // writeBuf is used to write to the correct code buffer when needed.
-    std::string* writeBuf; 
+    std::string* writeBuf = nullptr; 
     size_t index = 0;
 
     // loop through all lines of the shader source
@@ -189,6 +190,7 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
         
         // possibility 1: line is vertexIdentifer
         if (line == shader_VertexIdentifier) {
+            
             // current line is the vertex identifier,
             // we are in the vertex source right now.
             // set the write buffer to write to vCode.
@@ -199,6 +201,7 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
         }
         // possibility 2: line is fragmentIdentifier
         else if (line == shader_FragmentIdentifier) {
+
             // current line is the fragment identifier,
             // now we are in the fragment code.
             // same thing, set writeBuf to fCode.
@@ -233,10 +236,9 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
                 // while there are more v_ vars on this line:
                 while (subindex != std::string::npos) {
                     // remove the v_ identifier, replace it with _transpilerID
-                    line.erase(line.begin() + subindex, line.begin() + subindex + 1);
-                    line.insert(subindex, "_transpilerID");
+                    line.replace(subindex, shader_transpilerIdentifier.length(), "_transpilerID_");
                     // try get the next reference of a v_ var on this line
-                    subindex = line.find(shader_transpilerIdentifier, subindex + shader_transpilerIdentifier.length());
+                    subindex = line.find(shader_transpilerIdentifier, subindex + 15); 
                 }
             }
         }
@@ -250,6 +252,22 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
         index++;
     }
 
+    // we strip everything after the last fragment brace.
+    // for reasons im not aware of, sometimes
+    // the shader code can have random trailing
+    // chars at the end of it that prevent compilation.
+    // no idea why probably some uf-8 thing
+    size_t lastFragBrace = fCode.find_last_of('}');
+    if (lastFragBrace != std::string::npos) {
+        fCode.erase(lastFragBrace + 1);
+    }
+
+    // same for vertex code
+    size_t lastVertBrace = vCode.find_last_of('}');
+    if (lastVertBrace != std::string::npos) {
+        vCode.erase(lastVertBrace + 1);
+    }
+
     // create the shader handles
     GLuint vert = glCreateShader(GL_VERTEX_SHADER);
     GLuint frag = glCreateShader(GL_FRAGMENT_SHADER);
@@ -257,20 +275,23 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
     // store the code as char strings (easier)
     const char* vCode_cstr = vCode.c_str();
     const char* fCode_cstr = fCode.c_str();
+    
+    int vCodeLen = static_cast<int>(vCode.length());
+    int fCodeLen = static_cast<int>(fCode.length());
 
     // assign the source code to the shader handles 
-    glShaderSource(vert, 1, &vCode_cstr, NULL);
-    glShaderSource(frag, 1, &fCode_cstr, NULL);
+    glShaderSource(vert, 1, &vCode_cstr, &vCodeLen);
+    glShaderSource(frag, 1, &fCode_cstr, &fCodeLen);
 
     // try compile the shaders
     glCompileShader(vert);
     glCompileShader(frag);
 
     // get any errors given by the glsl compiler
-    const char* verror = _getShaderCompileErrors(vert);
-    const char* ferror = _getShaderCompileErrors(frag);
+    std::string verror = _getShaderCompileErrors(vert);
+    std::string ferror = _getShaderCompileErrors(frag);
 
-    if (verror || ferror) {
+    if (verror != "" || ferror != "") {
         // there have been errors, dump the shader glsl source
         std::cerr << "Shader dump:\nVertex:\n\n" << vCode << "\n\nFragment:\n\n" << fCode << std::endl; 
         std::cerr << "ShaderProgram with key '" << m_key << "' has compilation errors!\nVertex Error(s):\n" << verror << "Fragment Error(s):\n" << ferror << std::endl;
@@ -292,6 +313,14 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
     // link the program together.
     glLinkProgram(m_programID);
 
+    char linkLog[512];
+    int stat;
+    glGetProgramiv(m_programID, GL_LINK_STATUS, &stat);
+    if (!stat) {
+        glGetProgramInfoLog(m_programID, 512, NULL, linkLog);
+        std::cout << "ShaderProgram with key '" << m_key << " linking failed! " << linkLog << std::endl;
+    }
+
     // cleanup, we are done with these. they are linked to the program now.
     glDeleteShader(vert);
     glDeleteShader(frag);
@@ -301,21 +330,27 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
 }
 
 // check if this shader step has any compile errors. returns 0 if no errors.
-const char* ShaderProgram::_getShaderCompileErrors(GLuint shader) {
+std::string ShaderProgram::_getShaderCompileErrors(GLuint shader) {
+    // store the success code
     int success;
-    // error log will probably never be bigger than 512 anyway so this is ok (prolly)
-    char log[512];
-    // get compile status code
+    // get the compile status code
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if (!success) {
-        // failed, get any errors
-        glGetShaderInfoLog(shader, 512, NULL, log);
-        // return a const char string.
-        const char* _ = log;
-        return _; 
+        // get log length from opengl
+        int logLength = 0;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
+        
+        if (logLength > 0) {
+            // allocate a string with enough room to store the log
+            std::string infoLog(logLength, '\0');
+            
+            // get the log
+            glGetShaderInfoLog(shader, logLength, NULL, &infoLog[0]);
+            return infoLog;
+        }
+        return "Unknown shader compilation error. Driver returned empty log.";
     }
-    // no errors, just return 0 or null.
-    return NULL;
+    return "";
 }
 
 // returns a shared_ptr to an existing shader via a shader name.
@@ -346,7 +381,7 @@ int ShaderProgram::getUniformLoc(const std::string &uniformLoc) {
     int loc = glGetUniformLocation(m_programID, uniformLoc.c_str());
     if (loc == -1) {
         // location doesn't exist
-        std::cerr << "ShaderProgram with key '" << m_key << "' Uniform '" << uniformLoc << "' doesn't exist!\n";
+        //std::cerr << "ShaderProgram with key '" << m_key << "' Uniform '" << uniformLoc << "' doesn't exist!\n";
         return -1;
         // we could just add this incorrect location to the cache,
         // but then it might go unnoticed in development.

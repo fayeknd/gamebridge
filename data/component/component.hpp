@@ -1,8 +1,9 @@
 #pragma once
 #include <unordered_map>
 #include <iostream>
-#include <idpool.hpp>
 #include <memory>
+#include <cstdint>
+#include <transform.hpp>
 
 namespace Engine {
 
@@ -11,33 +12,39 @@ namespace Engine {
 
     using ComponentTypeID = uint32_t;
 
-    class EntityComponent {
+    class IComponent {
     private:
 
         ComponentTypeID m_typeID;
         
         Entity* m_entity;
 
-        static inline IDPool<ComponentTypeID> s_componentTypePool;
+        static ComponentTypeID _nextID();
+
+        template <typename T>
+        static ComponentTypeID _getID() {
+            static const ComponentTypeID id = _nextID();
+            return id;
+        }
 
     public:
 
-        virtual ~EntityComponent() = default; 
+        virtual ~IComponent() = default; 
     
         Entity& getEntity();
         const Entity& getEntity() const;
         #define entity this->getEntity()
 
         const ComponentTypeID getTypeID() const;
+
         template <typename T>
         static ComponentTypeID getComponentTypeID() {
 
-            if (!std::is_base_of<EntityComponent, T>::value) {
+            if (!std::is_base_of<IComponent, T>::value) {
                 std::cerr << "Provided class is not a component!\n"; 
                 return -1;
             }
-            ComponentTypeID id = s_componentTypePool.getNewID();
-            return id;
+            return _getID<T>();
 
         }
 

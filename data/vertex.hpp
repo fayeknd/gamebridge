@@ -18,5 +18,13 @@ namespace Engine {
 
         // a normalized vec3. just a direction.
         fm::vec3 normal;
+
+        Vertex(fm::vec3 p, fm::vec4 c, fm::vec2 u, fm::vec3 n) {
+            position = p;
+            colour = c;
+            uv = u;
+            normal = n;
+        }
+
     };
 }

@@ -1,4 +1,7 @@
 #pragma once
+#include <string>
+#include <algorithm>
+#include <cstdint>
 
 #define ERR_GLFW_INIT_FAILED 0x01
 #define GL_CREATE_CONTEXT_SUCCESS 0x02
@@ -12,3 +15,10 @@
 #define SHADER_COMPILE_SUCCESS 0x0D
 #define GLAD_LOAD_SUCCESS 0x0E
 #define ERR_NO_ROOT_ENTITY 0x0F
+
+using bitfield = int;
+
+inline void stripUnicode(std::string& str)
+{
+    str.erase(remove_if(str.begin(), str.end(), [](unsigned char c) {return !(c >= 0 && c < 128); }), str.end());
+}

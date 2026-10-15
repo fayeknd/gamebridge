@@ -1,9 +1,9 @@
 #VERTEX
 void main() {
-    gl_Position = vec4(v_position, 1);
+    gl_Position = vp_matrix * model_matrix * vec4(v_position, 1.0);
 }
 
 #FRAGMENT
 void main() {
-    fragCol = vec4(v_position, 1);
-}
+    fragCol = vec4(v_position, 1.0);
+} 
