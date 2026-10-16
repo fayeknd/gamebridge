@@ -68,16 +68,29 @@ namespace Engine {
         // constructor with name, copied
         Entity(std::string name) : m_name(std::move(name)) {};
 
+        // if disabling this entity, we should still run all the 
+        // update functions for that frame and then let it be disabled on the next.
+        // this might be kind of stupid. if this needs to change lmk
         bool m_enabled = true;
+        // mark if the "enabled" state has changed
         bool m_enabledDirty = false;
 
+        // update the enabled state.
         void _updateEnabled();
 
+        // this entity's component map. access a component via a componentTypeID.
         std::unordered_map<ComponentTypeID, std::shared_ptr<IComponent>> m_componentMap;
 
+        // call every update function on all components
+        void _updateComponents(float delta);
+
+        // call every lateUpdate function on all components
+        void _lateUpdateComponents(float delta);
 
     public:
     
+        // this entity's transform. by itself, doesn't actually do anything.
+        // only useful when utilised by things such as a rendering component.
         Transform transform;
 
         ~Entity();
@@ -123,54 +136,90 @@ namespace Engine {
         // set this entity's parent
         void setParent(Entity* e);
 
+        // add a component to this entity.
+        // if that entity has a constructor, pass constructor
+        // args through as parameters. for example: 
+        // auto player = entity->addComponent<Player>("PlayerName", playerHealth, canDoubleJump);
         template <typename T, typename ... Args>
         T* addComponent(Args&& ... targs) {
-            
+            // create the component instance itself.
+            // std::forward will just forward the arguments to any
+            // constructor present in the given component class.
             auto component = std::make_unique<T>(std::forward<Args>(targs)...);
+            // assign the component's entity pointer to this.
             component->m_entity = this;
 
+            // get the component type id
             ComponentTypeID id = IComponent::getComponentTypeID<T>();
+            // assign the component it's type id for easy internal lookup
             component->m_typeID = id;
 
+            // move the component to the component map
             m_componentMap[id] = std::move(component);
+            // if this entity is enabled, run the init function.
             if (m_enabled) m_componentMap[id]->init();
+            // return a pointer to the component we just made.
+            // allows for instant assignment.
+            // (auto c = e->addComponent<Component>(), c is the component) 
             return static_cast<T*>(m_componentMap[id].get());
         }
 
+        // get a component from the entity.
         template <typename T>
         T* getComponent() {
 
+            // try find a component with the type given in the component man
             auto it = m_componentMap.find(IComponent::getComponentTypeID<T>());
             if (it != m_componentMap.end()) {
+                // component found
                 
                 // we know what type of component this is
                 // (static cast is much cheaper than dynamic_cast)
                 return static_cast<T*>(it->second.get());
             }
 
+            // no component was found.
             return nullptr;
         }
 
+        // remove a component from 
         template <typename T> 
         void removeComponent() {
 
+            // try find the component
             auto it = m_componentMap.find(IComponent::getComponentTypeID<T>());
             if (it != m_componentMap.end()) {
 
+                // component found. get a pointer to it
                 auto component = m_componentMap[it];
+
+                // call the destroy function
                 component->onDestroy();
-                // just in case 
+                // just in case the entity isn't destroyed, unhook it
+                // from the entity.
                 component->m_entity = nullptr;
+
+                // erase the component from the map.
+                // if there are no shared_ptrs to this component,
+                // it will just automatically deallocate.
                 m_componentMap.erase(it);
+                return; 
             }
+            // no component was found.
+            std::cerr << "No component of that type was found on entity " << m_name << ".\n";
         }
 
-        void updateComponents(float delta);
-        void lateUpdateComponents(float delta);
-
+        // return if this entity is enabled or not
         bool isEnabled();
+
+        // queue this entity to change it's enabled state at the end of the frame.
         void setEnabled(bool enabled);
 
+        // force the entity to change it's enabled state immediately.
+        void forceSetEnabled(bool enabled);
+
+        // update loop happens in window, allow private function calling from
+        // the window class.
         friend class Window; 
 
     };

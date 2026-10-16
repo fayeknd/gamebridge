@@ -207,32 +207,49 @@ void Entity::setParent(Entity* e) {
     m_parent = s_entityList[e->m_id];
 }
 
-void Entity::updateComponents(float delta) {
-    if (!m_enabled) return; 
+// call every update function on all components
+void Entity::_updateComponents(float delta) {
+    if (!m_enabled) return; // return early if entity is not enabled
+
+    // loop through every component and call update.
     for (const auto& component : m_componentMap) {
         component.second->update(delta);
     }
+    // update this entity's enabled state.
+    // does nothing if the enabled state isnt queued to change.
     _updateEnabled();
 }
 
-void Entity::lateUpdateComponents(float delta) {
+// call every lateUpdate function on all components
+void Entity::_lateUpdateComponents(float delta) {
     if (!m_enabled) return;
+    
+    // loop through every component and call lateUpdate.
     for (const auto& component : m_componentMap) {
         component.second->lateUpdate(delta);
     }
     _updateEnabled();
 }
 
+// return if this entity is enabled or not.
 bool Entity::isEnabled() {
     return m_enabled;
 }
 
+// queue this entity to change it's enabled state at the end of the frame.
 void Entity::setEnabled(bool enabled) {
     if (m_enabled != enabled) m_enabledDirty = true;
 }
 
+// force the entity to change it's enabled state immediately.
+void Entity::forceSetEnabled(bool enabled) {
+    m_enabled = enabled;
+}
+
+// update this entity's enabled state.
 void Entity::_updateEnabled() {
-    if (!m_enabledDirty) return;
+    if (!m_enabledDirty) return; // no state change, return early.
+    // state has been changed, apply the changes
     m_enabledDirty = false;
     m_enabled = !m_enabled;
 }

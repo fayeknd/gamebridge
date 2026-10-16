@@ -3,11 +3,14 @@
 
 #include <component/renderable.hpp>
 #include <resources.hpp>
+#include <window.hpp>
 
 using namespace Engine;
 
 void MainComponent::init() {
     
+    Window::get().setWndSize({1280, 720});
+
     auto v = std::vector<Vertex>() = {
         {{ 0.5f,  0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
         {{ 0.7f, -0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
@@ -27,7 +30,7 @@ void MainComponent::init() {
     renderer->m_mesh = mesh;
     renderer->m_shaderProgram = program;
 
-    square->transform.setPositionX(0.5f);
+    square->transform.setRotationX(70);
 
     glClearColor(1, 0.5, 1, 1);
 }

@@ -211,11 +211,6 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
         }
         // possibility 3: something else
         else {
-            // if this line contains the phrase "main()" and we are in vertex code
-            if (line.find("main()") != std::string::npos && writeBuf == &vCode) {
-                // add some more vertex boilerplate
-                line += shader_vertexOut;
-            }
 
             // so because of some in/out naming conflicions that glsl has,
             // as i explained in the shader header,
@@ -252,21 +247,15 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
         index++;
     }
 
-    // we strip everything after the last fragment brace.
-    // for reasons im not aware of, sometimes
-    // the shader code can have random trailing
-    // chars at the end of it that prevent compilation.
-    // no idea why probably some uf-8 thing
-    size_t lastFragBrace = fCode.find_last_of('}');
-    if (lastFragBrace != std::string::npos) {
-        fCode.erase(lastFragBrace + 1);
-    }
-
-    // same for vertex code
+    // insert the vertex out code at the end of the 
+    // vertex main() function
     size_t lastVertBrace = vCode.find_last_of('}');
     if (lastVertBrace != std::string::npos) {
-        vCode.erase(lastVertBrace + 1);
+        lastVertBrace -= 1;
+        vCode.insert(lastVertBrace, shader_vertexOut);
     }
+
+    //std::cout << vCode << std::endl << fCode << std::endl;
 
     // create the shader handles
     GLuint vert = glCreateShader(GL_VERTEX_SHADER);

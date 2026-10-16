@@ -3,6 +3,8 @@
 
 namespace fm {
 
+    // very proud of the matrix class. 4
+
     template <typename T>
     class _mat4x4 {
     public:

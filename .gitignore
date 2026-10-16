@@ -1,5 +1,7 @@
 build/*
 out/*
 CMakePresets.json
-.vs/
-.vscode/
+.vs/*
+.vscode/*
+_deps/*
+CMakeFiles/*

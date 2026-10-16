@@ -13,6 +13,9 @@
 
 namespace Engine {
 
+    // TODO : create a function to set default uniforms for a shader
+    // to reduce verbosity / boilerplate
+
     // this whole section should really change
 
     // a constant for the layout position of the vertex position attrib.
@@ -92,7 +95,7 @@ namespace Engine {
     // this gets added to the main function of the vertex shader
     // to assign the value of the out v_vars for the frag shader.
     constexpr const char* shader_vertexOut = {
-        "\n    _transpilerID_position = v_position;\n"
+        "\n    _transpilerID_position = gl_Position.xyz;\n"
         "    _transpilerID_colour = v_colour;\n"
         "    _transpilerID_uv = v_uv;\n"
         "    _transpilerID_normal = v_normal;\n"

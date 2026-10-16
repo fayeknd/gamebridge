@@ -3,6 +3,8 @@
 
 namespace Engine {
     
+    // The main entrypoint component. The program
+    // will assign this to the root component automatically.
     class MainComponent : public IComponent {
 
     public:

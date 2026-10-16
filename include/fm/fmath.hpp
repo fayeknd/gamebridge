@@ -1,5 +1,23 @@
 #pragma once
 #include "types/mat4x4.hpp"
+
+// ---------------------------------------------------------------------------------
+//
+// (16/10/26) a small header-only graphics maths library written by me (fayeknd)
+//
+// fun fact: this was initially written as a replacement for kazmath
+// for a geometry dash 3D rendering api mod. using glm was an option, but 
+// writing my own functions sounded more fun, and it was.
+// feel free to use this yourself: https://github.com/fayeknd/fmath
+//
+// provides support for simple vector maths and matrix4x4 maths currently.
+// provides vec2, 3, 4 and mat4. any type can be used in the construction. 
+// some default types are provided, such as uvec2, being a vector of unsigned
+// integers. 
+// to use a custom type, construct via auto v = _vec3<type>(x, y, z)
+//
+// ---------------------------------------------------------------------------------
+
 namespace fm {
 
     template<typename T = float>

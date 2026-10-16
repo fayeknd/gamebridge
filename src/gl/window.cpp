@@ -241,14 +241,15 @@ void Window::beginGameLoop() {
     // while glfw believes the window should not close
     while (!glfwWindowShouldClose(m_wnd)) {
         
+        // TODO : move m_clearFlags to a future camera class
         glClear(GLContext::get().glState.m_clearFlags);
 
         // update all the components of all the entities 
         for (const auto& e : Entity::s_entityList) {
-            e.second->updateComponents(0);
+            e.second->_updateComponents(0);
         }
         for (const auto& e : Entity::s_entityList) {
-            e.second->lateUpdateComponents(0);
+            e.second->_lateUpdateComponents(0);
         }
 
         // cycle the glfw front and back buffers
