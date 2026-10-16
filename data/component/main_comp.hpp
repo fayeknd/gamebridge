@@ -10,8 +10,8 @@ namespace Engine {
     public:
 
         void init() override;
-        void update(float delta) override;
-        void lateUpdate(float delta) override; 
+        void update(double delta) override;
+        void lateUpdate(double delta) override; 
         void onDestroy() override;
         
     };

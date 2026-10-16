@@ -26,7 +26,7 @@ void IRenderable::_useRenderData() {
 }
 
 // draw
-void IRenderable::lateUpdate(float delta) {
+void IRenderable::lateUpdate(double delta) {
     // if the mesh or shader is null, or if the renderer is disabled, return early
     if (!m_mesh || !m_shaderProgram || !m_render) return;
     _useRenderData(); // use our render data

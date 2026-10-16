@@ -82,10 +82,10 @@ namespace Engine {
         std::unordered_map<ComponentTypeID, std::shared_ptr<IComponent>> m_componentMap;
 
         // call every update function on all components
-        void _updateComponents(float delta);
+        void _updateComponents(double delta);
 
         // call every lateUpdate function on all components
-        void _lateUpdateComponents(float delta);
+        void _lateUpdateComponents(double delta);
 
     public:
     

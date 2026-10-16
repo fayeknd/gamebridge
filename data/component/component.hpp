@@ -105,12 +105,12 @@ namespace Engine {
         // update is obvious, called once per frame. delta time is passed through.
         // i know unity does not pass through delta time, but engines like 
         // cocos2d-x and godot do this, and it's helpful in those. 
-        virtual void update(float delta) {};
+        virtual void update(double delta) {};
 
         // lateUpdate is the second stage of update and all lateUpdate functions
         // are called after all update functions are finished calling.
         // used for things like rendering. "late-stage" game loop stuff.
-        virtual void lateUpdate(float delta) {};
+        virtual void lateUpdate(double delta) {};
 
         // called right before the object gets destroyed. (or dereferenced, 
         // the object won't be destroyed if there is a shared_ptr to it.

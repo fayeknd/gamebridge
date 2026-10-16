@@ -3,7 +3,7 @@
 using namespace Engine;
 
 // get the matrix
-// see renderable.cpp to see where this might be called
+// see src/component/renderable.cpp to see where this might be called
 fm::mat4 Transform::getMatrix() {
     // if the transform isn't dirty, return what's already been computed
     if (!m_dirty) return m_modelMat;

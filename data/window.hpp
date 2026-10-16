@@ -10,10 +10,16 @@ namespace Engine {
     // FullscreenMode is just an enumerator to store different window states.
     // pretty self explanitory.
     enum FullscreenMode {
-        Fullscreen = 0x01,
-        Borderless = 0x02,
-        BorderlessWindowed = 0x03,
-        Windowed = 0x04
+        Fullscreen              = 0x01,
+        Borderless              = 0x02,
+        BorderlessWindowed      = 0x03,
+        Windowed                = 0x04
+    };
+
+    enum VSyncMode {
+        On                      = 1,
+        Off                     = 0,
+        Adaptive                =-1,
     };
 
     // to keep the program simple, the window class is a singleton.
@@ -53,7 +59,48 @@ namespace Engine {
         // handles changing the m_wndSize value and glViewport.
         static void _framebuffer_resize_callback(GLFWwindow* wnd, int w, int h);
 
+        // target frames per second, self explanitory 
+        uint16_t m_targetFramesPerSecond;
+        uint16_t m_currentFramesPerSecond;
+
+        // target delta time. what is used to limit fps.
+        double m_targetFrameDelta;
+
+        // the current vsync mode.
+        VSyncMode m_vsyncMode;
+
+        // the current frame.
+        uint32_t m_frame;
+
     public:
+
+        // these are setters/getters to ensure that targetFrameDelta and
+        // targetFramesPerSecond are representing the same thing.
+        // for instance, an fps of 60 means the delta is 0.0166...
+        // and a delta of 0.0166... means the fps is 60.
+
+        // get desired fps
+        uint16_t getTargetFPS();
+
+        uint16_t getFPS();
+
+        // get desired frame delta
+        double getTargetFrameDelta();
+
+        // set desired fps
+        void setTargetFPS(uint16_t fps);
+
+        // set desired frame delta
+        void setTargetFrameDelta(double delta);
+
+        // get the current vsync mode
+        VSyncMode getVSyncMode();
+
+        // get the frame
+        uint32_t getFrame() { return m_frame; }
+
+        // set the current vsync mode
+        void setVSyncMode(VSyncMode vsm);
 
         // there's a lot of these dotted around the program for a good reason.
         // check out gl_context.hpp for an explanation of why.

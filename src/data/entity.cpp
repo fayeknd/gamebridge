@@ -208,7 +208,7 @@ void Entity::setParent(Entity* e) {
 }
 
 // call every update function on all components
-void Entity::_updateComponents(float delta) {
+void Entity::_updateComponents(double delta) {
     if (!m_enabled) return; // return early if entity is not enabled
 
     // loop through every component and call update.
@@ -221,7 +221,7 @@ void Entity::_updateComponents(float delta) {
 }
 
 // call every lateUpdate function on all components
-void Entity::_lateUpdateComponents(float delta) {
+void Entity::_lateUpdateComponents(double delta) {
     if (!m_enabled) return;
     
     // loop through every component and call lateUpdate.

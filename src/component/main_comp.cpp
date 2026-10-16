@@ -35,11 +35,11 @@ void MainComponent::init() {
     glClearColor(1, 0.5, 1, 1);
 }
 
-void MainComponent::update(float delta) {
-
+void MainComponent::update(double delta) {
+    std::cout << "The frame delta is " << delta << ". Target FPS: " << Window::get().getTargetFPS() << ", Current FPS: " << static_cast<double>(1) / delta << std::endl;
 }
 
-void MainComponent::lateUpdate(float delta) {
+void MainComponent::lateUpdate(double delta) {
 
 }
 

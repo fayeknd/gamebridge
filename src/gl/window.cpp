@@ -5,6 +5,7 @@
 #include <shader.hpp>
 #include <entity.hpp>
 #include <component/main_comp.hpp>
+#include <time.hpp>
 
 using namespace Engine;
 
@@ -130,6 +131,45 @@ void Window::setFullscreenMode(FullscreenMode fm) {
     m_fsMode = fm;
 }
 
+// get the target fps
+uint16_t Window::getTargetFPS() {
+    return m_targetFramesPerSecond;
+}
+
+uint16_t Window::getFPS() {
+    return m_currentFramesPerSecond;
+}
+
+// get the target frame delta
+double Window::getTargetFrameDelta() {
+    return m_targetFrameDelta;
+}
+
+// set the target fps.
+void Window::setTargetFPS(uint16_t fps) {
+    m_targetFramesPerSecond = fps;
+    // also calculate the new target delta.
+    m_targetFrameDelta = static_cast<double>(1) / static_cast<double>(fps);
+}
+
+// set the target delta time.
+void Window::setTargetFrameDelta(double delta) {
+    m_targetFrameDelta = delta;
+    // also calculate the new target fps.
+    m_targetFramesPerSecond = static_cast<double>(1) / static_cast<double>(delta);
+}
+
+// get the current vsync mode
+VSyncMode Window::getVSyncMode() {
+    return m_vsyncMode;
+}
+
+// set the current vsync mode
+void Window::setVSyncMode(VSyncMode vsm) {
+    m_vsyncMode = vsm;
+    glfwSwapInterval(static_cast<int>(vsm));
+}
+
 // creates the window. this should be the first function to run.
 // a run through of what the parameters defaults are for:
 
@@ -151,6 +191,11 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
 
     // if for whatever reason the m_wnd has already been assigned, return early. 
     if (m_wnd) return ERR_WINDOW_CREATION_FAILED;
+
+    // if the root entity is null, something is wrong. return.
+    if (!Entity::s_root) {
+        return ERR_NO_ROOT_ENTITY;
+    }
 
     // check for default parameter values and set them to the true defaults accordingly.
     // the reason they are -1 is to allow setting defaults to be done with the original variables
@@ -187,9 +232,13 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     // set fullscreen mode passed in
     setFullscreenMode(fsMode);
 
-    if (!Entity::s_root) {
-        return ERR_NO_ROOT_ENTITY;
-    }
+    // set a default target fps
+    setTargetFPS(60);
+    
+    // set the vsync mode
+    setVSyncMode(VSyncMode::Off);
+
+    // add the main entrypoint component to the root entity.
     Entity::s_root->addComponent<MainComponent>();
 
     // window creation succeeded!!
@@ -238,18 +287,37 @@ void Window::_framebuffer_resize_callback(GLFWwindow* wnd, int w, int h) {
 // any cleanup stuff to perform after the program stops.
 void Window::beginGameLoop() {
 
+    Time::s_deltaTimer.start();
+
     // while glfw believes the window should not close
     while (!glfwWindowShouldClose(m_wnd)) {
+
+        // if the delta timer is less than the target frame delta, 
+        // then the frame was finished early. keep going until the 
+        // delta timer is less than or equal to the target delta.
+        // continue keyword means it skips everything else in the loop.
+
+        if (Time::deltaTimeNow() < m_targetFrameDelta) {
+            continue;
+        }
+        // reset the delta timer at the start of this frame
+        Time::_resetDeltaTimer();
+        // and get the delta time
+        double dt = Time::deltaTime();
+        m_currentFramesPerSecond = static_cast<double>(1) / static_cast<double>(dt);
+
+        // increment the frame counter
+        m_frame++;
         
         // TODO : move m_clearFlags to a future camera class
         glClear(GLContext::get().glState.m_clearFlags);
 
         // update all the components of all the entities 
         for (const auto& e : Entity::s_entityList) {
-            e.second->_updateComponents(0);
+            e.second->_updateComponents(dt);
         }
         for (const auto& e : Entity::s_entityList) {
-            e.second->_lateUpdateComponents(0);
+            e.second->_lateUpdateComponents(dt);
         }
 
         // cycle the glfw front and back buffers
