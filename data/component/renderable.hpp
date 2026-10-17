@@ -36,7 +36,7 @@ namespace Engine {
         void init() override;
 
         // where the draw happens
-        void lateUpdate(double delta) override;
+        void draw() override;
         
     };
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include <component/component.hpp>
 #include <idpool.hpp>
+#include <queue>
 
 namespace Engine {
     
@@ -75,11 +76,26 @@ namespace Engine {
         // mark if the "enabled" state has changed
         bool m_enabledDirty = false;
 
+        // specifically for any cameras. effectively m_dirty
+        // but doesn't reset when the transform matrix gets 
+        // computed. just a check to see if the transform
+        // was dirty at any point this frame.
+        bool m_transformDirty = true;
+
         // update the enabled state.
         void _updateEnabled();
 
         // this entity's component map. access a component via a componentTypeID.
         std::unordered_map<ComponentTypeID, std::shared_ptr<IComponent>> m_componentMap;
+
+        // this entity's component queue, for any components that have not been initialised yet.
+        // this is required because if an entity is disabled, components will not run init().
+        // eventually they need to run init, so put them in a queue. when this entity is enabled
+        // again, iterate through this queue and run init().
+        std::queue<std::weak_ptr<IComponent>> m_componentInitQueue;
+
+        // run the init function on the queued components
+        void _initQueuedComponents();
 
         // call every update function on all components
         void _updateComponents(double delta);
@@ -87,8 +103,22 @@ namespace Engine {
         // call every lateUpdate function on all components
         void _lateUpdateComponents(double delta);
 
+        // call every draw function on all components
+        void _drawComponents();
+
+        // poll the behaviour of all components
+        static void _pollComponentBehaviours(double delta);
+
+        // invalidate all the child transforms
+        void _invalidateChildTransforms(); 
     public:
     
+        // queue the m_transformDirty var to get reset
+        bool m_queueTransformReset = false;
+
+        // was the transform dirty at any point this frame?
+        bool wasTransformDirty();
+
         // this entity's transform. by itself, doesn't actually do anything.
         // only useful when utilised by things such as a rendering component.
         Transform transform;
@@ -157,7 +187,13 @@ namespace Engine {
             // move the component to the component map
             m_componentMap[id] = std::move(component);
             // if this entity is enabled, run the init function.
-            if (m_enabled) m_componentMap[id]->init();
+            if (m_enabled) {
+                m_componentMap[id]->initImpl();
+            }
+            else {
+                // not enabled, queue the init function for later.
+                m_componentInitQueue.push(m_componentMap[id]);
+            }
             // return a pointer to the component we just made.
             // allows for instant assignment.
             // (auto c = e->addComponent<Component>(), c is the component) 
@@ -221,6 +257,8 @@ namespace Engine {
         // update loop happens in window, allow private function calling from
         // the window class.
         friend class Window; 
+        // let the transform call _invalidateChildTransforms();
+        friend class Transform;
 
     };
 

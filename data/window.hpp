@@ -74,6 +74,9 @@ namespace Engine {
 
     public:
 
+    // TODO : put this somewhere better
+        bool m_viewportDirty = false;
+
         // these are setters/getters to ensure that targetFrameDelta and
         // targetFramesPerSecond are representing the same thing.
         // for instance, an fps of 60 means the delta is 0.0166...
@@ -101,6 +104,11 @@ namespace Engine {
 
         // set the current vsync mode
         void setVSyncMode(VSyncMode vsm);
+
+        // return a fractional aspect ratio (e.g 16:9)
+        fm::uvec2 getFractionalAspectRatio();
+        // return a regular float aspect ratio (e.g 1.7777..)
+        double getAspectRatio();
 
         // there's a lot of these dotted around the program for a good reason.
         // check out gl_context.hpp for an explanation of why.

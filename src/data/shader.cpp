@@ -251,6 +251,7 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
     // vertex main() function
     size_t lastVertBrace = vCode.find_last_of('}');
     if (lastVertBrace != std::string::npos) {
+        // go back 1
         lastVertBrace -= 1;
         vCode.insert(lastVertBrace, shader_vertexOut);
     }

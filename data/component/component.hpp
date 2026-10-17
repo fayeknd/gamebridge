@@ -64,7 +64,18 @@ namespace Engine {
             return id;
         }
 
+        // has this component's init() been run?
+        bool m_hasInit;
+
+    protected:
+
+        // init() is called when the component is added to an entity, once.
+        virtual void init() {};
+
     public:
+
+        // returns if the init function has been run yet.
+        bool hasInitRun(); 
 
         virtual ~IComponent() = default; 
 
@@ -78,6 +89,9 @@ namespace Engine {
         // without entity being writable. just feels nicer to use.
         #define entity this->getEntity()
 
+        // makes it a bit easier to run the base initialiser
+        #define baseinit IComponent::init()
+        
         // get this instance's typeid.
         const ComponentTypeID getTypeID() const;
 
@@ -97,10 +111,19 @@ namespace Engine {
 
         }
 
-        // virtual basic behaviour functions.
+        // external init function. this is the externally visible
+        // init function. used so each component does not have to call
+        // the base init to have m_hasInit set to true, while calling
+        // init will still set it to true. useful!
+        void initImpl() {
+            // set hasInit to true
+            m_hasInit = true;
+            // run the init function
+            init();
+        }
 
-        // init() is called when the component is added to an entity, once.
-        virtual void init() {};
+
+        // virtual basic behaviour functions.
 
         // update is obvious, called once per frame. delta time is passed through.
         // i know unity does not pass through delta time, but engines like 
@@ -109,14 +132,17 @@ namespace Engine {
 
         // lateUpdate is the second stage of update and all lateUpdate functions
         // are called after all update functions are finished calling.
-        // used for things like rendering. "late-stage" game loop stuff.
         virtual void lateUpdate(double delta) {};
+
+        // final stage in the game loop. used for anything to do with drawing.
+        virtual void draw() {};
 
         // called right before the object gets destroyed. (or dereferenced, 
         // the object won't be destroyed if there is a shared_ptr to it.
         // this function will still run in that scenario though. don't store
         // a shared_ptr to any component.)
         virtual void onDestroy() {};
+
     
 
         // allow the Entity class full access to a component's functions.

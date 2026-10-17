@@ -1,5 +1,6 @@
 #pragma once
 #include "../degrad.hpp"
+#include <cstdint>
 
 namespace fm {
     
@@ -202,6 +203,7 @@ namespace fm {
     inline _vec4<T> unit_vector(const _vec4<T>& v) {
         return v / v.length();
     };
+
     using vec4  = _vec4<float>;
     using ivec4 = _vec4<int>;
     using uvec4 = _vec4<unsigned int>;
@@ -209,4 +211,6 @@ namespace fm {
     using bvec4 = _vec4<bool>;
     using lvec4 = _vec4<long>; 
     using svec4 = _vec4<short>;
+
+    using col   = vec4;
 }

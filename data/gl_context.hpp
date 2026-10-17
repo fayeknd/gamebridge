@@ -78,9 +78,6 @@ namespace Engine {
             // the current render flag information
             RenderData renderData;
 
-            // the buffers to clear
-            bitfield m_clearFlags = (GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
         } glState;
 
     };

@@ -3,7 +3,21 @@
 
 namespace fm {
 
-    // very proud of the matrix class. 4
+    template <typename T>
+    class _mat4x4decomp {
+    public:
+        _vec3<T> position;
+        _vec3<T> rotation;
+        _vec3<T> scale;
+        _vec3<T> skew;
+    };
+    
+    // very proud of the matrix class. 
+    // TODO : go through and comment all of this.
+    // most of this is from wikipedia and stackoverflow
+    // and some really niche blog sites i could not
+    // possibly rediscover, so this is in desperate need
+    // of documenting.
 
     template <typename T>
     class _mat4x4 {
@@ -46,6 +60,12 @@ namespace fm {
 
         _mat4x4<T> transposed();
         _mat4x4<T>& transpose();
+
+        _mat4x4<T> inversed();
+        _mat4x4<T>& inverse();
+
+        _mat4x4decomp<T> decompose();
+        _vec3<T> extractEuler();
 
         T& at(int row, int column);
         _mat4x4<T>& operator=(const _mat4x4<T>& m);
@@ -314,7 +334,7 @@ namespace fm {
         return _;
     }
     template <typename T>
-    inline _vec3<T> _vec3<T>::transform(const _mat4x4<T>& mat) const {
+    inline _vec3<T> _vec3<T>::transform(const _mat4x4<T>& mat) {
         *this = this->transformed(mat);
         return *this;
     }
@@ -333,6 +353,162 @@ namespace fm {
         *this = this->transposed();
         return *this;
     }
+    template <typename T>
+    // https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
+    inline _mat4x4decomp<T> _mat4x4<T>::decompose() {
+        _mat4x4decomp<T> d;
+
+        d.position.x = m_data[3][0];
+        d.position.y = m_data[3][1];
+        d.position.z = m_data[3][2];
+
+        // upper-left columns
+        T ULcolumns[3][3];
+
+        for (size_t i = 0; i < 3; i++) {
+            for (size_t j = 0; j < 3; j++) {
+                ULcolumns[i][j] = m_data[i][j];;
+            }
+        }
+
+        // helper function
+        auto column = [&](size_t i) {
+            return _vec3<T>{ULcolumns[i][0], ULcolumns[i][1], ULcolumns[i][2]};
+        };
+
+        d.scale.x = column(0).length(); // scale X
+        for (size_t i = 0; i < 3; ++i) {
+            ULcolumns[0][i] /= d.scale.x; 
+        }
+
+        d.skew.x = column(0).dot(column(1)); // skew XY
+        for (size_t i = 0; i < 3; ++i) {
+            ULcolumns[1][i] -= d.skew.x * ULcolumns[0][i];
+        }
+
+        d.scale.y = column(1).length(); // scale Y
+        for (size_t i = 0; i < 3; ++i) {
+            ULcolumns[1][i] /= d.scale.y; 
+        }
+
+        d.skew.y /= d.scale.y;
+
+        d.skew.y = column(0).dot(column(2)); // skew XZ
+        for (size_t i = 0; i < 3; ++i) {
+            ULcolumns[2][i] -= d.skew.y * ULcolumns[0][i];
+        }
+
+        d.skew.z = column(1).dot(column(2)); // skew YZ
+        for (size_t i = 0; i < 3; ++i) { 
+            ULcolumns[2][i] -= d.skew.z * ULcolumns[1][i]; 
+        }
+
+        d.scale.z = column(2).length(); // scale Z
+        for (size_t i = 0; i < 3; ++i) { 
+            ULcolumns[2][i] /= d.scale.z; 
+        }
+
+        d.skew.y /= d.scale.z;
+        d.skew.z /= d.scale.z;
+
+        // check for a orientation flip or negative determinant
+        T det = {
+            ULcolumns[0][0] * (ULcolumns[1][1] * ULcolumns[2][2] - ULcolumns[1][2] * ULcolumns[2][1]) -
+            ULcolumns[0][1] * (ULcolumns[1][0] * ULcolumns[2][2] - ULcolumns[1][2] * ULcolumns[2][0]) +
+            ULcolumns[0][2] * (ULcolumns[1][0] * ULcolumns[2][1] - ULcolumns[1][1] * ULcolumns[2][0]) 
+        };
+        if (det < 0) {
+            d.scale.z *= -1.0; // flip z
+            for (size_t i = 0; i < 3; ++i) {
+                ULcolumns[2][i] *= -1.0;
+            }
+        }
+
+        d.rotation = _mat4x4<T>(
+            ULcolumns[0][0], ULcolumns[0][1], ULcolumns[0][2], 0,
+            ULcolumns[1][0], ULcolumns[1][1], ULcolumns[1][2], 0,
+            ULcolumns[2][0], ULcolumns[2][1], ULcolumns[2][2], 0,
+            0, 0, 0, 0
+        ).extractEuler();
+        return d;
+    }
+    template <typename T>
+    inline _vec3<T> _mat4x4<T>::extractEuler() {
+        _vec3<T> v;
+        v.x = -std::asin(m_data[2][0]);
+
+        // protect against gimbal lock
+        if (std::cos(v.x) > 0.0001) {
+            v.y  = std::atan2(m_data[2][1], m_data[2][2]);
+            v.z  = std::atan2(m_data[1][0], m_data[0][0]);
+        } else {
+            // gimbal lock, y and z are dependent 
+            v.y  = 0.0;
+            v.z = std::atan2(-m_data[0][1], m_data[1][1]);
+        }
+        return v;
+    }
+    template <typename T>
+    // https://en.wikipedia.org/wiki/Cramer%27s_rule#:~:text=Finding%20inverse%20matrixedit
+    // https://www.scribd.com/document/869851943/Investigatory-Project
+    inline _mat4x4<T> _mat4x4<T>::inversed() {
+        _mat4x4<T> _;
+
+        // adj(A) = adj(A)A = det(A)I (adjoint)
+
+        // sd = subdeterminants
+        T sd0 = m_data[0][0] * m_data[1][1] - m_data[1][0] * m_data[0][1];
+        T sd1 = m_data[0][0] * m_data[1][2] - m_data[1][0] * m_data[0][2];
+        T sd2 = m_data[0][0] * m_data[1][3] - m_data[1][0] * m_data[0][3];
+        T sd3 = m_data[0][1] * m_data[1][2] - m_data[1][1] * m_data[0][2];
+        T sd4 = m_data[0][1] * m_data[1][3] - m_data[1][1] * m_data[0][3];
+        T sd5 = m_data[0][2] * m_data[1][3] - m_data[1][2] * m_data[0][3];
+
+        T c0 = m_data[2][0] * m_data[3][1] - m_data[3][0] * m_data[2][1];
+        T c1 = m_data[2][0] * m_data[3][2] - m_data[3][0] * m_data[2][2];
+        T c2 = m_data[2][0] * m_data[3][3] - m_data[3][0] * m_data[2][3];
+        T c3 = m_data[2][1] * m_data[3][2] - m_data[3][1] * m_data[2][2];
+        T c4 = m_data[2][1] * m_data[3][3] - m_data[3][1] * m_data[2][3];
+        T c5 = m_data[2][2] * m_data[3][3] - m_data[3][2] * m_data[2][3];
+
+        T det = sd0 * c5 - sd1 * c4 + sd2 * c3 + sd3 * c2 - sd4 * c1 + sd5 * c0;
+
+        // have you ever heard the phrase "fuck it we ball"?
+        // i am typing in random things i have found from random websites nobody has ever heard of
+        // i do not know what i am writing i barely know what an adjugate is it is 4 am
+
+        if (std::abs(det) < 1e-6) return _mat4x4<T>::identity(); // don't divide by zero 
+        T invDet = static_cast<T>(1.0) / det;
+
+        // adjoint shit multiplied by the inverse determinindwaikntf
+        _.m_data[0][0] = ( m_data[1][1] * c5  - m_data[1][2] * c4  + m_data[1][3] * c3 ) * invDet;
+        _.m_data[0][1] = (-m_data[0][1] * c5  + m_data[0][2] * c4  - m_data[0][3] * c3 ) * invDet;
+        _.m_data[0][2] = ( m_data[3][1] * sd5 - m_data[3][2] * sd4 + m_data[3][3] * sd3) * invDet;
+        _.m_data[0][3] = (-m_data[2][1] * sd5 + m_data[2][2] * sd4 - m_data[2][3] * sd3) * invDet;
+
+        _.m_data[1][0] = (-m_data[1][0] * c5  + m_data[1][2] * c2  - m_data[1][3] * c1 ) * invDet;
+        _.m_data[1][1] = ( m_data[0][0] * c5  - m_data[0][2] * c2  + m_data[0][3] * c1 ) * invDet;
+        _.m_data[1][2] = (-m_data[3][0] * sd5 + m_data[3][2] * sd2 - m_data[3][3] * sd1) * invDet;
+        _.m_data[1][3] = ( m_data[2][0] * sd5 - m_data[2][2] * sd2 + m_data[2][3] * sd1) * invDet;
+
+        _.m_data[2][0] = ( m_data[1][0] * c4  - m_data[1][1] * c2  + m_data[1][3] * c0 ) * invDet;
+        _.m_data[2][1] = (-m_data[0][0] * c4  + m_data[0][1] * c2  - m_data[0][3] * c0 ) * invDet;
+        _.m_data[2][2] = ( m_data[3][0] * sd4 - m_data[3][1] * sd2 + m_data[3][3] * sd0) * invDet;
+        _.m_data[2][3] = (-m_data[2][0] * sd4 + m_data[2][1] * sd2 - m_data[2][3] * sd0) * invDet;
+
+        _.m_data[3][0] = (-m_data[1][0] * c3  + m_data[1][1] * c1  - m_data[1][2] * c0 ) * invDet;
+        _.m_data[3][1] = ( m_data[0][0] * c3  - m_data[0][1] * c1  + m_data[0][2] * c0 ) * invDet;
+        _.m_data[3][2] = (-m_data[3][0] * sd3 + m_data[3][1] * sd1 - m_data[3][2] * sd0) * invDet;
+        _.m_data[3][3] = ( m_data[2][0] * sd3 - m_data[2][1] * sd1 + m_data[2][2] * sd0) * invDet;
+
+        return _;
+    }
+    template <typename T>
+    inline _mat4x4<T>& _mat4x4<T>::inverse() {
+        *this = this->inversed();
+        return *this;
+    }
+
     using mat4  = _mat4x4<float>;
     using imat4 = _mat4x4<bool>;
     using dmat4 = _mat4x4<double>;

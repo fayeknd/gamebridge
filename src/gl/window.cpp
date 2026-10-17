@@ -6,6 +6,8 @@
 #include <entity.hpp>
 #include <component/main_comp.hpp>
 #include <time.hpp>
+#include <component/camera.hpp>
+#include <numeric>
 
 using namespace Engine;
 
@@ -170,6 +172,22 @@ void Window::setVSyncMode(VSyncMode vsm) {
     glfwSwapInterval(static_cast<int>(vsm));
 }
 
+fm::uvec2 Window::getFractionalAspectRatio() {
+    // get the greatest common divisor
+    int div = std::gcd(m_wndSize.x, m_wndSize.y);
+    // get ratio width
+    uint8_t rWidth  = m_wndSize.x / div;
+    // get ratio height
+    uint8_t rHeight = m_wndSize.y / div;
+    // awesome!
+    return {rWidth, rHeight};
+}
+
+double Window::getAspectRatio() {
+    // width / height = aspect
+    return static_cast<double>(m_wndSize.x) / static_cast<double>(m_wndSize.y);
+}
+
 // creates the window. this should be the first function to run.
 // a run through of what the parameters defaults are for:
 
@@ -278,6 +296,7 @@ void Window::_framebuffer_resize_callback(GLFWwindow* wnd, int w, int h) {
 
     // keep the viewport up to date
     glViewport(0, 0, w, h);
+    get().m_viewportDirty = true;
 
     // make sure m_wndSize is aware of the updated size
     Window::get().m_wndSize = fm::vec<unsigned int>(w,h);
@@ -300,6 +319,7 @@ void Window::beginGameLoop() {
         if (Time::deltaTimeNow() < m_targetFrameDelta) {
             continue;
         }
+        auto cam = Camera::activeCamera();
         // reset the delta timer at the start of this frame
         Time::_resetDeltaTimer();
         // and get the delta time
@@ -309,20 +329,24 @@ void Window::beginGameLoop() {
         // increment the frame counter
         m_frame++;
         
-        // TODO : move m_clearFlags to a future camera class
-        glClear(GLContext::get().glState.m_clearFlags);
+        if (!cam) {
+            std::cerr << "No active camera in game! There has to be an active camera for any behaviour to occurr.\n";
+        }
+        else {
+            glClear(cam->m_clearFlags);
+            glClearColor(cam->m_clearCol.x, cam->m_clearCol.y, cam->m_clearCol.z, cam->m_clearCol.w);
+        }
 
-        // update all the components of all the entities 
-        for (const auto& e : Entity::s_entityList) {
-            e.second->_updateComponents(dt);
-        }
-        for (const auto& e : Entity::s_entityList) {
-            e.second->_lateUpdateComponents(dt);
-        }
+        // poll all component behaviours
+        Entity::_pollComponentBehaviours(dt);
 
         // cycle the glfw front and back buffers
         glfwSwapBuffers(m_wnd); 
         
+        // end of frame, viewport no longer dirty
+        // comes before glfwPollEvents because the 
+        // framebuffer resize gets called there.
+        m_viewportDirty = false;
         // update window.
         glfwPollEvents();
     }

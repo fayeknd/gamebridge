@@ -3,6 +3,10 @@
 
 using namespace Engine;
 
+bool IComponent::hasInitRun() {
+    return m_hasInit;
+}
+
 // get the next available ID for a component type.
 ComponentTypeID IComponent::_nextID() {
     // create static variable (once)

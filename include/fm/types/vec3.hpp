@@ -30,7 +30,7 @@ namespace fm {
         T dot(_vec3<T> v) const;
         _vec3<T> cross(_vec3<T> v) const;
         _vec3<T> transformed(const _mat4x4<T>& mat) const;
-        _vec3<T> transform(const _mat4x4<T>& mat) const; 
+        _vec3<T> transform(const _mat4x4<T>& mat); 
 
         _vec3<T>& operator+=(const _vec3<T>& v);
         _vec3<T>& operator-=(const _vec3<T>& v);

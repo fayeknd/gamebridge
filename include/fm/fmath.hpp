@@ -7,7 +7,7 @@
 //
 // fun fact: this was initially written as a replacement for kazmath
 // for a geometry dash 3D rendering api mod. using glm was an option, but 
-// writing my own functions sounded more fun, and it was.
+// writing my own functions sounded more fun, and it was. (UPDATE: LIE!!)
 // feel free to use this yourself: https://github.com/fayeknd/fmath
 //
 // provides support for simple vector maths and matrix4x4 maths currently.

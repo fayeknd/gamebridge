@@ -18,6 +18,26 @@ std::shared_ptr<Entity> Entity::create(std::string name) {
     return nullptr;
 }
 
+// was the transform dirty at any point this frame?
+bool Entity::wasTransformDirty() {
+    return m_transformDirty;
+}
+
+void Entity::_initQueuedComponents() {
+    // while the queue has values in it
+    while (m_componentInitQueue.size() != 0) {
+        // get the front component
+        auto component = m_componentInitQueue.front();
+        // if the component pointer is invalid or init has run
+        if (component.expired() || component.lock()->hasInitRun()) {
+            // remove this element
+            m_componentInitQueue.pop();
+            continue;
+        }
+        component.lock()->initImpl();
+    }
+}
+
 // basic initialisation
 void Entity::_init() {
     // get a new entity ID from the pool
@@ -26,6 +46,8 @@ void Entity::_init() {
     s_entityList.emplace(m_id, shared_from_this());
     // parent this to the root node.
     setParent(s_root.get());
+    // assign the transform entity reference
+    transform.m_entity = this;
 }
 
 Entity::~Entity() {
@@ -137,7 +159,6 @@ Entity* Entity::getParent() {
         return p.get();
     }
     // parent not assigned, return nullptr
-    std::cerr << "On Entity " << m_id << ", getParent was called but no parent exists.\n";
     return nullptr;
 }
 
@@ -205,6 +226,7 @@ void Entity::setParent(Entity* e) {
     // actually the cheapest way of doing this.
     // (O(logN))
     m_parent = s_entityList[e->m_id];
+    _invalidateChildTransforms();
 }
 
 // call every update function on all components
@@ -231,6 +253,36 @@ void Entity::_lateUpdateComponents(double delta) {
     _updateEnabled();
 }
 
+void Entity::_pollComponentBehaviours(double delta) {
+    // update all the components of all the entities 
+    for (const auto& e : Entity::s_entityList) {
+        e.second->_updateComponents(delta);
+    }
+    for (const auto& e : Entity::s_entityList) {
+        e.second->_lateUpdateComponents(delta);
+    }
+    for (const auto& e : Entity::s_entityList) {
+        e.second->_drawComponents();
+        if (e.second->m_queueTransformReset) {
+            // set transformDirty to false, this is the end
+            // of the frame as far as behaviour is aware.
+            e.second->m_transformDirty = false; 
+            e.second->m_queueTransformReset = false;
+        }
+    }
+}
+
+// call every draw function on all components
+void Entity::_drawComponents() {
+    if (!m_enabled) return;
+    
+    // loop through every component and call draw.
+    for (const auto& component : m_componentMap) {
+        component.second->draw();
+    }
+    _updateEnabled();
+}
+
 // return if this entity is enabled or not.
 bool Entity::isEnabled() {
     return m_enabled;
@@ -244,6 +296,7 @@ void Entity::setEnabled(bool enabled) {
 // force the entity to change it's enabled state immediately.
 void Entity::forceSetEnabled(bool enabled) {
     m_enabled = enabled;
+    if (m_enabled) _initQueuedComponents();
 }
 
 // update this entity's enabled state.
@@ -252,4 +305,15 @@ void Entity::_updateEnabled() {
     // state has been changed, apply the changes
     m_enabledDirty = false;
     m_enabled = !m_enabled;
+    if (m_enabled) _initQueuedComponents();
+}
+
+// invalidate the transforms of every child
+void Entity::_invalidateChildTransforms() {
+
+    transform.m_globalDirty = true;
+    // loop through every entity
+    for (auto e : s_entityList) {
+        e.second->transform.m_globalDirty = true;
+    }
 }
