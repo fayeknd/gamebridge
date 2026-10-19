@@ -9,11 +9,11 @@ namespace fm {
     public:
 
         T x, y, z, w;
-        _vec4<T>();
-        _vec4<T>(T i);
-        _vec4<T>(T ix, T iy);
-        _vec4<T>(T ix, T iy, T iz);
-        _vec4<T>(T ix, T iy, T iz, T iw);
+        _vec4();
+        _vec4(T i);
+        _vec4(T ix, T iy);
+        _vec4(T ix, T iy, T iz);
+        _vec4(T ix, T iy, T iz, T iw);
 
         inline static const _vec4<T> zero() { return _vec4<T>(); }
         inline static const _vec4<T> one() { return _vec4<T>(1, 1, 1, 1); }

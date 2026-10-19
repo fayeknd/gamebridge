@@ -8,9 +8,9 @@ namespace fm {
     public:
 
         T x, y;
-        _vec2<T>();
-        _vec2<T>(T i);
-        _vec2<T>(T ix, T iy);
+        _vec2();
+        _vec2(T i);
+        _vec2(T ix, T iy);
 
         inline static const _vec2<T> zero() { return _vec2<T>(); }
         inline static const _vec2<T> one() { return _vec2<T>(1, 1); }

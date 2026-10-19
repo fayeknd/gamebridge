@@ -3,6 +3,11 @@ set(CMAKE_CXX_STANDARD 20)
 
 # i fucking hate working with cmake shit but it's also so useful
 
+if(WIN32)
+
+    set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -lwinpthread -ldwmapi -static")
+
+endif()
 
 include(FetchContent)
 FetchContent_Declare(
@@ -33,16 +38,6 @@ add_custom_command(
     COMMENT "Compressing project resources into '${RSC_FILE}' archive..."
 )
 add_custom_target(resources DEPENDS "${RSC_TARGET}")
-
-if(WIN32)
-    set(libzip_DIR "C:/Users/chard/OneDrive/Documents/vcpkg/packages/libzip_x64-windows")
-    if(MINGW)
-        set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++ -lwinpthread -ldwmapi")
-    endif()
-
-elseif(UNIX AND NOT APPLE)
-    set(CMAKE_EXE_LINKER_FLAGS "")
-endif()
 
 project(gamebridge VERSION 0.1.0 LANGUAGES C CXX)
 add_library(glad STATIC 
@@ -79,3 +74,9 @@ target_include_directories(gamebridge PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/includ
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
+
+if (COMMAND copy_dlls)
+
+    copy_dlls(gamebridge)
+
+endif()

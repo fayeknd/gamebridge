@@ -11,10 +11,10 @@ namespace fm {
     public:
 
         T x, y, z;
-        _vec3<T>();
-        _vec3<T>(T i);
-        _vec3<T>(T ix, T iy);
-        _vec3<T>(T ix, T iy, T iz);
+        _vec3();
+        _vec3(T i);
+        _vec3(T ix, T iy);
+        _vec3(T ix, T iy, T iz);
 
         inline static const _vec3<T> zero() { return _vec3<T>(); }
         inline static const _vec3<T> one() { return _vec3<T>(1, 1, 1); }

@@ -1,0 +1,33 @@
+#!/bin/bash
+set -e
+
+if [ "$1" == "-win" ]; then
+
+    echo "Building for Windows, then running..."
+    
+    if [ "$2" == "-fresh" ]; then
+        echo "Fresh build! This might take a minute..."
+        rm -rf ./build/windows 
+        cmake -B build/windows -DCMAKE_TOOLCHAIN_FILE="$PWD/windows-toolchain.cmake" --fresh
+    else
+        cmake -B build/windows -DCMAKE_TOOLCHAIN_FILE="$PWD/windows-toolchain.cmake"
+    fi
+    cmake --build build/windows
+    
+    echo "Launching executable..."
+    wine ./build/windows/gamebridge.exe
+else
+    echo "Building for Linux, then running..."
+    
+    if [ "$2" == "-fresh" ]; then
+        echo "Fresh build! This might take a minute..."
+        rm -rf ./build/linux
+        cmake -B build/linux --fresh
+    else
+        cmake -B build/linux
+    fi
+    cmake --build build/linux 
+    echo "Launching binary..."
+    
+    ./build/linux/gamebridge
+fi 

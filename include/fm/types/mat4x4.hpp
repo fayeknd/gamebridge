@@ -25,10 +25,10 @@ namespace fm {
 
         T m_data[4][4];
 
-        _mat4x4<T>();
-        _mat4x4<T>(T i);
-        _mat4x4<T>(T i[4][4]);
-        _mat4x4<T>(
+        _mat4x4();
+        _mat4x4(T i);
+        _mat4x4(T i[4][4]);
+        _mat4x4(
             T i00, T i01, T i02, T i03,
             T i04, T i05, T i06, T i07,
             T i08, T i09, T i10, T i11,
