@@ -102,7 +102,6 @@ std::shared_ptr<ShaderProgram> ShaderProgram::createProgramFromData(unsigned cha
 
 // create program from a string stream. this string stream gets passed right through to _compileProgram().
 std::shared_ptr<ShaderProgram> ShaderProgram::_createProgramFromStringStream(std::stringstream& ss, std::string shaderKey) {
-
     // create a new shader program
     auto program = std::shared_ptr<ShaderProgram>(new ShaderProgram);
     
@@ -188,6 +187,14 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
     // loop through all lines of the shader source
     while (std::getline(shaderSource, line)) {
         
+#ifdef _WIN32
+        // windows line endings, strip the \r from the end of the line if it exists.
+        // yeah no thanks windows. thanks. yeah thanks. thanks. thanks windows.
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+
+#endif
         // possibility 1: line is vertexIdentifer
         if (line == shader_VertexIdentifier) {
             
@@ -247,6 +254,8 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
         index++;
     }
 
+    std::cout << vCode << std::endl << fCode << std::endl;
+
     // insert the vertex out code at the end of the 
     // vertex main() function
     size_t lastVertBrace = vCode.find_last_of('}');
@@ -256,7 +265,7 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
         vCode.insert(lastVertBrace, shader_vertexOut);
     }
 
-    //std::cout << vCode << std::endl << fCode << std::endl;
+    //std::cout << "Shader code: " << vCode << std::endl << fCode << std::endl;
 
     // create the shader handles
     GLuint vert = glCreateShader(GL_VERTEX_SHADER);

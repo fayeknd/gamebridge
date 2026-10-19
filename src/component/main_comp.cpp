@@ -7,6 +7,7 @@
 #include <component/camera.hpp>
 #include <time.hpp>
 
+
 using namespace Engine;
 
 Entity* square;
@@ -25,7 +26,7 @@ void MainComponent::init() {
     auto i = std::vector<unsigned short>() = {0, 1, 2, 2, 3, 0};
 
     auto mesh = Mesh::createMeshWithData(v, i);
-    auto program = ShaderProgram::createProgramFromPath("resources=>shaders/shader.glsl");
+    auto program = ShaderProgram::createProgramFromPath("stuff=>shaders/shader.glsl");
     ResourceManager::freeArchives();
 
     // create entity and add component
@@ -44,7 +45,7 @@ void MainComponent::init() {
     // push the camera back a bit in the world
     cam->transform.addPositionZ(-5);
     // set the clear colour on the camera
-    camComponent->m_clearCol = {1, 0, 1, 1};
+    camComponent->m_clearCol = {1, 0, 1, 0.1f};
 
     // set the target fps
     Window::get().setTargetFPS(240);

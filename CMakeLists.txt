@@ -20,11 +20,37 @@ set(GLFW_BUILD_TESTS OFF CACHE INTERNAL "")
 set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "")
 FetchContent_MakeAvailable(glfw)
 
+FetchContent_Declare(
+    zlib
+    GIT_REPOSITORY https://github.com/madler/zlib
+    GIT_TAG        v1.3.2
+)
+set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "") 
+FetchContent_MakeAvailable(zlib)
+
+if(NOT TARGET ZLIB::ZLIB AND TARGET zlibstatic)
+    add_library(ZLIB::ZLIB ALIAS zlibstatic)
+endif()
+
+
+FetchContent_Declare(
+    libzip
+    GIT_REPOSITORY https://github.com/nih-at/libzip
+    GIT_TAG        v1.12.1 
+)
+set(LIBZIP_DO_INSTALL OFF CACHE INTERNAL "")
+set(BUILD_DOC OFF CACHE INTERNAL "")
+set(BUILD_EXAMPLES OFF CACHE INTERNAL "")
+set(BUILD_REGRESS OFF CACHE INTERNAL "")
+set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "")
+FetchContent_MakeAvailable(libzip)
+
+
 # resource packing
 # rsc_source is /resources/ in the project directory
 # rsc_out is the output. (in the binary directory.)
 
-set(RSC_FILE "resources")
+set(RSC_FILE "stuff")
 
 set(RSC_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/resources")
 set(RSC_TARGET "${CMAKE_CURRENT_BINARY_DIR}/${RSC_FILE}")
@@ -63,8 +89,8 @@ file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
 add_executable(gamebridge ${PROJECT_SOURCES})
 add_dependencies(gamebridge resources)
 
-find_package(libzip CONFIG REQUIRED)
-target_link_libraries(gamebridge PRIVATE glfw libzip::zip)
+#find_package(libzip CONFIG REQUIRED)
+target_link_libraries(gamebridge PRIVATE glfw zip)
 
 include(CTest)
 enable_testing()
