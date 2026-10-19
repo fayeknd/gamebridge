@@ -6,4 +6,4 @@ void main() {
 #FRAGMENT
 void main() {
     fragCol = vec4(v_position, 1.0);
-} 
+}

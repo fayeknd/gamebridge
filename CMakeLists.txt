@@ -35,6 +35,7 @@ add_custom_command(
 add_custom_target(resources DEPENDS "${RSC_TARGET}")
 
 if(WIN32)
+    set(libzip_DIR "C:/Users/chard/OneDrive/Documents/vcpkg/packages/libzip_x64-windows")
     if(MINGW)
         set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++ -lwinpthread -ldwmapi")
     endif()
@@ -66,7 +67,8 @@ file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
 
 add_executable(gamebridge ${PROJECT_SOURCES})
 add_dependencies(gamebridge resources)
-find_package(libzip REQUIRED)
+
+find_package(libzip CONFIG REQUIRED)
 target_link_libraries(gamebridge PRIVATE glfw libzip::zip)
 
 include(CTest)

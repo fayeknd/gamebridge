@@ -14,7 +14,7 @@ namespace Engine {
     class Entity;
 
     // just to make it clearer what a function is working with
-    using ComponentTypeID = uint32_t;
+    using ComponentTypeID = uint16_t;
 
     // Component interface / abstract class.
     // Components are assigned to entities

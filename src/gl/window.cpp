@@ -246,6 +246,7 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     
     // ensure the glViewport is set to the window size properly.
     glViewport(0, 0, size.x, size.y);
+    m_viewportDirty = true;
 
     // set fullscreen mode passed in
     setFullscreenMode(fsMode);

@@ -6,8 +6,11 @@
 #include <memory>
 #include <vector>
 #include "vertex.hpp"
+#include <idpool.hpp>
 
 namespace Engine {
+
+    using MeshID = uint16_t;
 
     // the mesh class is responsible for holding all of the
     // annjoying verbose opengl boilerplate.
@@ -36,7 +39,7 @@ namespace Engine {
         // buffer/vector of indices to get the
         // count from.
         GLuint m_indexCount;
-
+        
     public:
 
         // deconstructor, just destroys the various buffers.

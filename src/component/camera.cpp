@@ -43,7 +43,7 @@ Camera::~Camera() {
     }
     
 }
-
+// get the active FREAKINGGG CAMERRAAAAA!!!!
 Camera* Camera::activeCamera() {
     return s_activeCamera; 
 }
@@ -62,7 +62,6 @@ fm::mat4 Camera::getProjectionMat() {
     // return if the projection matrix isn't dirty 
     // calculate anyway if the viewport changed
     if (!m_projectionDirty && !Window::get().m_viewportDirty) return m_projectionMatrix;
-    std::cout << "flag\n";
     m_projectionDirty = false;
 
     // switch projection mode cases

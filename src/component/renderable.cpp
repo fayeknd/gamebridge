@@ -44,7 +44,7 @@ void IRenderable::draw() {
     fm::mat4 vpMat = fm::mat4::identity();
     // if main camera exists
     if (Camera::activeCamera()) {
-        // vp is the main camera projection * view
+        // vpMat is the main camera projection * view
         vpMat = Camera::activeCamera()->getProjectionMat() * Camera::activeCamera()->getViewMat();
         // for debug
         /*

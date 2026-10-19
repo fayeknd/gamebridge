@@ -172,6 +172,11 @@ namespace Engine {
         // auto player = entity->addComponent<Player>("PlayerName", playerHealth, canDoubleJump);
         template <typename T, typename ... Args>
         T* addComponent(Args&& ... targs) {
+            // does this entity already have a component with this type?
+            if (getComponent<T>()) {
+                std::cerr << "Entity " << m_name << " already has a component with that type!";
+                return nullptr;
+            }
             // create the component instance itself.
             // std::forward will just forward the arguments to any
             // constructor present in the given component class.
