@@ -3,6 +3,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 # i fucking hate working with cmake shit but it's also so useful
 
+message(NOTICE "Fetching and building GLFW...")
+
 include(FetchContent)
 FetchContent_Declare(
     glfw
@@ -17,8 +19,12 @@ FetchContent_MakeAvailable(glfw)
 # libzip is tricky on windows so fuck you build it from source
 if(WIN32)
 
+    message(NOTICE "Platform is WIN32")
+    message(NOTICE "Fetching and building zlib and libzip...")
+
     set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -lwinpthread -ldwmapi -static")
 
+    # build zlib 
     FetchContent_Declare(
         zlib
         GIT_REPOSITORY https://github.com/madler/zlib
@@ -27,11 +33,20 @@ if(WIN32)
     set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "") 
     FetchContent_MakeAvailable(zlib)
 
-    if(NOT TARGET ZLIB::ZLIB AND TARGET zlibstatic)
-        add_library(ZLIB::ZLIB ALIAS zlibstatic)
+    # lie to cmake and say we found zlib
+    set(ZLIB_FOUND TRUE CACHE INTERNAL "")
+
+    if(TARGET zlibstatic)
+        if(NOT TARGET ZLIB::ZLIB)
+            add_library(ZLIB::ZLIB ALIAS zlibstatic)
+        endif()
+        set(ZLIB_LIBRARIES zlibstatic CACHE INTERNAL "")
     endif()
 
+    set(ZLIB_INCLUDE_DIRS "${zlib_SOURCE_DIR};${zlib_BINARY_DIR}" CACHE INTERNAL "")
+    set(ZLIB_INCLUDE_DIR "${zlib_SOURCE_DIR};${zlib_BINARY_DIR}" CACHE INTERNAL "")
 
+    # build libzip
     FetchContent_Declare(
         libzip
         GIT_REPOSITORY https://github.com/nih-at/libzip
@@ -44,6 +59,8 @@ if(WIN32)
     set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "")
     FetchContent_MakeAvailable(libzip)
 
+else()
+    message(NOTICE "Platform is Linux. Assuming libzip/zlib is already installed.")
 endif()
 
 
