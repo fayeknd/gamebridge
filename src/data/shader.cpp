@@ -254,8 +254,6 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
         index++;
     }
 
-    std::cout << vCode << std::endl << fCode << std::endl;
-
     // insert the vertex out code at the end of the 
     // vertex main() function
     size_t lastVertBrace = vCode.find_last_of('}');

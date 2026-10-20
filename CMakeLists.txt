@@ -3,12 +3,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 # i fucking hate working with cmake shit but it's also so useful
 
-if(WIN32)
-
-    set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -lwinpthread -ldwmapi -static")
-
-endif()
-
 include(FetchContent)
 FetchContent_Declare(
     glfw
@@ -20,30 +14,37 @@ set(GLFW_BUILD_TESTS OFF CACHE INTERNAL "")
 set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "")
 FetchContent_MakeAvailable(glfw)
 
-FetchContent_Declare(
-    zlib
-    GIT_REPOSITORY https://github.com/madler/zlib
-    GIT_TAG        v1.3.2
-)
-set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "") 
-FetchContent_MakeAvailable(zlib)
+# libzip is tricky on windows so fuck you build it from source
+if(WIN32)
 
-if(NOT TARGET ZLIB::ZLIB AND TARGET zlibstatic)
-    add_library(ZLIB::ZLIB ALIAS zlibstatic)
+    set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -lwinpthread -ldwmapi -static")
+
+    FetchContent_Declare(
+        zlib
+        GIT_REPOSITORY https://github.com/madler/zlib
+        GIT_TAG        v1.3.2
+    )
+    set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "") 
+    FetchContent_MakeAvailable(zlib)
+
+    if(NOT TARGET ZLIB::ZLIB AND TARGET zlibstatic)
+        add_library(ZLIB::ZLIB ALIAS zlibstatic)
+    endif()
+
+
+    FetchContent_Declare(
+        libzip
+        GIT_REPOSITORY https://github.com/nih-at/libzip
+        GIT_TAG        v1.12.1 
+    )
+    set(LIBZIP_DO_INSTALL OFF CACHE INTERNAL "")
+    set(BUILD_DOC OFF CACHE INTERNAL "")
+    set(BUILD_EXAMPLES OFF CACHE INTERNAL "")
+    set(BUILD_REGRESS OFF CACHE INTERNAL "")
+    set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "")
+    FetchContent_MakeAvailable(libzip)
+
 endif()
-
-
-FetchContent_Declare(
-    libzip
-    GIT_REPOSITORY https://github.com/nih-at/libzip
-    GIT_TAG        v1.12.1 
-)
-set(LIBZIP_DO_INSTALL OFF CACHE INTERNAL "")
-set(BUILD_DOC OFF CACHE INTERNAL "")
-set(BUILD_EXAMPLES OFF CACHE INTERNAL "")
-set(BUILD_REGRESS OFF CACHE INTERNAL "")
-set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "")
-FetchContent_MakeAvailable(libzip)
 
 
 # resource packing
@@ -89,8 +90,13 @@ file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
 add_executable(gamebridge ${PROJECT_SOURCES})
 add_dependencies(gamebridge resources)
 
-#find_package(libzip CONFIG REQUIRED)
-target_link_libraries(gamebridge PRIVATE glfw zip)
+# haha lol i dont have to build libzip from source fuuuuckkkk yooouuuu
+if (NOT WIN32)
+    find_package(libzip CONFIG REQUIRED)
+    target_link_libraries(gamebridge PRIVATE glfw libzip::zip)
+else()
+    target_link_libraries(gamebridge PRIVATE glfw zip)
+endif()
 
 include(CTest)
 enable_testing()
