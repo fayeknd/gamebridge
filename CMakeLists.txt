@@ -25,7 +25,7 @@ message(NOTICE "Fetching and building zlib...")
 # build zlib 
 FetchContent_Declare(
     zlib
-    GIT_REPOSITORY https://github.com
+    GIT_REPOSITORY https://github.com/madler/zlib
     GIT_TAG        v1.3.2
     FIND_PACKAGE_ARGS NAMES ZLIB
 )
@@ -38,7 +38,7 @@ endif()
 # build libzip
 FetchContent_Declare(
     libzip
-    GIT_REPOSITORY https://github.com
+    GIT_REPOSITORY https://github.com/nih-at/libzip
     GIT_TAG        v1.12.1 
 )
 
