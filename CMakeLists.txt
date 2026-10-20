@@ -25,26 +25,20 @@ message(NOTICE "Fetching and building zlib...")
 # build zlib 
 FetchContent_Declare(
     zlib
-    GIT_REPOSITORY https://github.com/madler/zlib
+    GIT_REPOSITORY https://github.com
     GIT_TAG        v1.3.2
+    FIND_PACKAGE_ARGS NAMES ZLIB
 )
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "") 
 FetchContent_MakeAvailable(zlib)
 
-# if zlib exists on the system, ignore it and use our own.
 if(TARGET zlibstatic AND NOT TARGET ZLIB::ZLIB)
     add_library(ZLIB::ZLIB ALIAS zlibstatic)
 endif()
-
-message(NOTICE "Fetching and building libzip...")
-set(ZLIB_FOUND TRUE CACHE INTERNAL "")
-set(ZLIB_INCLUDE_DIRS "${zlib_SOURCE_DIR};${zlib_BINARY_DIR}" CACHE INTERNAL "")
-set(ZLIB_LIBRARIES zlibstatic CACHE INTERNAL "")
-
 # build libzip
 FetchContent_Declare(
     libzip
-    GIT_REPOSITORY https://github.com/nih-at/libzip
+    GIT_REPOSITORY https://github.com
     GIT_TAG        v1.12.1 
 )
 
@@ -52,7 +46,6 @@ set(ENABLE_ZSTD OFF CACHE BOOL "" FORCE)
 set(ENABLE_LZMA OFF CACHE BOOL "" FORCE)
 set(ENABLE_BZIP2 OFF CACHE BOOL "" FORCE)
 
-# fuck off 
 set(LIBZIP_DO_INSTALL OFF CACHE INTERNAL "")
 set(BUILD_DOC OFF CACHE INTERNAL "")
 set(BUILD_EXAMPLES OFF CACHE INTERNAL "")
@@ -60,7 +53,6 @@ set(BUILD_REGRESS OFF CACHE INTERNAL "")
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "")
 
 FetchContent_MakeAvailable(libzip)
-
 # resource packing
 # rsc_source is /resources/ in the project directory
 # rsc_out is the output. (in the binary directory.)
