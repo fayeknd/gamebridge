@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/gamebridge",
+            "program": "${workspaceFolder}/build/linux/gamebridge",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

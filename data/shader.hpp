@@ -2,6 +2,7 @@
 #include <engine.h>
 #include <gl_context.hpp>
 #include <fm/fmath.hpp>
+#include <cachable.hpp>
 
 #include <string>
 #include <filesystem>
@@ -108,31 +109,21 @@ namespace Engine {
     // enable_shared_from_this enables the use of the shared_from_this() function
     // which allows you to pass a "this" pointer as a shared_ptr.
     // useful for self-registry into the program cache. (s_programCache)
-    class ShaderProgram : public std::enable_shared_from_this<ShaderProgram> {
+    class ShaderProgram : public ICachable<ShaderProgram> {
     private:
+
+        using ICachable::ICachable; 
 
         // the shader program ID for binding to opengl
         GLuint m_programID;
-
-        // determines if the shader been created and compiled successfully
-        bool m_registered = false;
 
         // effectively the shader name. used for the unordered map.
         // this is not called the name because it is primarily used
         // as the key for the map.
         std::string m_key;
 
-        // stores a shared_ptr of every shader instance. simply existing in this map
-        // prevents the shaders from being deleted as the shared_ptr count never drops.
-        // this is because we might not want to unload shaders as reloading and compiling
-        // shaders may be expensive.
-        // if you don't need any of the unused shaders, just call ShaderProgram::cleanup()
-        // to dispose of unused shaders.
-
-        // the program cache stores a shared_ptr to the shader, and a string as an identifier. (m_key)
-        // we ensure the program cache is a reference so that it is deleted AFTER anything that 
-        // references any shaders get deleted to prevent a segfault.
-        static std::unordered_map<std::string, std::shared_ptr<ShaderProgram>>& getProgramCache();
+        // a map of string keys to cacheid keys.
+        static std::unordered_map<std::string, CacheID>& stringToIDMap();
 
         // a cache of this shader's used uniforms. only a performance thing really.
         // glGetUniformLoc is an expensive function and storing the uniform locations
@@ -158,19 +149,12 @@ namespace Engine {
         // if (vertexError) { //an error }
         // else { // no error }
         static std::string _getShaderCompileErrors(GLuint shader);
-        
-        // add this shaderprogram to the program cache.
-        void _registerProgram();
-
-        // remove this program from the shader cachce.
-        void _unregisterProgram();
 
         // create program from a string stream. this string stream gets passed right through to _compileProgram().
         static std::shared_ptr<ShaderProgram> _createProgramFromStringStream(std::stringstream& ss, std::string shaderKey = UNNAMED_SHADER);
     public:
-        
-        // cleanup expired shader refs (shader programs that are currently unreferenced by anything)
-        static void cleanup();
+
+        ~ShaderProgram();
 
         // create program from a file on the disk.
         // can also be used to get a program from an archive
@@ -190,7 +174,7 @@ namespace Engine {
         // to make it clear, an unsigned char array is the raw
         // file data loaded into memory. 
         // aside from that, functionally the same as the above function.
-        static std::shared_ptr<ShaderProgram> createProgramFromData(unsigned char* data, std::string shaderKey = UNNAMED_SHADER);
+        static std::shared_ptr<ShaderProgram> createProgramFromData(unsigned char* data, size_t shaderSize, std::string shaderKey = UNNAMED_SHADER);
 
         // returns a shared_ptr to an existing shader via a shader name.
         // (if that shader exists, that is.)
@@ -202,11 +186,6 @@ namespace Engine {
         // binds this shader program to the gl state if it is not already bound;
         // marks this program as the shader to use for drawing.
         void useProgram();
-        
-        // destructor for shader program. unregisters the program from the program cache.
-        ~ShaderProgram() {
-            _unregisterProgram(); 
-        }
 
         // get the location of a uniform with the help of the uniform cache.
         // uniformLoc is just the name of a uniform within the shader.

@@ -42,6 +42,7 @@ void Entity::_initQueuedComponents() {
 void Entity::_init() {
     // get a new entity ID from the pool
     m_id = s_entityPool.getNewID();
+    std::cout << "Creating new entity Entity with name " << m_name << " and EntityID " << m_id << ".\n";
     // add this entity to the entity list
     s_entityList.emplace(m_id, shared_from_this());
     // parent this to the root node.
@@ -51,6 +52,7 @@ void Entity::_init() {
 }
 
 Entity::~Entity() {
+    std::cout << "Entity " << m_name << " with EntityID " << m_id << " was destroyed.\n";
     if (!m_released) {
         // if this entity hasn't been released yet, do that.
         release();
