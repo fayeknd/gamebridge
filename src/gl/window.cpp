@@ -241,7 +241,7 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     glfwSetFramebufferSizeCallback(m_wnd, _framebuffer_resize_callback);
 
     // Initializes the input class
-    Input::Init(m_wnd);
+    Input::init(m_wnd);
 
     // if GLAD initialisation fails, return.
     if (GLContext::get().createGLADContext() != GLAD_LOAD_SUCCESS) {
@@ -353,12 +353,23 @@ void Window::beginGameLoop() {
         // framebuffer resize gets called there.
         m_viewportDirty = false;
 
-        // update window and input system
-        Input::NewFrame();
-        glfwPollEvents();
+        // moved Input::NewFrame() to pollEvents 
+        // (and renamed it to poll()) to clean up.
+        // we might have other things that
+        // have to go here so it's nicer to have them
+        // all in one place.
+        pollEvents();
     }
     // we have left the loop, so the program is attempting to close.
     cleanup();
+}
+
+// poll the various program events
+void Window::pollEvents() {
+
+    // update the window and input system
+    Input::poll();
+    glfwPollEvents();
 }
 
 // clean up the program after exiting

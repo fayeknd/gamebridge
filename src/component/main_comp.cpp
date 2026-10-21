@@ -7,7 +7,7 @@
 #include <window.hpp>
 #include <component/camera.hpp>
 #include <time.hpp>
-
+#include <input.hpp>
 
 using namespace Engine;
 
@@ -55,24 +55,28 @@ void MainComponent::init() {
 void MainComponent::update(double delta) {
     square->transform.addRotationZ(10 * delta);
 
+    if (Input::getActionDown(MouseBtn::LeftMouse)) {
+        std::cout << "Mouse was pressed!" << std::endl;
+    }
+
     // basic input handling test
-    if (glfwGetKey(Window::get().getWndHandle(), GLFW_KEY_W) == GLFW_PRESS) {
+    if (Input::getAction(Key::W)) {
         cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getFront());
     }
-    if (glfwGetKey(Window::get().getWndHandle(), GLFW_KEY_D) == GLFW_PRESS) {
+    if (Input::getAction(Key::D)) {
         cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getRight());
     }
-    if (glfwGetKey(Window::get().getWndHandle(), GLFW_KEY_E) == GLFW_PRESS) {
+    if (Input::getAction(Key::E)) {
         cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getUp());
     }
 
-    if (glfwGetKey(Window::get().getWndHandle(), GLFW_KEY_S) == GLFW_PRESS) {
+    if (Input::getAction(Key::S)) {
         cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getBack());
     }
-    if (glfwGetKey(Window::get().getWndHandle(), GLFW_KEY_A) == GLFW_PRESS) {
+    if (Input::getAction(Key::A)) {
         cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getLeft());
     }
-    if (glfwGetKey(Window::get().getWndHandle(), GLFW_KEY_Q) == GLFW_PRESS) {
+    if (Input::getAction(Key::Q)) {
         cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getDown());
     }
 }
