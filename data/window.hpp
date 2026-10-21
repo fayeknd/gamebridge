@@ -42,7 +42,7 @@ namespace Engine {
         fm::uvec2 m_wndSize = fm::uvec2(800,800);
 
         // window title
-        std::string m_wndTitle = "Game Window";
+        std::string m_wndTitle = "Trans ahh game";
         
         // GLFW window handle. required for a lot of things as you may know.
         // i believe on windows there is a function to get the HWND handle from this.
