@@ -1,3 +1,5 @@
+#include "gl_context.hpp"
+#include "logger.hpp"
 #include "shader.hpp"
 #include <component/main_comp.hpp>
 #include <entity.hpp>
@@ -13,19 +15,31 @@ using namespace Engine;
 
 Entity* square;
 Entity* cam;
+float sensitivity = 0.45;
 
 void MainComponent::init() {
 
     Window::get().setWndSize({1280, 720});
 
     auto v = std::vector<Vertex>() = {
-        {{ 0.5f,  0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{ 0.7f, -0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{-0.7f, -0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{-0.5f,  0.5f, 0.0f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}}
-    };
-    auto i = std::vector<unsigned short>() = {0, 1, 2, 2, 3, 0};
+        {{ 0.5f, 0.5f, 0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
+        {{ 0.5f,-0.5f, 0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
+        {{-0.5f,-0.5f, 0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
+        {{-0.5f, 0.5f, 0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
 
+        {{ 0.5f, 0.5f,-0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
+        {{ 0.5f,-0.5f,-0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
+        {{-0.5f,-0.5f,-0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
+        {{-0.5f, 0.5f,-0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}}
+    };
+    auto i = std::vector<unsigned short>() = {
+        0, 1, 2, 2, 3, 0,
+        1, 5, 6, 6, 2, 1,
+        2, 6, 7, 7, 3, 2,
+        0, 3, 7, 7, 4, 0,
+        4, 5, 1, 1, 0, 4,
+        5, 4, 7, 7, 6, 5
+    };
     auto mesh = Mesh::createMeshWithData(v, i);
     auto program = ShaderProgram::createProgramFromPath("stuff=>shaders/shader.glsl");
     ResourceManager::freeArchives();
@@ -48,15 +62,20 @@ void MainComponent::init() {
     // set the clear colour on the camera
     camComponent->m_clearCol = {1, 0, 1, 0.5f};
 
+    Logging::Logger::get().logInfo("Camera clear colour: {}", camComponent->m_clearCol);
+
     // set the target fps
     Window::get().setTargetFPS(240);
 }
 
 void MainComponent::update(double delta) {
-    square->transform.addRotationZ(10 * delta);
+    //square->transform.addRotationZ(10 * delta);
 
-    if (Input::getActionDown(MouseBtn::LeftMouse)) {
-        std::cout << "Mouse was pressed!" << std::endl;
+    auto mdelta = Input::getMouseDelta();
+    if (mdelta != fm::dvec2::zero()) {
+        cam->transform.addRotationX(mdelta.y * sensitivity);
+        cam->transform.addRotationY(mdelta.x * sensitivity);
+        cam->transform.setRotationX(std::clamp(cam->transform.getRotationX(), -90.0f, 90.0f));
     }
 
     // basic input handling test

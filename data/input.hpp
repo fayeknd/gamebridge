@@ -1,5 +1,7 @@
 #pragma once
+#include "GLFW/glfw3.h"
 #include <keys.hpp>
+#include <fm/fmath.hpp>
 
 namespace Engine {
 
@@ -17,14 +19,45 @@ namespace Engine {
 
         // Booleans to each key returning whether the key is held, pressed or released on
         // the last frame
-        static inline bool s_keyHeld[keyCount] = {};
-        static inline bool s_keyPressed[keyCount] = {};
-        static inline bool s_keyReleased[keyCount] = {};
+        static inline bool s_keyHeld[keyCount]     = { };
+        static inline bool s_keyPressed[keyCount]  = { };
+        static inline bool s_keyReleased[keyCount] = { };
 
         static void _key_callback(GLFWwindow* wnd, int code, int scancode, int action, int mods);
         static void _mouse_button_callback(GLFWwindow* wnd, int code, int action, int mods);
+        static void _mouse_pos_callback(GLFWwindow* wnd, double x, double y);
+        static void _enter_window_callback(GLFWwindow* wnd, int state);
+        static void _window_focus_callback(GLFWwindow* wnd, int state);
+
+        // has the mouse entered the window this frame?
+        static inline bool s_mouseEnteredTF;
+        // has the mouse left the window this frame?
+        static inline bool s_mouseExitedTF;
+
+        // mouse pos last callback (as double to match glfw)
+        static inline fm::dvec2 s_mousePosLC       = {0};
+        // mouse pos this callback 
+        static inline fm::dvec2 s_mousePos         = {0}; 
+        
+        // is the window focused? 
+        static inline bool s_windowFocused = true;
+
+        static inline GLFWwindow* s_wnd = nullptr; // store a ref to the window.
+        // don't use window.hpp because that can cause issues. i hate this solution.
 
     public:
+
+        static inline bool getMouseEnteredWindow() { return s_mouseEnteredTF; }
+        static inline bool getMouseExitedWindow() { return s_mouseEnteredTF; }
+        static inline bool isWindowFocused() { return s_windowFocused; }
+        // get the mouse pos
+        static inline fm::dvec2 getMousePos() { return s_mousePos; }
+        static inline fm::dvec2 getMousePosLastCallback() { return s_mousePosLC; } // if you want this? idk what you'd want it for
+
+        static inline void setMousePos(fm::dvec2 pos);
+
+        // get the amount the mouse moved this frame
+        static fm::dvec2 getMouseDelta();
 
         // to convert from key to int we have to cast.
         // to convert from int to key the cast is automatic

@@ -4,6 +4,7 @@
 #include <memory>
 #include <cstdint>
 #include <transform.hpp>
+#include <logger.hpp>
 
 namespace Engine {
 
@@ -26,6 +27,11 @@ namespace Engine {
 
     class IComponent {
     private:
+
+        static Logging::Logger& log() {
+            static Logging::Logger instance("COMPONENT");
+            return instance;
+        }
 
         // makes it easier to aquire the typeid for each
         // component instance. (this is assigned when adding
@@ -103,7 +109,7 @@ namespace Engine {
             // check if type is actually a derivative of IComponent
             if (!std::is_base_of<IComponent, T>::value) {
                 // type is not a component, return.
-                std::cerr << "Provided class is not a component!\n"; 
+                log().logError("(getComponentTypeID<T>) Provided class is not a component!");
                 return -1;
             }
             // return the unique ID for this class

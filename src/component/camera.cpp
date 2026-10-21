@@ -6,7 +6,7 @@ using namespace Engine;
 // constructor
 Camera::Camera() {
     // is camera queue empty?
-    if (s_cameraQueue.size() == 0) s_activeCamera = this; // yes, no active camera yet. set this one.
+    if (s_cameraQueue.size() == 0) setActiveCamera(this); // yes, no active camera yet. set this one.
 }
 
 void Camera::init() {
@@ -38,11 +38,27 @@ Camera::~Camera() {
         else {
             // we have the next valid camera in the queue
             nextCamera = front.lock().get();
-            s_activeCamera = nextCamera;
+            setActiveCamera(nextCamera);
         };
     }
     
 }
+
+void Camera::setActiveCamera(Camera *c) {
+    if (!c) return;
+    if (s_activeCamera) {
+        // disable all the old functions
+        for (size_t i = 0; i < s_activeCamera->m_glFunctions.size(); i++) {
+            glDisable(s_activeCamera->m_glFunctions[i]);
+        }
+    }
+    s_activeCamera = c;
+    // enable the new functions
+    for (size_t i = 0; i < s_activeCamera->m_glFunctions.size(); i++) {
+        glEnable(s_activeCamera->m_glFunctions[i]);
+    }
+}
+
 // get the active FREAKINGGG CAMERRAAAAA!!!!
 Camera* Camera::activeCamera() {
     return s_activeCamera; 
@@ -95,8 +111,8 @@ fm::mat4 Camera::getViewMat() {
     // return if the transform was not touched this frame
     if (!entity.wasTransformDirty()) return m_viewMatrix;
     entity.m_queueTransformReset = true;
-
     // (pos, pos + front, up)
+
     m_viewMatrix = fm::lookAt(
         entity.transform.getGlobalPosition(),
         entity.transform.getGlobalPosition() + entity.transform.getGlobalFront(),

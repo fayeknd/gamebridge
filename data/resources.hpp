@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <logger.hpp>
 
 namespace Engine {
 
@@ -90,6 +91,13 @@ namespace Engine {
         // computed at runtime it can't be.
 
         static inline std::filesystem::path s_binaryDir = "none";
+
+        static Logging::Logger& log() {
+            static Logging::Logger instance("RESOURCE");
+            return instance;
+        }
+
+        friend class Archive;
 
     public:
 

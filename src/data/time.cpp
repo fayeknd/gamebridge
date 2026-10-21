@@ -74,3 +74,16 @@ void Time::_resetDeltaTimer() {
     // restart the delta timer
     s_deltaTimer.reset();
 }
+
+const std::string Time::timeStamp() {
+    auto now = std::chrono::system_clock::now();
+    auto now_ms = std::chrono::floor<std::chrono::milliseconds>(now);
+    return std::format("{:%H:%M:%S}", now_ms);
+}
+
+
+const std::string Time::timeStampForFile() {
+    auto now = std::chrono::system_clock::now();
+    auto now_ms = std::chrono::floor<std::chrono::milliseconds>(now);
+    return std::format("{:%Y-%m-%d_%H-%M-%S}", now_ms);
+}

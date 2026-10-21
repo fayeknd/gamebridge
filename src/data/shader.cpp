@@ -56,7 +56,7 @@ std::shared_ptr<ShaderProgram> ShaderProgram::createProgramFromPath(std::filesys
     std::error_code ec;    
     if (!std::filesystem::exists(shaderSource, ec)) {
         // file read failed, print error message.
-        std::cerr << "ShaderProgram file read error! -> " << ec.message() << std::endl;
+        log().logError("ShaderProgram file read error! -> {}", ec.message());
         return nullptr;
     }
     // file read success!
@@ -255,9 +255,9 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
 
     if (verror != "" || ferror != "") {
         // there have been errors, dump the shader glsl source
-        std::cerr << "Shader dump:\nVertex:\n\n" << vCode << "\n\nFragment:\n\n" << fCode << std::endl; 
-        std::cerr << "ShaderProgram with key '" << m_key << "' has compilation errors!\nVertex Error(s):\n" << verror << "Fragment Error(s):\n" << ferror << std::endl;
-        
+        log().logError("Shader dump:\nVertex:\n\n{}\n\nFragment:\n\n{}", vCode, fCode);
+        log().logError("ShaderProgram with key '{}' has compilation errors!\nVertex Error(s):\n{}\nFragment Error(s):\n{}", m_key, verror, ferror);
+
         // cleanup shaders we don't need anymore
         glDeleteShader(vert);
         glDeleteShader(frag);
@@ -280,7 +280,7 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
     glGetProgramiv(m_programID, GL_LINK_STATUS, &stat);
     if (!stat) {
         glGetProgramInfoLog(m_programID, 512, NULL, linkLog);
-        std::cout << "ShaderProgram with key '" << m_key << " linking failed! " << linkLog << std::endl;
+        log().logError("ShaderProgram with key '{}' link failed! Link log: {}", m_key, linkLog);
     }
 
     // cleanup, we are done with these. they are linked to the program now.

@@ -1,13 +1,15 @@
+#include "fm/types/mat4x4.hpp"
 #include <transform.hpp>
 #include <entity.hpp>
+#include <component/camera.hpp>
 
 using namespace Engine;
 
 // get the matrix
 // see src/component/renderable.cpp to see where this might be called
-fm::mat4 Transform::getMatrix() {
+fm::mat4 Transform::getMatrix(bool forceRecompute) {
     // if the transform isn't dirty, return what's already been computed
-    if (!m_dirty) return m_modelMat;
+    if (!m_dirty && !forceRecompute) return m_modelMat;
 
     // calculate the model matrix.
     // with our SUPER EASY fmath function that SOMEONE wrote :)
@@ -18,7 +20,7 @@ fm::mat4 Transform::getMatrix() {
     m_front   = fm::vec3::zAxis().transformed(rot); // get the local z direction
     m_right   = fm::vec3::xAxis().transformed(rot); // get the local x direction
     m_up      = fm::vec3::yAxis().transformed(rot); // get the local y direction
-    
+
     // updated, set m_dirty to false.
     m_dirty = false;
     // return the new model matrix
@@ -30,7 +32,7 @@ fm::mat4 Transform::getGlobalMatrix() {
     if (!m_globalDirty) return m_globalModelMat;
     m_globalDirty = false;
 
-    fm::mat4 local = getMatrix();
+    fm::mat4 local = getMatrix(true);
     if (!m_entity) return local;
 
     auto p = m_entity->getParent();
@@ -43,10 +45,13 @@ fm::mat4 Transform::getGlobalMatrix() {
     m_globalScale    = decomp.scale;
     m_globalSkew     = decomp.skew;
 
-    fm::mat4 rot = fm::mat4().rotate(m_globalRotation);
-    m_globalFront = fm::vec3::zAxis().transformed(rot); // get the global z direction
-    m_globalRight = fm::vec3::xAxis().transformed(rot); // get the global x direction
-    m_globalUp    = fm::vec3::yAxis().transformed(rot); // get the global y direction
+    m_globalRight = -fm::vec3(m_globalModelMat.m_data[0][0], m_globalModelMat.m_data[0][1], m_globalModelMat.m_data[0][2]).normalized();
+    m_globalUp    = -fm::vec3(m_globalModelMat.m_data[1][0], m_globalModelMat.m_data[1][1], m_globalModelMat.m_data[1][2]).normalized();
+    m_globalFront =  fm::vec3(m_globalModelMat.m_data[2][0], m_globalModelMat.m_data[2][1], m_globalModelMat.m_data[2][2]).normalized();
+
+    //if (fm::flipX) m_globalRight = -m_globalRight;
+    //if (fm::flipY) m_globalUp    = -m_globalUp;
+    //if (fm::flipZ) m_globalFront = -m_globalFront;
 
     return m_globalModelMat;
 }

@@ -22,8 +22,7 @@ void IRenderable::_useRenderData() {
     rd = m_renderData;
 
     // apply the render data
-    glFrontFace(rd.m_frontFace);
-    glPolygonMode(rd.m_cullFace, rd.m_polyMode);
+    rd.useRenderData();
 }
 
 // draw

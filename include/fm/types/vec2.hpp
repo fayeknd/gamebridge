@@ -1,5 +1,7 @@
 #pragma once
 #include "../degrad.hpp"
+#include <format>
+#include <string_view>
 
 namespace fm {
 
@@ -186,6 +188,7 @@ namespace fm {
     inline _vec2<T> unit_vector(const _vec2<T>& v) {
         return v / v.length();
     }
+
     using vec2  = _vec2<float>;
     using ivec2 = _vec2<int>;
     using uvec2 = _vec2<unsigned int>;

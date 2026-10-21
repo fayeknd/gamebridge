@@ -104,3 +104,55 @@ namespace fmt {
     };
 }
 #endif
+
+namespace std {
+    template <typename T>
+    struct formatter<fm::_vec2<T>> : std::formatter<std::string_view> {
+        
+        auto parse(std::format_parse_context& ctx) {
+            return ctx.begin();
+        }
+
+        auto format(const fm::_vec2<T>& v, std::format_context& ctx) const {
+            return std::format_to(ctx.out(), "({}, {})", v.x, v.y);
+        }
+    };
+    template <typename T>
+    struct formatter<fm::_vec3<T>> : std::formatter<std::string_view> {
+        
+        auto parse(std::format_parse_context& ctx) {
+            return ctx.begin();
+        }
+
+        auto format(const fm::_vec3<T>& v, std::format_context& ctx) const {
+            return std::format_to(ctx.out(), "({}, {}, {})", v.x, v.y, v.z);
+        }
+    };
+    template <typename T>
+    struct formatter<fm::_vec4<T>> : std::formatter<std::string_view> {
+        
+        auto parse(std::format_parse_context& ctx) {
+            return ctx.begin();
+        }
+
+        auto format(const fm::_vec4<T>& v, std::format_context& ctx) const {
+            return std::format_to(ctx.out(), "({}, {}, {}, {})", v.x, v.y, v.z, v.w);
+        }
+    };
+    template <typename T>
+    struct formatter<fm::_mat4x4<T>> : std::formatter<std::string_view> {
+        
+        auto parse(std::format_parse_context& ctx) {
+            return ctx.begin();
+        }
+
+        auto format(const fm::_mat4x4<T>& v, std::format_context& ctx) const {
+            return std::format_to(ctx.out(), "[{}, {}, {}, {}]\n[{}, {}, {}, {}]\n[{}, {}, {}, {}]\n[{}, {}, {}, {}]", 
+                v.m_data[0][0], v.m_data[0][1], v.m_data[0][2], v.m_data[0][3], 
+                v.m_data[1][0], v.m_data[1][1], v.m_data[1][2], v.m_data[1][3], 
+                v.m_data[2][0], v.m_data[2][1], v.m_data[2][2], v.m_data[2][3], 
+                v.m_data[3][0], v.m_data[3][1], v.m_data[3][2], v.m_data[3][3]
+            );
+        }
+    };
+}

@@ -261,6 +261,9 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     // set the vsync mode
     setVSyncMode(VSyncMode::Off);
 
+    // use the default renderdata
+    GLContext::get().glState.renderData.useRenderData();
+
     // add the main entrypoint component to the root entity.
     Entity::s_root->addComponent<MainComponent>();
 
@@ -334,8 +337,14 @@ void Window::beginGameLoop() {
         // increment the frame counter
         m_frame++;
         
+        // poll the window events. this calls any callbacks first
+        // this should have actually been done earlier but oh well.
+        // without this, inputs would be handled on the NEXT frame
+        // instead of this one.
+        preFramePollEvents();
+
         if (!cam) {
-            std::cerr << "No active camera in game! There has to be an active camera for any behaviour to occurr.\n";
+            Logging::Logger::get().logError("No active camera in game! There has to be an active camera for any behaviour to occurr.");
         }
         else {
             glClear(cam->m_clearFlags);
@@ -353,27 +362,32 @@ void Window::beginGameLoop() {
         // framebuffer resize gets called there.
         m_viewportDirty = false;
 
-        // moved Input::NewFrame() to pollEvents 
+        // moved Input::NewFrame() to postFramePollEvents 
         // (and renamed it to poll()) to clean up.
         // we might have other things that
         // have to go here so it's nicer to have them
         // all in one place.
-        pollEvents();
+        postFramePollEvents();
     }
     // we have left the loop, so the program is attempting to close.
     cleanup();
 }
 
-// poll the various program events
-void Window::pollEvents() {
+void Window::preFramePollEvents() {
+    // poll glfw events.
+    glfwPollEvents(); 
+}
 
-    // update the window and input system
+// poll the various program events
+void Window::postFramePollEvents() {
+    // update the input system
     Input::poll();
-    glfwPollEvents();
 }
 
 // clean up the program after exiting
 void Window::cleanup() {
+    Logging::Logger::get().logInfo("Program recieved shutdown request, or was shutdown by the user. Attempting to clean up resources before closing...");
     ResourceManager::freeArchives();
     GLContext::get().destroyGLContext();
+    Logging::Logger::closeLog();
 }

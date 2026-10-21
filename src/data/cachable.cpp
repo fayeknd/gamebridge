@@ -54,7 +54,7 @@ void ObjectRegistry::cleanup() {
 
 // register this instance to the registry
 void ObjectRegistry::_register() {
-    std::cout << "Registering new cached instance with CacheID " << m_cacheID << ".\n";
+    log().logInfo("Registering new cached instance with CacheID {}.", m_cacheID);
     // the constructor generates a new id, we don't have to worry about that.
     registry().emplace(m_cacheID, weak_from_this());
     m_registered = true; 
@@ -62,7 +62,7 @@ void ObjectRegistry::_register() {
 
 // unregister this instance from the registry
 void ObjectRegistry::_unregister() {
-    std::cout << "Unregistering cached instance with CacheID " << m_cacheID << ".\n";
+    log().logInfo("Unregistering cached instance with CacheID {}.", m_cacheID);
     // remove this from the registry
     registry().erase(m_cacheID);
     // release the cache ID for another instance to use

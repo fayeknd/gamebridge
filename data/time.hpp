@@ -6,11 +6,13 @@
 
 namespace Engine {
 
+    
     // inspired by another implementation of mine: https://github.com/fayeknd/peachmilk_editor/blob/main/src/system/time.hpp. 
     // i'm not very confident with time stuff or really anything to do with chrono, so i'm not sure this is extremely accurate.
 
     // a static class that stores general program time information.
     // stores the delta time
+
     class Time {
 
         // track the frame delta time
@@ -69,6 +71,9 @@ namespace Engine {
         friend class Window;
         
     public:
+
+        const static std::string timeStamp();
+        const static std::string timeStampForFile();
 
         // deltatime getter
         static double deltaTime();

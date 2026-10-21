@@ -18,6 +18,9 @@ namespace Engine {
         // GL_FILL for regular full tri drawing,
         // GL_LINE for wireframe rendering.
         unsigned int m_polyMode = GL_FILL;
+        
+        // apply the render data
+        void useRenderData();
     };
 
     // comparator

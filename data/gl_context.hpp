@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <engine.h>
 #include <renderdata.hpp>
+#include <logger.hpp>
 
 namespace Engine {
 
@@ -24,6 +25,11 @@ namespace Engine {
         // effectively means it is a singleton, or static class. it can be used via Class::get().___
         // this means you don't need to add static to the start of each function. it also makes it
         // clearer what is and isn't a singleton.
+
+        static Logging::Logger& log() {
+            static Logging::Logger instance("OPENGL");
+            return instance;
+        }
 
         static GLContext& get() {
 

@@ -156,8 +156,9 @@ namespace Engine {
         // any cleanup stuff to perform after the program stops.
         void beginGameLoop();
 
-        // put anything that polls in this function.
-        void pollEvents();
+        // put anything that polls in these function.
+        void preFramePollEvents();
+        void postFramePollEvents();
 
         // clean up the program after exiting.
         void cleanup();

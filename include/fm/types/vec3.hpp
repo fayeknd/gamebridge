@@ -113,7 +113,6 @@ namespace fm {
         );
     }
 
-
     template <typename T>
     inline _vec3<T>& _vec3<T>::operator+=(const _vec3<T>& v) {
         x += v.x;

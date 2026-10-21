@@ -1,5 +1,6 @@
 #pragma once
 #include "../vec.hpp"
+#include "fm/fmath.hpp"
 
 namespace fm {
 
@@ -18,6 +19,10 @@ namespace fm {
     // and some really niche blog sites i could not
     // possibly rediscover, so this is in desperate need
     // of documenting.
+
+    static inline bool flipY = true;
+    static inline bool flipX = false;
+    static inline bool flipZ = false;
 
     template <typename T>
     class _mat4x4 {
@@ -283,13 +288,17 @@ namespace fm {
     template <typename T>
     inline _mat4x4<T> lookAt(_vec3<T> pos, _vec3<T> target, _vec3<T> up = {0.0f, 1.0f, 0.0f}) {
         _mat4x4<T> _;
-        _vec3<T> f = (target - pos).normalized();
+        _vec3<T> f = (pos - target).normalized();
         _vec3<T> r = up.cross(f).normalized();
         _vec3<T> u = r.cross(f);
         
+        if (flipZ) f = -f;
+        if (flipX) r = -r;
+        if (flipY) u = -u;
+
         _.m_data[0][0] = r.x; _.m_data[1][0] = r.y; _.m_data[2][0] = r.z; _.m_data[3][0] = -r.dot(pos); 
         _.m_data[0][1] = u.x; _.m_data[1][1] = u.y; _.m_data[2][1] = u.z; _.m_data[3][1] = -u.dot(pos); 
-        _.m_data[0][2] =-f.x; _.m_data[1][2] =-f.y; _.m_data[2][2] =-f.z; _.m_data[3][2] =  f.dot(pos); 
+        _.m_data[0][2] = f.x; _.m_data[1][2] = f.y; _.m_data[2][2] = f.z; _.m_data[3][2] = -f.dot(pos); 
 
         return _;
     }
@@ -435,18 +444,22 @@ namespace fm {
     template <typename T>
     inline _vec3<T> _mat4x4<T>::extractEuler() {
         _vec3<T> v;
-        v.x = -std::asin(m_data[2][0]);
+    
+        T r20 = m_data[2][0]; 
 
-        // protect against gimbal lock
-        if (std::cos(v.x) > 0.0001) {
-            v.y  = std::atan2(m_data[2][1], m_data[2][2]);
-            v.z  = std::atan2(m_data[1][0], m_data[0][0]);
+        // check for gimbal lock and protect against it
+        if (std::abs(r20) < 1.0 - 0.0001) {
+            v.x = -std::asin(r20);
+            v.y = std::atan2(m_data[2][1], m_data[2][2]);
+            v.z = std::atan2(m_data[1][0], m_data[0][0]);
         } else {
-            // gimbal lock, y and z are dependent 
-            v.y  = 0.0;
+            // gimbal lock triggered, lock to +-90
+            v.x = (r20 < 0) ? static_cast<T>(M_PI_2) : static_cast<T>(-M_PI_2);
+            v.y = 0.0;
             v.z = std::atan2(-m_data[0][1], m_data[1][1]);
         }
-        return v;
+
+        return (fm::radiansToDegrees(v.x), fm::radiansToDegrees(v.y), fm::radiansToDegrees(v.z));
     }
     template <typename T>
     // https://en.wikipedia.org/wiki/Cramer%27s_rule#:~:text=Finding%20inverse%20matrixedit

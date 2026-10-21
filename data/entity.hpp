@@ -2,6 +2,7 @@
 #include <component/component.hpp>
 #include <idpool.hpp>
 #include <queue>
+#include <logger.hpp>
 
 namespace Engine {
     
@@ -26,6 +27,11 @@ namespace Engine {
     
     class Entity : public std::enable_shared_from_this<Entity> {
     private:
+
+        static Logging::Logger& log() {
+            static Logging::Logger instance("ENTITY");
+            return instance;
+        }
 
         // this allocated entity ID.
         EntityID m_id;
@@ -174,7 +180,7 @@ namespace Engine {
         T* addComponent(Args&& ... targs) {
             // does this entity already have a component with this type?
             if (getComponent<T>()) {
-                std::cerr << "Entity " << m_name << " already has a component with that type!";
+                log().logError("Entity {} already has a component with that type!", m_name);
                 return nullptr;
             }
             // create the component instance itself.
@@ -247,7 +253,7 @@ namespace Engine {
                 return; 
             }
             // no component was found.
-            std::cerr << "No component of that type was found on entity " << m_name << ".\n";
+            log().logError("No component of that type was found on Entity {}", m_name);
         }
 
         // return if this entity is enabled or not

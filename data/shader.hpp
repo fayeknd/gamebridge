@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <unordered_map>
 #include <memory>
+#include <logger.hpp>
 
 // just an identifier for a shader with no key passed through.
 #define UNNAMED_SHADER "0"
@@ -111,6 +112,11 @@ namespace Engine {
     // useful for self-registry into the program cache. (s_programCache)
     class ShaderProgram : public ICachable<ShaderProgram> {
     private:
+
+        static Logging::Logger& log() {
+            static Logging::Logger instance("SHADER PROGRAM");
+            return instance;
+        }
 
         using ICachable::ICachable; 
 

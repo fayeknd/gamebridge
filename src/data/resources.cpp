@@ -38,7 +38,7 @@ std::shared_ptr<Archive> Archive::getArchive(const std::string& path) {
     // zip load failed?
     if (!ar->m_zip) {
         // print the error code provided by zip_open and return a nullptr
-        std::cerr << "Archive '" << path << "' loading failed. Error code: " << err << std::endl;
+        ResourceManager::log().logError("Archive '{}' loading failed. Error code:", path, err);
         return nullptr;
     }
     // no error. set the ar path to the function provided path
@@ -132,7 +132,7 @@ bytes ResourceManager::getFileFromArchive(std::shared_ptr<Archive> archive, cons
     // attempt to retrieve the file info
     if (zip_stat(archive->m_zip, pCstr, 0, &fStat) != 0) {
         // file not found in archive.
-        std::cerr << "File '" << path << "' not found in archive '" << archive->getPath() << "'." << std::endl;
+        log().logError("File '{}' not found in archive '{}'.", path, archive->getPath());
         // return an empty vector constructor.
         return {};
     }
@@ -143,7 +143,7 @@ bytes ResourceManager::getFileFromArchive(std::shared_ptr<Archive> archive, cons
     zip_file* file = zip_fopen(archive->m_zip, pCstr, 0);
     if (!file) {
         // file failed to open.
-        std::cerr << "Failed to open file '" << path << "' in archive '" << archive->getPath() << "'." << std::endl;
+        log().logError("Failed to open file '{}' in archive '{}'", path, archive->getPath());
         // close the file, we don't need it in memory anymore.
         zip_fclose(file);
         return {};
@@ -163,7 +163,7 @@ bytes ResourceManager::getFileFromArchive(std::shared_ptr<Archive> archive, cons
     if (readBytes <= 0) {
         // readBytes is 0 (or less than), this shouldn't be.
         // something has gone wrong, or the file has no size.
-        std::cerr << "Error reading file '" << path << "' in archive '" << archive->getPath() << "'." << std::endl;
+        log().logError("Error reading file '{}' in archive '{}'.", path, archive->getPath());
         return {};
     }
 

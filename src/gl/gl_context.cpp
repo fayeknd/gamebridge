@@ -41,7 +41,7 @@ int GLContext::createGLADContext() {
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 
         // if we made it into here, the glad loader failed.
-        std::cerr << "GLAD OpenGL loading failed!\n";
+        log().logError("GLAD OpenGL loading failed!");
         return ERR_GLAD_GL_LOAD_FAILED;
     }
 

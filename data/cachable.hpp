@@ -3,6 +3,7 @@
 #include <idpool.hpp>
 #include <engine.h>
 #include <unordered_map>
+#include <logger.hpp>
 
 namespace Engine { 
 
@@ -46,6 +47,10 @@ namespace Engine {
 
     public:
 
+        static Logging::Logger& log() {
+            static Logging::Logger instance("REGISTRY");
+            return instance;
+        }  
         static void cleanup(); 
         CacheID getCacheID();
         bool getRegistered();
@@ -81,7 +86,7 @@ namespace Engine {
                 // is instance null?
                 if (!inst) {
                     // instance is null, cast was incorrect.
-                    std::cout << "CacheID '" << cid << "' does not point to a value with the specified type!\n";
+                    ObjectRegistry::log().logError("CacheID {} does not point to a value with the specified type!", cid);
                     return nullptr;
                 }
                 // instance was not null, we have an instance to return
@@ -90,7 +95,7 @@ namespace Engine {
             }
 
             // no object was found. the cacheid was invalid.
-            std::cout << "CacheID '" << cid << "' does not point to a valid cached instance!\n";
+            ObjectRegistry::log().logError("CacheID {} does not point to a valid cached instance!", cid);
             return nullptr;
         }
 

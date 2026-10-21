@@ -112,7 +112,7 @@ namespace Engine {
     public:
 
         // return the matrix. if dirty, also calculates the matrix.
-        fm::mat4 getMatrix();
+        fm::mat4 getMatrix(bool forceCompute = false);
         // return the global matrix.
         fm::mat4 getGlobalMatrix();
 

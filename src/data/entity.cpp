@@ -42,7 +42,7 @@ void Entity::_initQueuedComponents() {
 void Entity::_init() {
     // get a new entity ID from the pool
     m_id = s_entityPool.getNewID();
-    std::cout << "Creating new entity Entity with name " << m_name << " and EntityID " << m_id << ".\n";
+    log().logInfo("Creating new entity Entity with name {} and EntityID {}.", m_name, m_id);
     // add this entity to the entity list
     s_entityList.emplace(m_id, shared_from_this());
     // parent this to the root node.
@@ -52,7 +52,7 @@ void Entity::_init() {
 }
 
 Entity::~Entity() {
-    std::cout << "Entity " << m_name << " with EntityID " << m_id << " was destroyed.\n";
+    log().logInfo("Entity {} with EntityID {} was destroyed.", m_name, m_id);
     if (!m_released) {
         // if this entity hasn't been released yet, do that.
         release();
@@ -149,7 +149,7 @@ Entity* Entity::getEntityViaID(EntityID id) {
         return s_entityList[id].get(); // return raw ptr
     }
     // entity not found, return nullptr
-    std::cerr << "Entity with ID " << id << " doesn't exist!\n";
+    log().logError("Entity with ID {} doesn't exist!", id);
     return nullptr;
 }
 
@@ -174,7 +174,7 @@ Entity* Entity::getChildAt(int index) {
         return m_children[index].lock().get();
     }
     // index was bigger than the object.
-    std::cerr << "On Entity " << m_id << ", Index of " << index << " was outside the bounds of the child vector, which has a size of " << m_children.size() << ".\n";
+    log().logError("On Entity {}, Index of {} was outside the bounds of the child vector, which has a size of {}.", m_id, index, m_children.size());
     return nullptr;
 }
 
@@ -198,7 +198,7 @@ Entity* Entity::getChildByName(std::string name) {
         }
     }
     // no child was found.
-    std::cerr << "On Entity " << m_id << ", no child named " << name << " was found.\n";
+    log().logError("On Entity {}, no child named {} was found.", m_id, name);
     return nullptr;
 }
 
