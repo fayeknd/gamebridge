@@ -1,3 +1,4 @@
+#include "shader.hpp"
 #include <component/main_comp.hpp>
 #include <entity.hpp>
 
@@ -35,7 +36,7 @@ void MainComponent::init() {
 
     // add some basic data to the renderer
     renderer->m_mesh = mesh;
-    renderer->m_shaderProgram = program;
+    renderer->m_shaderProgram = ShaderProgram::getShaderViaKey(program->getKey());
 
     // create the camera entity
     cam = Entity::create("Camera").get();
@@ -45,7 +46,7 @@ void MainComponent::init() {
     // push the camera back a bit in the world
     cam->transform.addPositionZ(-5);
     // set the clear colour on the camera
-    camComponent->m_clearCol = {1, 0, 1, 0.1f};
+    camComponent->m_clearCol = {1, 0, 1, 0.5f};
 
     // set the target fps
     Window::get().setTargetFPS(240);
