@@ -8,6 +8,7 @@
 #include <time.hpp>
 #include <component/camera.hpp>
 #include <numeric>
+#include <input.hpp>
 
 using namespace Engine;
 
@@ -239,6 +240,9 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     // set the callback that is called whenever the window changes size.
     glfwSetFramebufferSizeCallback(m_wnd, _framebuffer_resize_callback);
 
+    // Initializes the input class
+    Input::Init(m_wnd);
+
     // if GLAD initialisation fails, return.
     if (GLContext::get().createGLADContext() != GLAD_LOAD_SUCCESS) {
         return ERR_WINDOW_CREATION_FAILED;
@@ -348,7 +352,9 @@ void Window::beginGameLoop() {
         // comes before glfwPollEvents because the 
         // framebuffer resize gets called there.
         m_viewportDirty = false;
-        // update window.
+
+        // update window and input system
+        Input::NewFrame();
         glfwPollEvents();
     }
     // we have left the loop, so the program is attempting to close.
