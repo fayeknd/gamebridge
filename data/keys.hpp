@@ -3,8 +3,6 @@
 
 namespace Engine {
 
-    // put all the input related stuff in a nested namespace
-
     // The regular keyboard keys. Trying to include all
     // keys present on most keyboards here based on the
     // glfw3.h file. like these were copied in order

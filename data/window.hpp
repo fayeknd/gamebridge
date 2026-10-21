@@ -41,7 +41,7 @@ namespace Engine {
         // (uvec is just a vector of type unsigned integer. equivalent to fm::_vec2<unsigned int>)
         fm::uvec2 m_wndSize = fm::uvec2(800,800);
 
-        // window title
+        // window title           feel my wrath
         std::string m_wndTitle = "Trans ahh game";
         
         // GLFW window handle. required for a lot of things as you may know.
