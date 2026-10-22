@@ -3,8 +3,6 @@
 
 using namespace Engine;
 
-Time::Timer Time::s_deltaTimer = {};
-
 // deltatime getter
 double Time::deltaTime() {
     return s_deltaTime;
@@ -21,14 +19,14 @@ double Time::sinceStartup() {
 }
 
 // return the timer count
-double Time::Timer::count() {
+double Timer::count() {
     if (!m_counting && !m_hasStarted) return 0;
     std::chrono::duration<double> elapsed = std::chrono::system_clock::now() - m_start;
     return elapsed.count() - m_pauseDur;
 }
 
 // start the timer 
-void Time::Timer::start() {
+void Timer::start() {
     // if already counting, return early
     if (m_counting) return;
 
@@ -47,14 +45,14 @@ void Time::Timer::start() {
 }
 
 // stop the timer
-void Time::Timer::stop() {
+void Timer::stop() {
     // set the m_end time to now.
     m_end = std::chrono::system_clock::now();
     m_counting = false;
 }
 
 // reset the timer
-void Time::Timer::reset() {
+void Timer::reset() {
     // reset hasStarted
     m_hasStarted = false;
     // pause duration is 0

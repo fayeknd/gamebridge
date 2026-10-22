@@ -1,3 +1,4 @@
+#include "cachable.hpp"
 #include <window.hpp>
 
 #include <GLFW/glfw3native.h>
@@ -376,6 +377,7 @@ void Window::beginGameLoop() {
 void Window::preFramePollEvents() {
     // poll glfw events.
     glfwPollEvents(); 
+    ObjectRegistry::pollGC();
 }
 
 // poll the various program events

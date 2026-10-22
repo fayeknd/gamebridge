@@ -44,8 +44,18 @@ namespace Engine {
 
         // unregister this instance from the registry
         void _unregister();
+ 
+        // garbage collection timer
+        static inline Timer s_gcTimer;
 
     public:
+        // marks if the registry has changed.
+        static inline bool s_logGC = true;
+
+        // how often should we collect garbage data?
+        // (300s is 5 minutes)
+        static inline double s_cleanupInterval = 300;
+        static void pollGC();
 
         static Logging::Logger& log() {
             static Logging::Logger instance("REGISTRY");

@@ -30,9 +30,10 @@ bool ObjectRegistry::getRegistered() {
 }
 
 void ObjectRegistry::cleanup() {
+    // track the erased object count
+    int erasedObjs = 0;
 
     // loop through every item in the cache
-
     for (auto it = registry().begin(); it != registry().end();) {
         // if the instance total references is less than or equal to 1,
         // (that 1 being the cache itself)
@@ -43,6 +44,7 @@ void ObjectRegistry::cleanup() {
             // and the smart pointer automatically
             // deletes the program. 
             it = registry().erase(it);
+            erasedObjs++; // we erased an object, increment.
         }
         else {
             // this instance is referenced, 
@@ -50,6 +52,10 @@ void ObjectRegistry::cleanup() {
             it++;
         }
     }
+    // if erased objects is at least 1 and logging is enabled for GC
+    if (erasedObjs > 0 && s_logGC) {
+        log().logInfo("Cleaned up {} unused ref(s).", erasedObjs);
+    } 
 }
 
 // register this instance to the registry
@@ -67,4 +73,17 @@ void ObjectRegistry::_unregister() {
     registry().erase(m_cacheID);
     // release the cache ID for another instance to use
     instanceIDPool().releaseID(m_cacheID);
+}
+
+// run the garbage collector every x minutes
+void ObjectRegistry::pollGC() {
+    // begin the timer if it hasn't started
+    if (!s_gcTimer.isCounting()) s_gcTimer.start();
+    
+    // is the timer past the cleanup interval?
+    if (s_gcTimer.count() >= s_cleanupInterval) {
+        // yes, cleanup and reset the timer
+        ObjectRegistry::cleanup();
+        s_gcTimer.reset(); 
+    }
 }
