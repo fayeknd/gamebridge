@@ -29,6 +29,8 @@ namespace fm {
         _vec4<T> lerp(_vec4<T> to, T scalar) const;
         T dot(_vec4<T> v) const;
         _vec4<T> cross(_vec4<T> v1, _vec4<T> v2) const;
+        static _vec4<T> min(const _vec4<T>&, const _vec4<T>&);
+        static _vec4<T> max(const _vec4<T>&, const _vec4<T>&);
 
         _vec4<T>& operator+=(const _vec4<T>& v) const;
         _vec4<T>& operator-=(const _vec4<T>& v) const;
@@ -117,6 +119,14 @@ namespace fm {
             (x *(v1.y * v2.w - v1.w * v2.z) - y * (v1.x * v2.w - v1.w * v2.x) + w *(v1.x * v2.y - v1.y * v2.x)),
             -(x *(v1.y * v2.w - v1.w * v2.z) - y * (v1.x * v2.w - v1.z * v2.x) + z *(v1.x * v2.y - v1.y * v2.x))
         );
+    }
+    template <typename T>
+    inline _vec4<T> _vec4<T>::min(const _vec4<T>& v, const _vec4<T>& y) {
+        return v.length() >= y.length() ? y.length() : v.length();
+    }
+    template <typename T>
+    inline _vec4<T> _vec4<T>::max(const _vec4<T>& v, const _vec4<T>& y) {
+        return v.length() <= y.length() ? y.length() : v.length();
     }
 
 

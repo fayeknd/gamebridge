@@ -31,6 +31,8 @@ namespace fm {
         _vec3<T> cross(_vec3<T> v) const;
         _vec3<T> transformed(const _mat4x4<T>& mat) const;
         _vec3<T> transform(const _mat4x4<T>& mat); 
+        static _vec3<T> min(const _vec3<T>&, const _vec3<T>&);
+        static _vec3<T> max(const _vec3<T>&, const _vec3<T>&);
 
         _vec3<T>& operator+=(const _vec3<T>& v);
         _vec3<T>& operator-=(const _vec3<T>& v);
@@ -111,6 +113,14 @@ namespace fm {
             z * v.x - x * v.z,
             x * v.y - y * v.x
         );
+    }
+    template <typename T>
+    inline _vec3<T> _vec3<T>::min(const _vec3<T>& v, const _vec3<T>& y) {
+        return v.length() >= y.length() ? y.length() : v.length();
+    }
+    template <typename T>
+    inline _vec3<T> _vec3<T>::max(const _vec3<T>& v, const _vec3<T>& y) {
+        return v.length() <= y.length() ? y.length() : v.length();
     }
 
     template <typename T>
