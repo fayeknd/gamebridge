@@ -25,7 +25,8 @@ namespace fm {
         T distanceTo(_vec3<T> to) const;
         _vec3<T> normalized() const;
         T length() const;
-        T& operator[](int i) const;
+        T& operator[](int i);
+        const T& operator[](int i) const;
         _vec3<T> lerp(_vec3<T> to, T scalar) const;
         T dot(_vec3<T> v) const;
         _vec3<T> cross(_vec3<T> v) const;
@@ -77,7 +78,25 @@ namespace fm {
         return std::sqrt((x * x) + (y * y) + (z * z));
     }
     template <typename T>
-    inline T& _vec3<T>::operator[](int i) const { 
+    inline T& _vec3<T>::operator[](int i) { 
+        switch (i) {
+        case 0:
+            return x;
+            break;
+        case 1:
+            return y;
+            break;
+        case 2:
+            return z;
+            break;
+        default:
+            throw std::out_of_range("vec3 has three components!");;
+            return x;
+            break;
+        }
+    }
+    template <typename T>
+    inline const T& _vec3<T>::operator[](int i) const{ 
         switch (i) {
         case 0:
             return x;

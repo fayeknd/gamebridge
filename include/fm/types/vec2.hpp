@@ -22,7 +22,8 @@ namespace fm {
         T distanceTo(_vec2<T> to) const;
         _vec2<T> normalized() const;
         T length() const;
-        T& operator[](int i) const;
+        T& operator[](int i);
+        const T& operator[](int i) const;
         _vec2<T>* rotatedBy(float degrees, _vec2<T> offset = _vec2(0)) const;
         _vec2<T> lerp(_vec2<T> to, T scalar) const;
         T dot(_vec2<T> v) const;
@@ -66,7 +67,7 @@ namespace fm {
         return sqrt((x * x) + (y * y));
     }
     template <typename T>
-    inline T& _vec2<T>::operator[](int i) const { 
+    inline T& _vec2<T>::operator[](int i) { 
         switch (i) {
         case 0:
             return x;
@@ -75,7 +76,22 @@ namespace fm {
             return y;
             break;
         default:
-            throw std::out_of_range("vec2 has two components!");;
+            throw std::out_of_range("vec3 has three components!");;
+            return x;
+            break;
+        }
+    }
+    template <typename T>
+    inline const T& _vec2<T>::operator[](int i) const{ 
+        switch (i) {
+        case 0:
+            return x;
+            break;
+        case 1:
+            return y;
+            break;
+        default:
+            throw std::out_of_range("vec3 has three components!");;
             return x;
             break;
         }

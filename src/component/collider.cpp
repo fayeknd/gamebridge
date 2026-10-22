@@ -33,17 +33,39 @@ bool BoundingBox::CheckRayIntersection(const Ray& ray, RaycastHit& outRaycastHit
 
 bool BoundingBox::RayAABoxIntersection(const Ray& ray, const BoundingBox& box, HitInfo& outHitInfo)
 {
-    fm::vec3 tMin = (box.m_min - ray.m_origin) / ray.m_direction;
-    fm::vec3 tMax = (box.m_max - ray.m_origin) / ray.m_direction;
+    float tNearMax = -std::numeric_limits<float>::max();
+    float tFarMin = std::numeric_limits<float>::max();
 
-    // Find the nearest and farthest intersections
-    fm::vec3 tNear = fm::vec3::min(tMin, tMax);
-    fm::vec3 tFar = fm::vec3::max(tMin, tMax);
+    // Test intersection for each axis (X, Y, Z) safely handling negative directions
+    for (int i = 0; i < 3; ++i)
+    {
+        float origin = ray.m_origin[i];
+        float dir = ray.m_direction[i];
+        float minVal = box.m_min[i];
+        float maxVal = box.m_max[i];
 
-    // Find the maximum of the nearest intersections
-    float tNearMax = std::max(std::max(tNear.x, tNear.y), tNear.z);
-    // Find the minimum of the farthest intersections
-    float tFarMin = std::min(std::min(tFar.x, tFar.y), tFar.z);
+        // Avoid division by zero if ray is parallel to the slab
+        if (std::abs(dir) < 1e-8f)
+        {
+            // If origin is outside the slab along this parallel axis, no intersection
+            if (origin < minVal || origin > maxVal)
+                return false;
+        }
+        else
+        {
+            float t1 = (minVal - origin) / dir;
+            float t2 = (maxVal - origin) / dir;
+
+            if (t1 > t2) std::swap(t1, t2);
+
+            tNearMax = std::max(tNearMax, t1);
+            tFarMin = std::min(tFarMin, t2);
+
+            // Box is missed if near intersection is greater than far intersection
+            if (tNearMax > tFarMin)
+                return false;
+        }
+    }
 
     // Check if the ray intersects the bounding box
     if (tNearMax <= tFarMin && outHitInfo.m_distance > tNearMax)
