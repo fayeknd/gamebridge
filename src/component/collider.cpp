@@ -1,92 +1,154 @@
+#include "ray.hpp"
 #include <component/collider.hpp>
 
 using namespace Engine;
 
-void BoundingBox::init()
-{
-    s_boundingBoxList.push_back(weak_from_this());
+BoundingBoxID BoundingBox::getBoxID() {
+    return m_boxID;
 }
 
-bool BoundingBox::CheckBoxIntersection(const BoundingBox& a, const BoundingBox& b)
-{
-    return (a.m_min.x <= b.m_max.x && a.m_max.x >= b.m_min.x) &&
-        (a.m_min.y <= b.m_max.y && a.m_max.y >= b.m_min.y) &&
-        (a.m_min.z <= b.m_max.z && a.m_max.z >= b.m_min.z);
+void BoundingBox::init() {
+
+    // get the next box id
+    m_boxID = s_boundingBoxIDPool.getNewID();
+
+    // register ourselves with the bounding box list
+    s_boundingBoxList.emplace(m_boxID, this);
 }
 
-bool BoundingBox::CheckRayIntersection(const Ray& ray, RaycastHit& outRaycastHit)
-{
-    fm::vec3 origin = ray.m_origin.transformed(outRaycastHit.m_hitEntity->transform.getGlobalMatrix());
-    fm::vec3 direction = ray.m_direction.transformed(outRaycastHit.m_hitEntity->transform.getGlobalMatrix());
+void BoundingBox::onDestroy() {
 
-    Ray localRay(origin, direction); 
-    BoundingBox& boundingBox = *outRaycastHit.m_hitEntity->getComponent<BoundingBox>();
+    // remove ourselves from the bounding box list
+    s_boundingBoxList.erase(m_boxID);
 
-    if (RayAABoxIntersection(localRay, boundingBox, outRaycastHit.m_hitInfo))
-    {
-        Logging::Logger::get().logInfo("Raycast Hit At {}", boundingBox.getEntity().m_name);
-        outRaycastHit.m_hitInfo.m_hasHit = true;
-    }
-
-    return outRaycastHit.m_hitInfo.m_hasHit;
+    // release our id 
+    s_boundingBoxIDPool.releaseID(m_boxID);
 }
 
-bool BoundingBox::RayAABoxIntersection(const Ray& ray, const BoundingBox& box, HitInfo& outHitInfo)
-{
+bool BoundingBox::checkBoxIntersection(BoundingBox& a, BoundingBox& b) {
+    // easy fucking peasy 
+
+    // get the entity global scale
+    fm::vec3 a_scale = a.getEntity().transform.getGlobalScale();
+    fm::vec3 b_scale = b.getEntity().transform.getGlobalScale();
+
+    // transform the bounds by the global scale
+    fm::vec3 a_min = a.m_min * a_scale;
+    fm::vec3 a_max = a.m_max * a_scale;
+
+    fm::vec3 b_min = b.m_min * b_scale;
+    fm::vec3 b_max = b.m_max * b_scale;
+
+    // calculate intersection in any axis
+    return (a_min.x <= b_max.x && a_max.x >= b_min.x) &&
+           (a_min.y <= b_max.y && a_max.y >= b_min.y) &&
+           (a_min.z <= b_max.z && a_max.z >= b_min.z);
+}
+
+bool BoundingBox::checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit) {
+
+    fm::mat4 worldMatrixInversed = outRaycastHit.m_hitEntity->transform.getGlobalMatrix().inversed();
+
+    // construct our local ray 
+    Ray localRay(
+        ray.m_origin.transformed(worldMatrixInversed), // local origin
+        ray.m_direction.transformed(worldMatrixInversed) // local direction
+    );
+
+    // get bounding box from entity. 
+    BoundingBox& boundingBox = *outRaycastHit.m_hitBox;
+
+    // return a collision. we don't need to return hasHit,
+    // because if hasHit is true, this function will have set it.
+    return rayAABoxIntersection(localRay, boundingBox, outRaycastHit);
+}
+
+bool BoundingBox::rayAABoxIntersection(const Ray& ray, const BoundingBox& box, RaycastHit& outRaycastHit) {
+
     float tNearMax = -std::numeric_limits<float>::max();
-    float tFarMin = std::numeric_limits<float>::max();
+    float tFarMin  =  std::numeric_limits<float>::max();
 
-    // Test intersection for each axis (X, Y, Z) safely handling negative directions
-    for (int i = 0; i < 3; ++i)
-    {
+    // "slab" refers to the infinite plane of an axis.
+    // the X slab is just the straight (1,0,0) axis that
+    // extends from -infinity to +infinity.
+
+    fm::vec3 entityScale = outRaycastHit.m_hitEntity->transform.getGlobalScale();
+    // idfk dude if the scale in an axis is smaller than this
+    // then it detects a hit all the time so like check this
+    float minAxisScale = 0.01;
+
+    // test intersection per axis
+    for (int i = 0; i < 3; ++i) {
+
+        // if the axis is smaller than the minimum allowed scale, 
+        // just return to avoid some weird bugs
+        if (entityScale[i] < minAxisScale) return false;
+
         float origin = ray.m_origin[i];
         float dir = ray.m_direction[i];
+        
         float minVal = box.m_min[i];
         float maxVal = box.m_max[i];
 
-        // Avoid division by zero if ray is parallel to the slab
-        if (std::abs(dir) < 1e-8f)
-        {
-            // If origin is outside the slab along this parallel axis, no intersection
+        // avoid division by zero
+        if (std::abs(dir) < 1e-8f) { // 1e-8f = 0.00000001 
+            // dir is effectively 0
+
+            // is ray origin outside this axis' slab?
             if (origin < minVal || origin > maxVal)
-                return false;
-        }
-        else
-        {
-            float t1 = (minVal - origin) / dir;
-            float t2 = (maxVal - origin) / dir;
+                return false; // yes, no intersection happened.
+        
+        } 
+        else {
+            // dir is not 0, continue
 
-            if (t1 > t2) std::swap(t1, t2);
+            // point where the ray entered. 
+            float boxEntry = (minVal - origin) / dir;
 
-            tNearMax = std::max(tNearMax, t1);
-            tFarMin = std::min(tFarMin, t2);
+            // point where the ray left.
+            float boxExit  = (maxVal - origin) / dir;
 
-            // Box is missed if near intersection is greater than far intersection
+            if (boxEntry > boxExit) std::swap(boxEntry, boxExit);
+
+            // nearest hit point to the ray origin
+            tNearMax = std::max(tNearMax, boxEntry);
+
+            // furthest hit point to the origin
+            tFarMin  = std::min(tFarMin, boxExit);
+
+            // if near intersection is greater than far intersection, the box was missed.
             if (tNearMax > tFarMin)
                 return false;
         }
     }
 
-    // Check if the ray intersects the bounding box
-    if (tNearMax <= tFarMin && outHitInfo.m_distance > tNearMax)
-    {
-        // Ray intersects the bounding box
-        // Calculate the intersection point
-        fm::vec3 intersectionPoint = ray.m_origin + ray.m_direction * tNearMax;
-        outHitInfo.m_hitPoint = intersectionPoint;
-        outHitInfo.m_distance = tNearMax;
-        outHitInfo.m_hasHit = true;
+    RaycastHitInfo& outHitInfo = outRaycastHit.m_hitInfo;
 
+    // check for box intersection
+    if (tNearMax <= tFarMin && outHitInfo.m_distance > tNearMax) {
+        // we hit!!
+        // set some values and then we GET OUTTA HERE!!!
+
+        fm::mat4 worldMatrix = outRaycastHit.m_hitEntity->transform.getGlobalMatrix();
+
+        outHitInfo.m_hitPoint    = (ray.m_origin + ray.m_direction * tNearMax).transformed(worldMatrix);
+        outHitInfo.m_farHitPoint = (ray.m_origin + ray.m_direction * tFarMin).transformed(worldMatrix);
+        outHitInfo.m_distance    = tNearMax;
+        outHitInfo.m_hasHit      = true;
+
+        // GET OUTTA HERE!!!
         return true;
     }
 
     return false;
 }
 
-void BoundingBox::SetBounds(fm::vec3 min, fm::vec3 max)
-{
+// set the box bounds
+void BoundingBox::setBounds(fm::vec3 min, fm::vec3 max) {
     m_min = min;
     m_max = max;
 }
 
-
+std::unordered_map<BoundingBoxID, BoundingBox*> BoundingBox::getBoundingBoxList() {
+    return s_boundingBoxList; // readonly
+}

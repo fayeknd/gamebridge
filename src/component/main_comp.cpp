@@ -1,5 +1,6 @@
 #include "gl_context.hpp"
 #include "logger.hpp"
+#include "ray.hpp"
 #include "shader.hpp"
 #include <component/collider.hpp>
 #include <component/main_comp.hpp>
@@ -17,6 +18,7 @@ using namespace Engine;
 
 Entity* square;
 Entity* cam;
+Entity* teenySquare;
 float sensitivity = 0.45;
 
 void MainComponent::init() {
@@ -50,12 +52,19 @@ void MainComponent::init() {
     square = Entity::create("Test Square").get(); 
     auto renderer = square->addComponent<IRenderable>();
     auto collider = square->addComponent<BoundingBox>();
-    collider->SetBounds(fm::vec3(-0.5f, -0.5f, -0.5f), fm::vec3(0.5f, 0.5f, 0.5f));
+
+    square->transform.addPosition(0.1f);
+
+    // TODO : implement copying entities
+    teenySquare = Entity::create("hitSquare").get();
+    auto renderer2 = teenySquare->addComponent<IRenderable>();
 
     // add some basic data to the renderer
     renderer->m_mesh = mesh;
     renderer->m_shaderProgram = ShaderProgram::getShaderViaKey(program->getKey());
-
+    renderer2->m_mesh = mesh;
+    renderer2->m_shaderProgram = program;
+    teenySquare->transform.setScale(0.1f);
     // create the camera entity
     cam = Entity::create("Camera").get();
     // add a camera component
@@ -73,7 +82,7 @@ void MainComponent::init() {
 }
 
 void MainComponent::update(double delta) {
-    //square->transform.addRotationZ(10 * delta);
+    square->transform.setScale((sin(Time::sinceStartup()) / 2.0f) + 0.5f);
 
     auto mdelta = Input::getMouseDelta();
     if (mdelta != fm::dvec2::zero()) {
@@ -102,14 +111,15 @@ void MainComponent::update(double delta) {
     if (Input::getAction(Key::Q)) {
         cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getDown());
     }
-    if (Input::getActionDown(Key::F))
-    {
-        RaycastHit out;
-        if(Physics::Raycast({cam->transform.getPosition(), cam->transform.getFront()}, out))
-        {
-            Logging::Logger::get().logInfo("Sex Balls Seex");
-        };
+    if (Input::getActionDown(Key::F)) {
+        
     }
+    RaycastHit out;
+        
+    if(Physics::Raycast({cam->transform.getPosition(), cam->transform.getFront()}, out)) {
+        Logging::Logger::get().logInfo("Raycast hit at {}, object scale is {}", out.m_hitInfo.m_hitPoint, square->transform.getGlobalScale());
+        teenySquare->transform.setPosition(out.m_hitInfo.m_hitPoint);
+    };
 }
 
 void MainComponent::lateUpdate(double delta) {

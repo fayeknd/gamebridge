@@ -6,25 +6,24 @@
 using namespace Engine;
 
 
-RaycastHit Physics::Raycast(Ray ray, RaycastHit& rayCastHit)
-{
-    Logging::Logger::get().logInfo("Raycast casted");
+RaycastHit Physics::Raycast(Ray ray, RaycastHit& rayCastHit, float distance) {
 
-    for (size_t i = 0; i < BoundingBox::s_boundingBoxList.size(); i++)
-    {
-        auto bb = BoundingBox::s_boundingBoxList[i];
-        if (bb.expired()) 
-        {
-            BoundingBox::s_boundingBoxList.erase(BoundingBox::s_boundingBoxList.begin() + i);
-            continue;
-        }
- 
+    // iterate through every bounding box (expensive!!)
+    for (auto it : BoundingBox::getBoundingBoxList()) {
 
+        // get the bounding box pointer
+        auto bb = it.second;
+
+        // set some hit values
         RaycastHit hit;
-        hit.m_hitEntity = &bb.lock().get()->getEntity();
+        hit.m_hitEntity = &bb->getEntity();
+        hit.m_hitBox    = bb;
 
-        bb.lock()->CheckRayIntersection(ray, hit);
+        // flood raycasthit with hit info
+        bb->checkRayIntersection(ray, hit);
 
+        // did we hit?
+        // (this is weird, im so sure that raycast article was ai)
         if(hit.m_hitInfo.m_distance < rayCastHit.m_hitInfo.m_distance)
             rayCastHit = hit;
     }
