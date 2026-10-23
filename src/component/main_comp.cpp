@@ -3,6 +3,7 @@
 #include "ray.hpp"
 #include "shader.hpp"
 #include <component/collider.hpp>
+#include <component/boundingbox.hpp>
 #include <component/main_comp.hpp>
 #include <entity.hpp>
 #include <physics.hpp>
@@ -15,6 +16,7 @@
 #include <input.hpp>
 
 using namespace Engine;
+using namespace Physics;
 
 Entity* square;
 Entity* cam;
@@ -32,9 +34,10 @@ void MainComponent::init() {
     square = Entity::create("Test Square").get(); 
     auto collider = square->addComponent<BoundingBox>();
     auto renderer = square->addComponent<IRenderable>();
-    collider->m_renderBounds = true;
+    collider->m_renderBounds = false;
     collider->m_max += {0.1f};
     collider->m_min -= {0.1f};
+    //collider->collider = Collider(ColliderShape::Sphere);
 
     square->transform.addPosition(1.1f);
     square->transform.addScaleY(.3f);

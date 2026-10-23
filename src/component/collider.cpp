@@ -1,81 +1,40 @@
-#include "gl_context.hpp"
-#include "mesh.hpp"
-#include "ray.hpp"
-#include "shader.hpp"
 #include <component/collider.hpp>
-#include <component/camera.hpp>
 
 using namespace Engine;
 
-BoundingBoxID BoundingBox::getBoxID() {
-    return m_boxID;
+Collider::Collider(const fm::vec3& min, const fm::vec3& max)
+{
+    m_shape = ColliderShape::Box;
+    this->m_min = min;
+    this->m_max = max;
 }
 
-void BoundingBox::setColour(fm::vec4 col) {
-    m_program->useProgram();
-    m_program->setUniform("boxCol", col);
+Collider::Collider(const fm::vec3& center, const float& radius)
+{
+    m_shape = ColliderShape::Box;
+    this->center = center;
+    this->radius = radius;
 }
 
-void BoundingBox::init() {
-
-    // get the next box id
-    m_boxID = s_boundingBoxIDPool.getNewID();
-
-    // register ourselves with the bounding box list
-    s_boundingBoxList.emplace(m_boxID, this);
-
-    // create some debug drawing stuff
-    m_boxMesh = Mesh::primitive(Primitive::Cube);
-    m_program = ShaderProgram::createProgramFromPath("stuff=>shaders/collider.glsl");
-    // set the box draw colour
-    setColour(m_boxDebugCol);
+Collider::Collider(ColliderShape shape)
+{
+    this->m_shape = shape;
 }
 
-void BoundingBox::onDestroy() {
-
-    // remove ourselves from the bounding box list
-    s_boundingBoxList.erase(m_boxID);
-
-    // release our id 
-    s_boundingBoxIDPool.releaseID(m_boxID);
+bool Collider::IsCollidingWith(Collider& collider)
+{
+    if (this->m_shape == ColliderShape::Box && collider.m_shape == ColliderShape::Box)
+        return CheckBoxIntersection(*this, collider);
+    else if (this->m_shape == ColliderShape::Sphere && collider.m_shape == ColliderShape::Sphere)
+        return CheckSphereIntersection(*this, collider);
+    else if (this->m_shape == ColliderShape::Sphere && collider.m_shape == ColliderShape::Box 
+        || this->m_shape == ColliderShape::Box && collider.m_shape == ColliderShape::Sphere)
+        return CheckSphereBoxIntersection(*this, collider);
+    else
+        return false;
 }
 
-void BoundingBox::draw() {
-    if (!m_boxMesh || !m_program || !entity.isEnabled() || !m_renderBounds) return;
-    m_renderData.useRenderData();
-
-    // bind the mesh
-    m_boxMesh->bindMesh();
-
-    // use the program 
-    m_program->useProgram();
-
-    fm::vec3 boxCenter = m_min.lerp(m_max, 0.5f);
-
-    // set basic uniforms
-    m_program->setUniform(shader_ModelMatrix, entity.transform.getGlobalMatrix() * fm::model(
-        boxCenter,
-        (m_max.abs() + m_min.abs()),
-        {0}, {0}
-    ));
-    // ViewProjection matrix
-    fm::mat4 vpMat = fm::mat4::identity();
-    // if main camera exists
-    if (Camera::activeCamera()) {
-        // vpMat is the main camera projection * view
-        vpMat = Camera::activeCamera()->getProjectionMat() * Camera::activeCamera()->getViewMat();
-    }
-    m_program->setUniform(shader_ViewProjectionMatrix, vpMat);
-
-    // draw the mesh
-    glDrawElements(m_boxMesh->getTopology(), m_boxMesh->getIndexCount(), GL_UNSIGNED_SHORT, 0);
-    glLineWidth(5);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glDrawElements(m_boxMesh->getTopology(), m_boxMesh->getIndexCount(), GL_UNSIGNED_SHORT, 0);
-    m_renderData.useRenderData();
-}
-
-bool BoundingBox::checkBoxIntersection(BoundingBox& a, BoundingBox& b) {
+bool Collider::CheckBoxIntersection(Collider& a, Collider& b) {
     // easy fucking peasy 
 
     // get the entity global scale
@@ -95,110 +54,45 @@ bool BoundingBox::checkBoxIntersection(BoundingBox& a, BoundingBox& b) {
            (a_min.z <= b_max.z && a_max.z >= b_min.z);
 }
 
-bool BoundingBox::checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit) {
+bool Collider::CheckSphereIntersection(Collider& a, Collider& b) {
+    fm::vec3 centerA = a.center + a.offset;
+    fm::vec3 centerB = b.center + b.offset;
 
-    fm::mat4 worldMatrixInversed = outRaycastHit.m_hitEntity->transform.getGlobalMatrix().inversed();
+    fm::vec3 dist = centerB - centerA;
 
-    // construct our local ray 
-    Ray localRay(
-        ray.m_origin.transformed(worldMatrixInversed), // local origin
-        ray.m_direction.transformed(worldMatrixInversed, true) // local direction
-    );
+    float distSq = dist.dot(dist);
 
-    // get bounding box from entity. 
-    BoundingBox& boundingBox = *outRaycastHit.m_hitBox;
+    float radiiSum = a.radius + b.radius;
+    float radiiSumSq = a.radius * b.radius;
 
-    // return a collision. we don't need to return hasHit,
-    // because if hasHit is true, this function will have set it.
-    return rayAABoxIntersection(localRay, boundingBox, outRaycastHit);
+    return distSq <= radiiSumSq;
 }
 
-bool BoundingBox::rayAABoxIntersection(const Ray& ray, const BoundingBox& box, RaycastHit& outRaycastHit) {
-
-    float tNearMax = -std::numeric_limits<float>::max();
-    float tFarMin  =  std::numeric_limits<float>::max();
-
-    // "slab" refers to the infinite plane of an axis.
-    // the X slab is just the straight (1,0,0) axis that
-    // extends from -infinity to +infinity.
-
-    fm::vec3 entityScale = outRaycastHit.m_hitEntity->transform.getGlobalScale();
-    // idfk dude if the scale in an axis is smaller than this
-    // then it detects a hit all the time so like check this
-    float minAxisScale = 0.01;
-
-    // test intersection per axis
-    for (int i = 0; i < 3; ++i) {
-
-        // if the axis is smaller than the minimum allowed scale, 
-        // just return to avoid some weird bugs
-        if (entityScale[i] < minAxisScale) return false;
-
-        float origin = ray.m_origin[i];
-        float dir = ray.m_direction[i];
-        
-        float minVal = box.m_min[i];
-        float maxVal = box.m_max[i];
-
-        // avoid division by zero
-        if (std::abs(dir) < 1e-8f) { // 1e-8f = 0.00000001 
-            // dir is effectively 0
-
-            // is ray origin outside this axis' slab?
-            if (origin < minVal || origin > maxVal)
-                return false; // yes, no intersection happened.
-        
-        } 
-        else {
-            // dir is not 0, continue
-
-            // point where the ray entered. 
-            float boxEntry = (minVal - origin) / dir;
-
-            // point where the ray left.
-            float boxExit  = (maxVal - origin) / dir;
-
-            if (boxEntry > boxExit) std::swap(boxEntry, boxExit);
-
-            // nearest hit point to the ray origin
-            tNearMax = std::max(tNearMax, boxEntry);
-
-            // furthest hit point to the origin
-            tFarMin  = std::min(tFarMin, boxExit);
-
-            // if near intersection is greater than far intersection, the box was missed.
-            if (tNearMax > tFarMin)
-                return false;
-        }
+bool Collider::CheckSphereBoxIntersection(Collider& a, Collider& b)
+{
+    // A is always = sphere and b is always = box
+    if (b.m_shape == ColliderShape::Sphere && a.m_shape == ColliderShape::Box)
+    {
+        Collider& c = b;
+        a = b;
+        a = c;
     }
 
-    RaycastHitInfo& outHitInfo = outRaycastHit.m_hitInfo;
+    fm::vec3 boxMin = b.m_min + b.offset;
+    fm::vec3 boxMax = b.m_max + b.offset;
+    fm::vec3 sphereCenter = a.center + a.offset;
 
-    // check for box intersection
-    if (tNearMax <= tFarMin && outHitInfo.m_distance > tNearMax) {
-        // we hit!!
-        // set some values and then we GET OUTTA HERE!!!
+    fm::vec3 closestPoint;
 
-        fm::mat4 worldMatrix = outRaycastHit.m_hitEntity->transform.getGlobalMatrix();
+    closestPoint.x = std::max(boxMin.x, std::min(sphereCenter.x, boxMax.x));
+    closestPoint.y= std::max(boxMin.y, std::min(sphereCenter.y, boxMax.y));
+    closestPoint.z = std::max(boxMin.z, std::min(sphereCenter.z, boxMax.z));
 
-        outHitInfo.m_hitPoint    = (ray.m_origin + ray.m_direction * tNearMax).transformed(worldMatrix);
-        outHitInfo.m_farHitPoint = (ray.m_origin + ray.m_direction * tFarMin).transformed(worldMatrix);
-        outHitInfo.m_distance    = tNearMax;
-        outHitInfo.m_hasHit      = true;
+    fm::vec3 dist = sphereCenter - closestPoint;
 
-        // GET OUTTA HERE!!!
-        return true;
-    }
+    float distSq = dist.dot(dist);
 
-    return false;
-}
+    float radiusSq = a.radius * a.radius;
 
-// set the box bounds
-void BoundingBox::setBounds(fm::vec3 min, fm::vec3 max) {
-    m_min = min;
-    m_max = max;
-}
-
-std::unordered_map<BoundingBoxID, BoundingBox*> BoundingBox::getBoundingBoxList() {
-    return s_boundingBoxList; // readonly
+    return distSq <= radiusSq;
 }

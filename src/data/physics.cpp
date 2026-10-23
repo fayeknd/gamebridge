@@ -1,9 +1,10 @@
 #include <physics.hpp>
-#include <component/collider.hpp>
 #include <logger.hpp>
+#include <component/boundingbox.hpp>
 #include <vector>
 
 using namespace Engine;
+using namespace Physics;
 
 
 RaycastHit Physics::Raycast(Ray ray, RaycastHit& rayCastHit, float distance) {
@@ -23,7 +24,7 @@ RaycastHit Physics::Raycast(Ray ray, RaycastHit& rayCastHit, float distance) {
         bb->checkRayIntersection(ray, hit);
 
         // did we hit?
-        // (this is weird, im so sure that raycast article was ai)
+        // we hit bitches - hunter
         if(hit.m_hitInfo.m_distance < rayCastHit.m_hitInfo.m_distance)
             rayCastHit = hit;
     }
