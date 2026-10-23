@@ -79,8 +79,8 @@ bool BoundingBox::checkBoxIntersection(BoundingBox& a, BoundingBox& b) {
     // easy fucking peasy 
 
     // get the entity global scale
-    fm::vec3 a_scale = a.getEntity().transform.getGlobalScale();
-    fm::vec3 b_scale = b.getEntity().transform.getGlobalScale();
+    fm::vec3 a_scale = fm::vec3::one();//a.getEntity().transform.getGlobalScale();
+    fm::vec3 b_scale = fm::vec3::one();//b.getEntity().transform.getGlobalScale();
 
     // transform the bounds by the global scale
     fm::vec3 a_min = a.m_min * a_scale;
