@@ -84,14 +84,17 @@ namespace Engine {
         struct GLState {
 
             // the currently bound shader program
-            GLuint m_currentProgram;
+            GLuint m_currentProgram = -1;
 
             // the currently bound vertex array
-            GLuint m_currentMesh; 
+            GLuint m_currentMesh = -1; 
 
             // the texture queue. up to 32 textures can be
             // bound at any time, so we store them in a queue.
             std::queue<GLuint> m_txQueue;
+
+            // the active unit.
+            GLuint m_activeTextureUnit = -1;
 
         } glState;
 

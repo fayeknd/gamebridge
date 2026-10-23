@@ -13,13 +13,9 @@
 #include <component/camera.hpp>
 #include <time.hpp>
 #include <input.hpp>
+#include <texture.hpp>
 
 using namespace Engine;
-
-Entity* square;
-Entity* cam;
-Entity* teenySquare;
-float sensitivity = 0.45;
 
 void MainComponent::init() {
 
@@ -57,9 +53,14 @@ void MainComponent::init() {
     // push the camera back a bit in the world
     cam->transform.addPositionZ(-5);
     // set the clear colour on the camera
-    camComponent->m_clearCol = {0.1f, 0.1f, 0.1f, 1};
+    camComponent->m_clearCol = {0.1f, 0.1f, 0.1f, 0.0f};
 
     Logging::Logger::get().logInfo("Camera clear colour: {}", camComponent->m_clearCol);
+
+
+    texture = Texture2D::createTextureFromPath("stuff=>textures/me trying to flirt.png");
+    texture->bindTexture();
+    program->setUniform("tx", texture);
 
     // set the target fps
     Window::get().setTargetFPS(240);

@@ -62,7 +62,7 @@ namespace Engine {
         }
 
         // free an ID. this should be called in the destructors of anything that uses an IDPool.
-        void releaseID(T uid) {
+        void releaseID(T& uid) {
 
             // if uid is less than or equal to nextID, then the uid cannot have possibly been assigned to anything.
             if (uid >= m_nextID) {
@@ -71,6 +71,7 @@ namespace Engine {
 
             // add this id to the list of free ones. 
             m_freeIDs.push_back(uid);
+            uid = 0;
         }
     };
 }
