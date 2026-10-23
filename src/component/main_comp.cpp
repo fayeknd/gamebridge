@@ -29,6 +29,7 @@ void MainComponent::init() {
     auto collider = square->addComponent<BoundingBox>();
     auto renderer = square->addComponent<IRenderable>();
     collider->m_renderBounds = true;
+    
     collider->m_max += {0.1f};
     collider->m_min -= {0.1f};
 
