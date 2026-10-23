@@ -5,6 +5,7 @@
 #include <engine.h>
 #include <renderdata.hpp>
 #include <logger.hpp>
+#include <queue>
 
 namespace Engine {
 
@@ -19,6 +20,11 @@ namespace Engine {
         // determines if opengl is ready to use. returned by isGLReady().
         bool m_glInit = false;
 
+        // maximum allowed bound textures
+        uint8_t m_maxTextureSlots;
+
+        friend class Window;
+        
     public:
 
         // example of a static instance singleton. having one of these in a class
@@ -60,6 +66,8 @@ namespace Engine {
         // unless you're doing something really specific. 
         int destroyGLContext();
 
+        uint8_t maxTextureSlots() { return m_maxTextureSlots; }
+
         // destructor just calls destroyGLContext().
         ~GLContext();
 
@@ -81,8 +89,9 @@ namespace Engine {
             // the currently bound vertex array
             GLuint m_currentMesh; 
 
-            // the current render flag information
-            RenderData renderData;
+            // the texture queue. up to 32 textures can be
+            // bound at any time, so we store them in a queue.
+            std::queue<GLuint> m_txQueue;
 
         } glState;
 

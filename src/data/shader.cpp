@@ -122,7 +122,7 @@ std::shared_ptr<ShaderProgram> ShaderProgram::_createProgramFromStringStream(std
 void ShaderProgram::useProgram() {
 
     // if this program is already bound or was not registered, return early.
-    //if (GLContext::get().glState.m_currentProgram == m_programID || !m_registered) return;
+    if (GLContext::get().glState.m_currentProgram == m_programID) return;
 
     // bind the program.
     glUseProgram(m_programID);

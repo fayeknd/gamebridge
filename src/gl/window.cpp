@@ -1,4 +1,5 @@
 #include "cachable.hpp"
+#include "gl_context.hpp"
 #include <window.hpp>
 
 #include <GLFW/glfw3native.h>
@@ -217,6 +218,13 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
         return ERR_NO_ROOT_ENTITY;
     }
 
+    // the max slots amount differs on GPUs. it's either 16 or 32.
+    // we aren't really going to run into a gpu that only allows 16,
+    // but still. may as well.
+    GLint maxSlots;
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxSlots); 
+    GLContext::get().m_maxTextureSlots = maxSlots; 
+
     // check for default parameter values and set them to the true defaults accordingly.
     // the reason they are -1 is to allow setting defaults to be done with the original variables
     // in window.hpp instead.
@@ -261,9 +269,6 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     
     // set the vsync mode
     setVSyncMode(VSyncMode::Off);
-
-    // use the default renderdata
-    GLContext::get().glState.renderData.useRenderData();
 
     // add the main entrypoint component to the root entity.
     Entity::s_root->addComponent<MainComponent>();

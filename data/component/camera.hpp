@@ -70,7 +70,7 @@ namespace Engine {
         fm::col m_clearCol = fm::col(0, 0, 0, 1);
         // flags to clear at the end of a frame
         bitfield m_clearFlags  = (GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-        std::vector<GLuint> m_glFunctions = {GL_DEPTH_TEST, GL_CULL_FACE}; 
+        std::vector<GLuint> m_glFunctions = {GL_DEPTH_TEST, GL_CULL_FACE, GL_BLEND}; 
 
         // set the projection mode and mark projectionDirty as true        
         void setProjectionMode(ProjectionMode pm);

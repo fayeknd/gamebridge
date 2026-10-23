@@ -32,13 +32,17 @@ namespace fm {
         _vec4<T> cross(_vec4<T> v1, _vec4<T> v2) const;
         static _vec4<T> min(const _vec4<T>&, const _vec4<T>&);
         static _vec4<T> max(const _vec4<T>&, const _vec4<T>&);
-
+        _vec4<T> abs();
+        
         _vec4<T>& operator+=(const _vec4<T>& v) const;
         _vec4<T>& operator-=(const _vec4<T>& v) const;
         _vec4<T>& operator*=(double t) const;
         _vec4<T>& operator/=(double t) const;
     };
-
+    template <typename T>
+    inline _vec4<T> _vec4<T>::abs() {
+        return fm::_vec4<T>(std::abs(x), std::abs(y), std::abs(z), std::abs(w));
+    }
     template <typename T>
     inline _vec4<T>::_vec4() {
         x = 0; y = 0; z = 0; w = 0;
@@ -124,9 +128,10 @@ namespace fm {
     template <typename T>
     inline _vec4<T> _vec4<T>::lerp(_vec4<T> to, T scalar) const {
         _vec4<T> v = *this;
-        v->x = x + scalar * ( to.x - x ); 
-        v->y = y + scalar * ( to.y - y );
-        v->z = z + scalar * ( to.z - z );
+        v.x = x + scalar * ( to.x - x ); 
+        v.y = y + scalar * ( to.y - y );
+        v.z = z + scalar * ( to.z - z );
+        v.w = w + scalar * ( to.w - w );
         return v;
     }
     template <typename T>

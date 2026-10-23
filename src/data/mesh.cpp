@@ -1,5 +1,6 @@
 #include <mesh.hpp>
 #include <shader.hpp>
+#include <primitives.hpp>
 
 using namespace Engine;
 
@@ -74,9 +75,8 @@ void Mesh::bindMesh() {
     glBindVertexArray(m_vao);
 }
 
-// unimplemented
-std::shared_ptr<Mesh> Mesh::createPrimitiveMesh(std::string mesh) {
-    return nullptr; // doesn't do anything atm
+std::shared_ptr<Mesh> Mesh::primitive(Primitive p) {
+    return Primitives::getPrimitive(p);
 }
 
 // deconstructor

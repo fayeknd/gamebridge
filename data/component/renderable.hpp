@@ -11,17 +11,11 @@ namespace Engine {
     // and draws them.
     class IRenderable : public IComponent {
     protected:
-    
-        // use this instance's render data
-        void _useRenderData();
-
-        // a backup of the glstate render data
-        RenderData m_renderDataBk;
 
     public:
 
         // instance's render data
-        RenderData m_renderData;
+        RenderData m_renderData = RenderData();
 
         // mesh to draw
         std::shared_ptr<Mesh> m_mesh;

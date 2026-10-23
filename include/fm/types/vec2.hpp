@@ -30,12 +30,17 @@ namespace fm {
         T cross(_vec2<T> v) const;
         static _vec2<T> min(const _vec2<T>&, const _vec2<T>&);
         static _vec2<T> max(const _vec2<T>&, const _vec2<T>&);
+        _vec2<T> abs();
 
         _vec2<T>& operator+=(const _vec2<T>& v);
         _vec2<T>& operator-=(const _vec2<T>& v);
         _vec2<T>& operator*=(double t);
         _vec2<T>& operator/=(double t);
     };
+    template <typename T>
+    inline _vec2<T> _vec2<T>::abs() {
+        return fm::_vec2<T>(std::abs(x), std::abs(y));
+    }
     template <typename T>
     inline _vec2<T>::_vec2() {
         x = 0; y = 0;
@@ -118,8 +123,8 @@ namespace fm {
     template <typename T>
     inline _vec2<T> _vec2<T>::lerp(_vec2<T> to, T scalar) const {
         _vec2<T> v = *this;
-        v->x = x + scalar * ( to.x - x ); 
-        v->y = y + scalar * ( to.y - y );
+        v.x = x + scalar * ( to.x - x ); 
+        v.y = y + scalar * ( to.y - y );
         return v;
     }
     template <typename T>

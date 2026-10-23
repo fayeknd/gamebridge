@@ -7,29 +7,12 @@ using namespace Engine;
 void IRenderable::init() {
 }
 
-// use this instance's render data
-void IRenderable::_useRenderData() {
-
-    // reference to the glstate data
-    RenderData& rd = GLContext::get().glState.renderData;
-
-    // if the render data is already the same, don't bother changing anything.
-    if (rd == m_renderData) return;
-
-    // backup the old render data
-    m_renderDataBk = rd;
-    // set the glstate render data to this render data
-    rd = m_renderData;
-
-    // apply the render data
-    rd.useRenderData();
-}
 
 // draw
 void IRenderable::draw() {
     // if the mesh or shader is null, or if the renderer is disabled, return early
     if (!m_mesh || !m_shaderProgram || !m_render) return;
-    _useRenderData(); // use our render data
+    m_renderData.useRenderData(); // use our render data
 
     // bind the mesh
     m_mesh->bindMesh();

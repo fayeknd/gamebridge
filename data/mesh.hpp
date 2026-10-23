@@ -10,6 +10,11 @@
 
 namespace Engine {
 
+    // just one currently
+    enum Primitive {
+        Cube     = 0x01
+    };
+
     using MeshID = uint16_t;
 
     // the mesh class is responsible for holding all of the
@@ -39,7 +44,9 @@ namespace Engine {
         // buffer/vector of indices to get the
         // count from.
         GLuint m_indexCount;
-        
+
+        friend class Primitives;
+
     public:
 
         // deconstructor, just destroys the various buffers.
@@ -47,7 +54,7 @@ namespace Engine {
 
         // create a primitive mesh using an identifier. 
         // CURRENTLY DOESN'T DO ANYTHING!
-        static std::shared_ptr<Mesh> createPrimitiveMesh(std::string mesh);
+        static std::shared_ptr<Mesh> primitive(Primitive p);
 
         // create a mesh with any valid mesh data.
         // vertices and indices. and also topology.

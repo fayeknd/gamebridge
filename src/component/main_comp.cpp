@@ -25,44 +25,28 @@ void MainComponent::init() {
 
     Window::get().setWndSize({1280, 720});
 
-    auto v = std::vector<Vertex>() = {
-        {{ 0.5f, 0.5f, 0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{ 0.5f,-0.5f, 0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{-0.5f,-0.5f, 0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{-0.5f, 0.5f, 0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-
-        {{ 0.5f, 0.5f,-0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{ 0.5f,-0.5f,-0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{-0.5f,-0.5f,-0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}},
-        {{-0.5f, 0.5f,-0.5f}, {1.0,1.0,1.0,1.0}, {0.0,0.0}, {0.0,0.0,0.0}}
-    };
-    auto i = std::vector<unsigned short>() = {
-        0, 1, 2, 2, 3, 0,
-        1, 5, 6, 6, 2, 1,
-        2, 6, 7, 7, 3, 2,
-        0, 3, 7, 7, 4, 0,
-        4, 5, 1, 1, 0, 4,
-        5, 4, 7, 7, 6, 5
-    };
-    auto mesh = Mesh::createMeshWithData(v, i);
     auto program = ShaderProgram::createProgramFromPath("stuff=>shaders/shader.glsl");
     ResourceManager::freeArchives();
 
     // create entity and add component
     square = Entity::create("Test Square").get(); 
-    auto renderer = square->addComponent<IRenderable>();
     auto collider = square->addComponent<BoundingBox>();
+    auto renderer = square->addComponent<IRenderable>();
+    collider->m_renderBounds = true;
+    collider->m_max += {0.1f};
+    collider->m_min -= {0.1f};
 
-    square->transform.addPosition(0.1f);
+    square->transform.addPosition(1.1f);
+    square->transform.addScaleY(.3f);
 
     // TODO : implement copying entities
     teenySquare = Entity::create("hitSquare").get();
     auto renderer2 = teenySquare->addComponent<IRenderable>();
 
     // add some basic data to the renderer
-    renderer->m_mesh = mesh;
+    renderer->m_mesh = Mesh::primitive(Primitive::Cube);
     renderer->m_shaderProgram = ShaderProgram::getShaderViaKey(program->getKey());
-    renderer2->m_mesh = mesh;
+    renderer2->m_mesh = Mesh::primitive(Primitive::Cube);
     renderer2->m_shaderProgram = program;
     teenySquare->transform.setScale(0.1f);
     // create the camera entity
@@ -73,7 +57,7 @@ void MainComponent::init() {
     // push the camera back a bit in the world
     cam->transform.addPositionZ(-5);
     // set the clear colour on the camera
-    camComponent->m_clearCol = {1, 0, 1, 0.5f};
+    camComponent->m_clearCol = {0.1f, 0.1f, 0.1f, 1};
 
     Logging::Logger::get().logInfo("Camera clear colour: {}", camComponent->m_clearCol);
 
@@ -82,7 +66,7 @@ void MainComponent::init() {
 }
 
 void MainComponent::update(double delta) {
-    square->transform.setScale((sin(Time::sinceStartup()) / 2.0f) + 0.5f);
+    square->transform.setScaleX((sin(Time::sinceStartup()) / 10.0f) + 1.0f);
 
     auto mdelta = Input::getMouseDelta();
     if (mdelta != fm::dvec2::zero()) {
@@ -112,14 +96,18 @@ void MainComponent::update(double delta) {
         cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getDown());
     }
     if (Input::getActionDown(Key::F)) {
-        
+        // then idk good job
     }
-    RaycastHit out;
-        
+
+
+    RaycastHit out;    
     if(Physics::Raycast({cam->transform.getPosition(), cam->transform.getFront()}, out)) {
-        Logging::Logger::get().logInfo("Raycast hit at {}, object scale is {}", out.m_hitInfo.m_hitPoint, square->transform.getGlobalScale());
+        teenySquare->forceSetEnabled(true);
         teenySquare->transform.setPosition(out.m_hitInfo.m_hitPoint);
-    };
+    }
+    else {
+        teenySquare->setEnabled(false);
+    }
 }
 
 void MainComponent::lateUpdate(double delta) {

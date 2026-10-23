@@ -1,10 +1,19 @@
+#include "gl_context.hpp"
+#include "mesh.hpp"
 #include "ray.hpp"
+#include "shader.hpp"
 #include <component/collider.hpp>
+#include <component/camera.hpp>
 
 using namespace Engine;
 
 BoundingBoxID BoundingBox::getBoxID() {
     return m_boxID;
+}
+
+void BoundingBox::setColour(fm::vec4 col) {
+    m_program->useProgram();
+    m_program->setUniform("boxCol", col);
 }
 
 void BoundingBox::init() {
@@ -14,6 +23,12 @@ void BoundingBox::init() {
 
     // register ourselves with the bounding box list
     s_boundingBoxList.emplace(m_boxID, this);
+
+    // create some debug drawing stuff
+    m_boxMesh = Mesh::primitive(Primitive::Cube);
+    m_program = ShaderProgram::createProgramFromPath("stuff=>shaders/collider.glsl");
+    // set the box draw colour
+    setColour(m_boxDebugCol);
 }
 
 void BoundingBox::onDestroy() {
@@ -23,6 +38,41 @@ void BoundingBox::onDestroy() {
 
     // release our id 
     s_boundingBoxIDPool.releaseID(m_boxID);
+}
+
+void BoundingBox::draw() {
+    if (!m_boxMesh || !m_program || !entity.isEnabled() || !m_renderBounds) return;
+    m_renderData.useRenderData();
+
+    // bind the mesh
+    m_boxMesh->bindMesh();
+
+    // use the program 
+    m_program->useProgram();
+
+    fm::vec3 boxCenter = m_min.lerp(m_max, 0.5f);
+
+    // set basic uniforms
+    m_program->setUniform(shader_ModelMatrix, entity.transform.getGlobalMatrix() * fm::model(
+        boxCenter,
+        (m_max.abs() + m_min.abs()),
+        {0}, {0}
+    ));
+    // ViewProjection matrix
+    fm::mat4 vpMat = fm::mat4::identity();
+    // if main camera exists
+    if (Camera::activeCamera()) {
+        // vpMat is the main camera projection * view
+        vpMat = Camera::activeCamera()->getProjectionMat() * Camera::activeCamera()->getViewMat();
+    }
+    m_program->setUniform(shader_ViewProjectionMatrix, vpMat);
+
+    // draw the mesh
+    glDrawElements(m_boxMesh->getTopology(), m_boxMesh->getIndexCount(), GL_UNSIGNED_SHORT, 0);
+    glLineWidth(5);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glDrawElements(m_boxMesh->getTopology(), m_boxMesh->getIndexCount(), GL_UNSIGNED_SHORT, 0);
+    m_renderData.useRenderData();
 }
 
 bool BoundingBox::checkBoxIntersection(BoundingBox& a, BoundingBox& b) {
@@ -52,7 +102,7 @@ bool BoundingBox::checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit
     // construct our local ray 
     Ray localRay(
         ray.m_origin.transformed(worldMatrixInversed), // local origin
-        ray.m_direction.transformed(worldMatrixInversed) // local direction
+        ray.m_direction.transformed(worldMatrixInversed, true) // local direction
     );
 
     // get bounding box from entity. 

@@ -30,10 +30,11 @@ namespace fm {
         _vec3<T> lerp(_vec3<T> to, T scalar) const;
         T dot(_vec3<T> v) const;
         _vec3<T> cross(_vec3<T> v) const;
-        _vec3<T> transformed(const _mat4x4<T>& mat) const;
-        _vec3<T> transform(const _mat4x4<T>& mat); 
+        _vec3<T> transformed(const _mat4x4<T>& mat, bool isDirection = false) const;
+        _vec3<T> transform(const _mat4x4<T>& mat, bool isDirection = false); 
         static _vec3<T> min(const _vec3<T>&, const _vec3<T>&);
         static _vec3<T> max(const _vec3<T>&, const _vec3<T>&);
+        _vec3<T> abs();
 
         _vec3<T>& operator+=(const _vec3<T>& v);
         _vec3<T>& operator-=(const _vec3<T>& v);
@@ -42,6 +43,10 @@ namespace fm {
         _vec3<T>& operator*=(const _mat4x4<T>& m);
         _vec3<T>& operator/=(double t);
     };
+    template <typename T>
+    inline _vec3<T> _vec3<T>::abs() {
+        return fm::_vec3<T>(std::abs(x), std::abs(y), std::abs(z));
+    }
     template <typename T>
     inline _vec3<T>::_vec3() {
         x = 0; y = 0; z = 0;
@@ -116,9 +121,9 @@ namespace fm {
     template <typename T>
     inline _vec3<T> _vec3<T>::lerp(_vec3<T> to, T scalar) const {
         _vec3<T> v = *this;
-        v->x = x + scalar * ( to.x - x ); 
-        v->y = y + scalar * ( to.y - y );
-        v->z = z + scalar * ( to.z - z );
+        v.x = x + scalar * ( to.x - x ); 
+        v.y = y + scalar * ( to.y - y );
+        v.z = z + scalar * ( to.z - z );
         return v;
     }
     template <typename T>

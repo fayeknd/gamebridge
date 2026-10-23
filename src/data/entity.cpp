@@ -42,7 +42,7 @@ void Entity::_initQueuedComponents() {
 void Entity::_init() {
     // get a new entity ID from the pool
     m_id = s_entityPool.getNewID();
-    log().logInfo("Creating new entity Entity with name {} and EntityID {}.", m_name, m_id);
+    log().logInfo("Creating new Entity with name {} and EntityID {}.", m_name, m_id);
     // add this entity to the entity list
     s_entityList.emplace(m_id, shared_from_this());
     // parent this to the root node.

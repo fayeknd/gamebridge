@@ -1,8 +1,11 @@
+#include "gl_context.hpp"
 #include <fm/fmath.hpp>
 #include <component/component.hpp>
 #include <physics.hpp>
 #include <unordered_map>
 #include <idpool.hpp>
+#include <shader.hpp>
+#include <mesh.hpp>
 
 using namespace Engine::Physics;
 
@@ -24,8 +27,23 @@ namespace Engine
         // this instance's id
         BoundingBoxID m_boxID;
 
+        // the box draw colour
+        fm::vec4 m_boxDebugCol = {0.3f, 0.7f, 1.0f, 0.6f};
+
+        // the mesh to represent the box
+        std::shared_ptr<Mesh> m_boxMesh;
+        std::shared_ptr<ShaderProgram> m_program;
+
+        RenderData m_renderData = RenderData(); 
+
+
     public:
 
+        bool m_renderBounds = false;
+        fm::vec4 getColour() { return m_boxDebugCol; }
+        void setColour(fm::vec4 col);
+
+        // get this box ID
         BoundingBoxID getBoxID();
 
         fm::vec3 m_min =-fm::vec3::one() * 0.5f; // bottom-left-front bounds
@@ -33,6 +51,7 @@ namespace Engine
 
         void init() override;
         void onDestroy() override;
+        void draw() override;
 
         // Checks for a collision and returns true if two bounding boxes overlap each other
         void setBounds(fm::vec3 min, fm::vec3 max);

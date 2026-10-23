@@ -5,5 +5,7 @@ using namespace Engine;
 // use the render data
 void RenderData::useRenderData() {
     glFrontFace(m_frontFace);
-    glPolygonMode(m_cullFace, m_polyMode);
+    glCullFace(m_cullFace);
+    glPolygonMode(m_setPoly, m_polyMode);
+    glBlendFunc(m_blendFuncOpt, m_blendFuncVal);
 }
