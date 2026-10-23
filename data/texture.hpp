@@ -1,4 +1,5 @@
 #pragma once
+#include "idpool.hpp"
 #include <cachable.hpp>
 #include <gl_context.hpp>
 #include <fm/fmath.hpp>
@@ -11,7 +12,7 @@ namespace Engine {
     constexpr GLuint texture_defaultFormat    = GL_RGBA;
     constexpr GLuint texture_defaultWrapping  = GL_REPEAT;
 
-    class Texture : public ICachable<Texture> {
+    class Texture2D : public ICachable<Texture2D> {
     protected:
 
         static Logging::Logger& log() {
@@ -21,6 +22,13 @@ namespace Engine {
 
         // a map of this texture id to the cache id
         static std::unordered_map<GLuint, CacheID>& txIDToIDMap();
+
+        // the id pool for the bound texture units.
+        // when a texture is queued, it has to get
+        // the next free texture unit ID. 
+        static inline IDPool<GLuint> s_unitPool;
+
+        GLuint m_unitID;
 
         // has this texture been generated?
         bool m_txGenerated = false;
@@ -60,7 +68,7 @@ namespace Engine {
         // just cheeky little path storage
         std::string m_path;
 
-        static bool _processRawBytes(bytes& outBytes, std::shared_ptr<Texture> tx);
+        static bool _processRawBytes(bytes& outBytes, std::shared_ptr<Texture2D> tx);
         
         // does not follow the same structure as shader.hpp does. 
         // this is because this function does not create a texture,
@@ -78,7 +86,7 @@ namespace Engine {
 
     public:
 
-        ~Texture();
+        ~Texture2D();
 
         // in previous engines, this would have cached the path,
         // and if it was called again with the same path,
@@ -86,44 +94,46 @@ namespace Engine {
         // texture. this time, it's just going to create a new 
         // instance. trust the programmer. maybe we want differently
         // filtered textures.
-        static std::shared_ptr<Texture> createTextureFromPath(std::filesystem::path path, bool flipY = true, bool mipmap = true, GLuint format = texture_defaultFormat, GLuint filtering = texture_defaultFiltering, GLuint internalFormat = texture_defaultFormat, GLuint wrapping = texture_defaultWrapping, GLuint type = GL_TEXTURE_2D);
+        static std::shared_ptr<Texture2D> createTextureFromPath(std::filesystem::path path, bool flipY = true, bool mipmap = true, GLuint format = texture_defaultFormat, GLuint filtering = texture_defaultFiltering, GLuint internalFormat = texture_defaultFormat, GLuint wrapping = texture_defaultWrapping, GLuint type = GL_TEXTURE_2D);
 
         // idk why you would want to check this but sure have a getter
-        bool isGenerated() { return m_txGenerated; }
+        const bool isGenerated() const { return m_txGenerated; }
 
         // TODO : setters
 
         // get the texture ID
-        GLuint getTextureID() { return m_txID; }
+        const GLuint getTextureID() const { return m_txID; }
 
         // get the texture format
-        GLuint getFormat() { return m_format; }
+        const GLuint getFormat() const { return m_format; }
 
         // get the internal texture format
-        GLuint getInternalFormat() { return m_internalFormat; }
+        const GLuint getInternalFormat() const { return m_internalFormat; }
 
         // how many channels does this texture use?
-        GLuint getChannelCount() { return m_channelCount; }
+        const GLuint getChannelCount() const { return m_channelCount; }
 
         // what filtering method does this texture use?
-        GLuint getFiltering() { return m_filtering; }
+        const GLuint getFiltering() const { return m_filtering; }
 
         // what wrapping method does this texture use?
-        GLuint getWrapping() { return m_wrapping; }
+        const GLuint getWrapping() const { return m_wrapping; }
 
         // get the type of texture this is. for instance: GL_TEXTURE, GL_RENDER_TEXTURE, etc
-        GLuint getTextureType() { return m_txType; }
+        const GLuint getTextureType() const { return m_txType; }
 
-        std::shared_ptr<Texture> getTextureViaID(GLuint tid);
+        std::shared_ptr<Texture2D> getTextureViaID(GLuint tid);
 
         // is this texture using mipmapping?
-        bool isMipmapped() { return m_useMipmapping; }
+        const bool isMipmapped() const { return m_useMipmapping; }
 
         // bind this texture.
         void bindTexture();
 
         // is this texture in the texture queue?
-        bool isInQueue() { return m_inQueue; }
+        const bool isInQueue() const { return m_inQueue; }
+
+        const GLuint getUnitID() const { return m_unitID; }
 
     };
 }

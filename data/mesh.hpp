@@ -7,6 +7,7 @@
 #include <vector>
 #include "vertex.hpp"
 #include <idpool.hpp>
+#include <cachable.hpp>
 
 namespace Engine {
 
@@ -20,7 +21,7 @@ namespace Engine {
     // the mesh class is responsible for holding all of the
     // annjoying verbose opengl boilerplate.
 
-    class Mesh {
+    class Mesh : public ICachable<Mesh>{
     private:
 
         // vertex buffer id

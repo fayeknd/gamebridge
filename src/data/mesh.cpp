@@ -63,6 +63,9 @@ std::shared_ptr<Mesh> Mesh::createMeshWithData(std::vector<Vertex>& vertices, st
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+    // register the mesh in the cache
+    mesh->_register();
+
     // mesh set up!
     return mesh;
 }

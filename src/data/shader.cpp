@@ -365,35 +365,50 @@ int ShaderProgram::getUniformLoc(const std::string &uniformLoc) {
 
 // im not commenting allat
 void ShaderProgram::setUniform(const std::string& uniformLoc, float uniform) {
+    useProgram();
     glUniform1fv(getUniformLoc(uniformLoc), 1, &uniform);
 }
 
 void ShaderProgram::setUniform(const std::string& uniformLoc, int uniform) {
+    useProgram();
     glUniform1iv(getUniformLoc(uniformLoc), 1, &uniform);
 }
 
 void ShaderProgram::setUniform(const std::string& uniformLoc, bool uniform) {
-    setUniform(uniformLoc, (int)uniform);
+    setUniform(uniformLoc, static_cast<int>(uniform));
 }
 
 void ShaderProgram::setUniform(const std::string& uniformLoc, double uniform) {
+    useProgram();
     glUniform1dv(getUniformLoc(uniformLoc), 1, &uniform);
 }
 
 void ShaderProgram::setUniform(const std::string& uniformLoc, unsigned int uniform) {
+    useProgram();
     glUniform1uiv(getUniformLoc(uniformLoc), 1, &uniform);
 }
 
 
 void ShaderProgram::setUniform(const std::string& uniformLoc, const fm::_vec2<float>& uniform) {
+    useProgram();
     glUniform2fv(getUniformLoc(uniformLoc), 1, &uniform.x);
 }
 void ShaderProgram::setUniform(const std::string& uniformLoc, const fm::_vec3<float>& uniform) {
+    useProgram();
     glUniform3fv(getUniformLoc(uniformLoc), 1, &uniform.x); 
 }
 void ShaderProgram::setUniform(const std::string& uniformLoc, const fm::_vec4<float>& uniform) {
+    useProgram();
     glUniform4fv(getUniformLoc(uniformLoc), 1, &uniform.x); 
 }
 void ShaderProgram::setUniform(const std::string& uniformLoc, const fm::_mat4x4<float>& uniform) {
+    useProgram();
     glUniformMatrix4fv(getUniformLoc(uniformLoc), 1, GL_FALSE, uniform.data()); 
+}
+
+void ShaderProgram::setUniform(const std::string& uniformLoc, const Texture2D* uniform) {
+    setUniform(uniformLoc, static_cast<int>(uniform->getUnitID()));
+}
+void ShaderProgram::setUniform(const std::string& uniformLoc, const std::shared_ptr<Texture2D> uniform) {
+    setUniform(uniformLoc, uniform.get());
 }

@@ -3,12 +3,12 @@
 #include <gl_context.hpp>
 #include <fm/fmath.hpp>
 #include <cachable.hpp>
-
 #include <string>
 #include <filesystem>
 #include <unordered_map>
 #include <memory>
 #include <logger.hpp>
+#include <texture.hpp>
 
 // just an identifier for a shader with no key passed through.
 #define UNNAMED_SHADER "0"
@@ -229,7 +229,9 @@ namespace Engine {
         // sets a matrix uniform by name and value. 
         void setUniform(const std::string& uniformLoc, const fm::mat4& uniform);
 
-        //void setUniform(std::string uniformLoc, Texture2D uniform); later
+        // sets a texture by name and value.
+        void setUniform(const std::string& uniformLoc, const Texture2D* uniform);
+        void setUniform(const std::string& uniformLoc, const std::shared_ptr<Texture2D> uniform);
          
     };
 

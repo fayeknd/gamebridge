@@ -1,4 +1,5 @@
 #include "gl_context.hpp"
+#include "logger.hpp"
 #include <texture.hpp>
 #include <resources.hpp>
 #include <fstream>
@@ -8,14 +9,14 @@
 
 using namespace Engine;
 
-std::unordered_map<GLuint, CacheID>& Texture::txIDToIDMap() {
+std::unordered_map<GLuint, CacheID>& Texture2D::txIDToIDMap() {
     static std::unordered_map<GLuint, CacheID> map;
     return map;
 }
 
 // use stb_image to convert our raw texture bytes into 
 // a usable data buffer for opengl to draw with
-bool Texture::_processRawBytes(bytes &outBytes, std::shared_ptr<Texture> tx) {
+bool Texture2D::_processRawBytes(bytes &outBytes, std::shared_ptr<Texture2D> tx) {
     // annoying asf cause stbi_load_from_memory takes ints and not uints.
     // its whatever i guess.
     int x, y, c;
@@ -29,7 +30,7 @@ bool Texture::_processRawBytes(bytes &outBytes, std::shared_ptr<Texture> tx) {
         return false;
     }
     // convert back to a vector 
-    size_t imgTotalBytes = static_cast<size_t>(x) * y * c;
+    size_t imgTotalBytes = static_cast<size_t>(x) * y * 4;
     bytes pixels(imgData, imgData + imgTotalBytes);
     outBytes = pixels;
 
@@ -44,10 +45,10 @@ bool Texture::_processRawBytes(bytes &outBytes, std::shared_ptr<Texture> tx) {
 }
 
 // create a texture from a path.
-std::shared_ptr<Texture> Texture::createTextureFromPath(std::filesystem::path path, bool flipY, bool mipmap, GLuint format, GLuint filtering, GLuint internalFormat, GLuint wrapping, GLuint type) {
+std::shared_ptr<Texture2D> Texture2D::createTextureFromPath(std::filesystem::path path, bool flipY, bool mipmap, GLuint format, GLuint filtering, GLuint internalFormat, GLuint wrapping, GLuint type) {
 
     stbi_set_flip_vertically_on_load(flipY);
-    std::shared_ptr<Texture> texture = std::shared_ptr<Texture>(new Texture);
+    std::shared_ptr<Texture2D> texture = std::shared_ptr<Texture2D>(new Texture2D);
     texture->m_path = path.string();
     // TODO : In case of error, return a default "error" texture instead.
 
@@ -105,7 +106,7 @@ std::shared_ptr<Texture> Texture::createTextureFromPath(std::filesystem::path pa
     return texture;
 }
 
-void Texture::_initTextureWithSTBIData(bytes &data, bool mipmap, GLuint format, GLuint filtering, GLuint internalFormat, GLuint wrapping, GLuint type) {
+void Texture2D::_initTextureWithSTBIData(bytes &data, bool mipmap, GLuint format, GLuint filtering, GLuint internalFormat, GLuint wrapping, GLuint type) {
 
     // set the texture values
     m_format            = format;
@@ -122,7 +123,7 @@ void Texture::_initTextureWithSTBIData(bytes &data, bool mipmap, GLuint format, 
     _register();
 }
 
-void Texture::_genTexture(bytes &data) {
+void Texture2D::_genTexture(bytes &data) {
 
     // TODO : incorporate pixel buffer objects
     // for videos later. check if the image is static.
@@ -177,7 +178,7 @@ void Texture::_genTexture(bytes &data) {
 
 }
 
-std::shared_ptr<Texture> Texture::getTextureViaID(GLuint tid) {
+std::shared_ptr<Texture2D> Texture2D::getTextureViaID(GLuint tid) {
     auto it = txIDToIDMap().find(tid);
     if (it != txIDToIDMap().end()) {
         
@@ -196,27 +197,56 @@ std::shared_ptr<Texture> Texture::getTextureViaID(GLuint tid) {
 }
 
 // add this texture to the queue and mark inQueue as true
-void Texture::_queue() {
-    GLContext::get().glState.m_txQueue.push(m_txID);
+void Texture2D::_queue() {
+    auto& txQueue = GLContext::get().glState.m_txQueue;
+    txQueue.push(m_txID);
+
+    // get the next free unit id
+    m_unitID = s_unitPool.getNewID();
+    GLuint unit = GL_TEXTURE0 + m_unitID;
+    // active texture is 0 + the unit id
+    glActiveTexture(unit);
+    GLContext::get().glState.m_activeTextureUnit = unit;
+    glBindTexture(m_txType, m_txID);
+
     m_inQueue = true;
 }
 
-void Texture::_unqueue() {
+void Texture2D::_unqueue() {
     // just pops the front, but since this is 
     // being called on the front object anyway,
     // that's fine.
     GLContext::get().glState.m_txQueue.pop();
     m_inQueue = false;
+    // let the ID pool know that this isn't
+    // an active texture anymore.
+    s_unitPool.releaseID(m_unitID);
 }
 
-void Texture::bindTexture() {
-    if (m_inQueue) return;
+void Texture2D::bindTexture() {
+    if (m_inQueue) {
+        // set active texture to this
+        GLuint unit = GL_TEXTURE0 + m_unitID;
+        if (GLContext::get().glState.m_activeTextureUnit != unit) {
+            glActiveTexture(unit);
+        }
+        return;
+    }
     auto& txQueue = GLContext::get().glState.m_txQueue; 
 
     if (txQueue.size() >= GLContext::get().maxTextureSlots()) {
         // tell the texture associated with this textureid to remove itself from the queue.
-        if (auto tx = getTextureViaID(txQueue.front()); tx != nullptr) {
+        auto tx = getTextureViaID(txQueue.front()); 
+        if (tx != nullptr) {
+            // unqueue properly
             tx->_unqueue();
+        }
+        else {
+            // object was deleted.
+            // if so, the unit ID has been
+            // unbound already, so just
+            // pop the front element.
+            txQueue.pop(); 
         }
     }
     // add this to the queue
@@ -224,7 +254,8 @@ void Texture::bindTexture() {
 }
 
 // destructor. delete this texture if it exists.
-Texture::~Texture() {
+Texture2D::~Texture2D() {
+    if (m_unitID) s_unitPool.releaseID(m_unitID);
     if (m_txGenerated) {
         glDeleteTextures(1, &m_txID);
     }

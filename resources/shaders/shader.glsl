@@ -4,6 +4,8 @@ void main() {
 }
 
 #FRAGMENT
+uniform sampler2D tx;
+
 void main() {
-    fragCol = vec4(v_position, 1.0);
+    fragCol = texture(tx, v_uv);
 }
