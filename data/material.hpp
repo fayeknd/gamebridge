@@ -34,7 +34,7 @@ namespace Engine {
         std::shared_ptr<Texture2D> m_emissionTx;
 
         // shader storage buffer object !!!!!!!!!!!
-        GLuint m_ssbo;
+        static GLuint m_ssbo;
         // has this function done generation of the ssbo?
         bool m_generated = false;
 
