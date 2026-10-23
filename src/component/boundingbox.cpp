@@ -89,18 +89,18 @@ bool BoundingBox::checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit
     // get bounding box from entity. 
     BoundingBox& boundingBox = *outRaycastHit.m_hitBox;
 
-    switch(boundingBox.collider.m_shape)
+    switch(boundingBox.collider->m_shape)
     {
         case ColliderShape::Box:
-            return rayAABoxIntersection(localRay, boundingBox.collider, outRaycastHit);
+            return rayAABoxIntersection(localRay, boundingBox.collider.get(), outRaycastHit);
         case ColliderShape::Sphere:
-            return rayAASphereIntersection(localRay, boundingBox.collider, outRaycastHit);
+            return rayAASphereIntersection(localRay, boundingBox.collider.get(), outRaycastHit);
         default: 
             return false;
     }
 }
 
-bool BoundingBox::rayAABoxIntersection(const Ray& ray, const Collider& box, RaycastHit& outRaycastHit) {
+bool BoundingBox::rayAABoxIntersection(const Ray& ray, const Collider* box, RaycastHit& outRaycastHit) {
 
     float tNearMax = -std::numeric_limits<float>::max();
     float tFarMin  =  std::numeric_limits<float>::max();
@@ -124,8 +124,8 @@ bool BoundingBox::rayAABoxIntersection(const Ray& ray, const Collider& box, Rayc
         float origin = ray.m_origin[i];
         float dir = ray.m_direction[i];
         
-        float minVal = box.m_min[i];
-        float maxVal = box.m_max[i];
+        float minVal = box->m_min[i];
+        float maxVal = box->m_max[i];
 
         // avoid division by zero
         if (std::abs(dir) < 1e-8f) { // 1e-8f = 0.00000001 
@@ -180,9 +180,9 @@ bool BoundingBox::rayAABoxIntersection(const Ray& ray, const Collider& box, Rayc
     return false;
 }
 
-bool BoundingBox::rayAASphereIntersection(const Ray& ray, const Collider& sphere, RaycastHit& outRaycastHit) {
+bool BoundingBox::rayAASphereIntersection(const Ray& ray, const Collider* sphere, RaycastHit& outRaycastHit) {
 
-    fm::vec3 sphereCenter = sphere.center + sphere.offset;
+    fm::vec3 sphereCenter = sphere->center + sphere->offset;
 
     fm::vec3 length = sphereCenter - ray.m_origin;
 
@@ -191,12 +191,12 @@ bool BoundingBox::rayAASphereIntersection(const Ray& ray, const Collider& sphere
     if (tca < 0.0f)
     {
         float distSqFromCenter = length.dot(length);
-        if (distSqFromCenter > sphere.radius * sphere.radius)
+        if (distSqFromCenter > sphere->radius * sphere->radius)
             return false;
     }
 
     float distSq = length.dot(length) - (tca * tca);
-    float radiusSq = sphere.radius * sphere.radius;
+    float radiusSq = sphere->radius * sphere->radius;
 
     if (distSq > radiusSq)
         return false;

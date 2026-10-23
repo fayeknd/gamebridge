@@ -47,7 +47,7 @@ namespace Engine
         // get this box ID
         BoundingBoxID getBoxID();
 
-        Collider collider;
+        std::shared_ptr<Collider> collider = nullptr;
         fm::vec3 m_min =-fm::vec3::one() * 0.5f; // bottom-left-front bounds
         fm::vec3 m_max = fm::vec3::one() * 0.5f; // top-right-back bounds
 
@@ -62,9 +62,9 @@ namespace Engine
         bool checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit);
 
         // check for an intersection with an axis-aligned box
-        static bool rayAABoxIntersection(const Ray& ray, const Collider& box, RaycastHit& outRaycastHit);
+        static bool rayAABoxIntersection(const Ray& ray, const Collider* box, RaycastHit& outRaycastHit);
         // check for an intersection with an axis-aligned sphere
-        static bool rayAASphereIntersection(const Ray& ray, const Collider& sphere, RaycastHit& outRaycastHit);
+        static bool rayAASphereIntersection(const Ray& ray, const Collider* sphere, RaycastHit& outRaycastHit);
         
         // get a list of valid bounding boxes
         static std::unordered_map<BoundingBoxID, BoundingBox*> getBoundingBoxList();

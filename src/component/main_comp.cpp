@@ -37,7 +37,7 @@ void MainComponent::init() {
     collider->m_renderBounds = false;
     collider->m_max += {0.1f};
     collider->m_min -= {0.1f};
-    //collider->collider = Collider(ColliderShape::Sphere);
+    collider->collider = std::shared_ptr<Collider>(new Collider(ColliderShape::Sphere));
 
     square->transform.addPosition(1.1f);
     square->transform.addScaleY(.3f);
