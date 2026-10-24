@@ -39,6 +39,9 @@ namespace Engine {
         // orthographic or perspective?
         ProjectionMode m_projMode = ProjectionMode::Perspective;
         
+        int m_lastCalculatedFrame_v = -1;
+        int m_lastCalculatedFrame_p = -1;
+
         // for the lazy calculations
         bool m_projectionDirty = true;
         // we would have an m_viewDirty 

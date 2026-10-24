@@ -1,8 +1,9 @@
-#include "logger.hpp"
-#include "shader.hpp"
+#include <logger.hpp>
+#include <shader.hpp>
 #include <component/renderable.hpp>
 #include <entity.hpp>
 #include <component/camera.hpp>
+#include <window.hpp>
 
 using namespace Engine;
 
@@ -43,7 +44,6 @@ void IRenderable::draw() {
             */
     }
     m_material->m_program->setUniform(shader_ViewProjectionMatrix, vpMat);
-
     // draw the mesh
     glDrawElements(m_mesh->getTopology(), m_mesh->getIndexCount(), GL_UNSIGNED_SHORT, 0);
 

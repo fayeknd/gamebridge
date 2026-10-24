@@ -18,7 +18,8 @@ namespace Engine {
         Entity* square;
         Entity* cam;
         Entity* teenySquare;
-        float sensitivity = 0.45;
+        float sensitivity = 0.25;
+        float speed = 3.0f;
 
     };
 }

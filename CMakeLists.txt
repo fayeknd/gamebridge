@@ -102,6 +102,7 @@ file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp"
 )
 add_executable(gamebridge ${PROJECT_SOURCES})
+add_compile_options(gamebridge -O0)
 add_dependencies(gamebridge resources)
 
 #debug stuff
@@ -120,7 +121,7 @@ endif()
 include(CTest)
 enable_testing()
 
-target_include_directories(gamebridge PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/data ${CMAKE_CURRENT_SOURCE_DIR}/utils)
+target_include_directories(gamebridge PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/data ${CMAKE_CURRENT_SOURCE_DIR}/data/utils)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

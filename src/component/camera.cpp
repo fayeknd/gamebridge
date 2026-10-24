@@ -1,3 +1,4 @@
+#include "logger.hpp"
 #include <component/camera.hpp>
 #include <window.hpp>
 #include <entity.hpp>
@@ -77,8 +78,10 @@ ProjectionMode Camera::getProjectionMode() {
 fm::mat4 Camera::getProjectionMat() {
     // return if the projection matrix isn't dirty 
     // calculate anyway if the viewport changed
-    if (!m_projectionDirty && !Window::get().m_viewportDirty) return m_projectionMatrix;
+    if (!m_projectionDirty && !Window::get().m_viewportDirty ||  m_lastCalculatedFrame_p == Window::get().getFrame()) return m_projectionMatrix;
     m_projectionDirty = false;
+
+     m_lastCalculatedFrame_p = Window::get().getFrame();
 
     // switch projection mode cases
     switch (m_projMode) {
@@ -109,9 +112,11 @@ fm::mat4 Camera::getProjectionMat() {
 }
 fm::mat4 Camera::getViewMat() {
     // return if the transform was not touched this frame
-    if (!entity.wasTransformDirty()) return m_viewMatrix;
+    if (!entity.wasTransformDirty() || m_lastCalculatedFrame_v == Window::get().getFrame()) return m_viewMatrix;
     entity.m_queueTransformReset = true;
     // (pos, pos + front, up)
+
+    m_lastCalculatedFrame_v = Window::get().getFrame();
 
     m_viewMatrix = fm::lookAt(
         entity.transform.getGlobalPosition(),

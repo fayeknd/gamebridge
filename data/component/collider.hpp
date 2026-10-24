@@ -30,7 +30,7 @@ namespace Engine
         BoundingBoxID m_boxID;
 
         // the box draw colour
-        fm::vec4 m_boxDebugCol = {0.3f, 0.7f, 1.0f, 0.6f};
+        fm::vec4 m_boxDebugCol = {1.0f, 0.4f, 0.2f, 0.15f};
 
         // the mesh to represent the box
         std::shared_ptr<Mesh> m_boxMesh;

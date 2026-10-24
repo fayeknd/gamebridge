@@ -4,6 +4,7 @@
 #include "shader.hpp"
 #include <component/collider.hpp>
 #include <component/camera.hpp>
+#include <debug.hpp>
 
 using namespace Engine;
 
@@ -41,7 +42,7 @@ void BoundingBox::onDestroy() {
 }
 
 void BoundingBox::draw() {
-    if (!m_boxMesh || !m_program || !entity.isEnabled() || !m_renderBounds) return;
+    if (!m_boxMesh || !m_program || !entity.isEnabled() || !m_renderBounds || !Debug::DebugUI::get().m_drawHitboxes) return;
     m_renderData.useRenderData();
 
     // bind the mesh

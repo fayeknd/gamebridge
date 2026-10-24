@@ -1,8 +1,7 @@
-#include "cachable.hpp"
-#include "gl_context.hpp"
-#include "logger.hpp"
-#include "ray.hpp"
-#include "shader.hpp"
+#include <cachable.hpp>
+#include <logger.hpp>
+#include <ray.hpp>
+#include <shader.hpp>
 #include <component/collider.hpp>
 #include <component/main_comp.hpp>
 #include <entity.hpp>
@@ -15,8 +14,12 @@
 #include <time.hpp>
 #include <input.hpp>
 #include <texture.hpp>
+#include <debug.hpp>
 
 using namespace Engine;
+using namespace Engine::Debug;
+
+// our main() function equivalent
 
 void MainComponent::init() {
 
@@ -55,11 +58,10 @@ void MainComponent::init() {
     // push the camera back a bit in the world
     cam->transform.addPositionZ(-5);
     // set the clear colour on the camera
-    camComponent->m_clearCol = {0.1f, 0.1f, 0.1f, 0.0f};
-
-
+    camComponent->m_clearCol = {0.1f, 0.1f, 0.1f, 0.7f};
 
     // set the target fps
+    //Window::get().setVSyncMode(VSyncMode::On);
     Window::get().setTargetFPS(240);
     // free any archives.
     ResourceManager::freeArchives();
@@ -68,32 +70,44 @@ void MainComponent::init() {
 void MainComponent::update(double delta) {
     square->transform.setScaleX((sin(Time::sinceStartup()) / 10.0f) + 1.0f);
 
-    auto mdelta = Input::getMouseDelta();
-    if (mdelta != fm::dvec2::zero()) {
-        cam->transform.addRotationX(mdelta.y * sensitivity);
-        cam->transform.addRotationY(mdelta.x * sensitivity);
-        cam->transform.setRotationX(std::clamp(cam->transform.getRotationX(), -90.0f, 90.0f));
+    if (Input::getActionDown(Key::F1)) {
+        DebugUI::get().m_drawDebugger = !DebugUI::get().m_drawDebugger;
     }
 
+    if (DebugUI::get().m_drawDebugger && Input::getAction(MouseBtn::RightMouse) || 
+       (!DebugUI::get().m_drawDebugger)) {
+        
+        if (!DebugUI::get().getIO().WantCaptureMouse) Input::setMouseHidden(true);
+
+        auto mdelta = Input::getMouseDelta();
+        if (mdelta != fm::dvec2::zero()) {
+            cam->transform.addRotationX(mdelta.y * sensitivity);
+            cam->transform.addRotationY(mdelta.x * sensitivity);
+            cam->transform.setRotationX(std::clamp(cam->transform.getRotationX(), -90.0f, 90.0f));
+        }
+    }
+    else {
+        Input::setMouseHidden(false);
+    }
     // basic input handling test
     if (Input::getAction(Key::W)) {
-        cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getFront());
+        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getFront() * speed);
     }
     if (Input::getAction(Key::D)) {
-        cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getRight());
+        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getRight() * speed);
     }
     if (Input::getAction(Key::E)) {
-        cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getUp());
+        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getUp() * speed);
     }
 
     if (Input::getAction(Key::S)) {
-        cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getBack());
+        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getBack() * speed);
     }
     if (Input::getAction(Key::A)) {
-        cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getLeft());
+        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getLeft() * speed);
     }
     if (Input::getAction(Key::Q)) {
-        cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getDown());
+        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getDown() * speed);
     }
     if (Input::getActionDown(Key::F)) {
         // then idk good job
