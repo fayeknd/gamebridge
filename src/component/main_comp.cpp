@@ -1,3 +1,4 @@
+#include "cachable.hpp"
 #include "gl_context.hpp"
 #include "logger.hpp"
 #include "ray.hpp"
@@ -21,9 +22,6 @@ void MainComponent::init() {
 
     Window::get().setWndSize({1280, 720});
 
-    auto program = ShaderProgram::createProgramFromPath("stuff=>shaders/shader.glsl");
-    ResourceManager::freeArchives();
-
     // create entity and add component
     square = Entity::create("Test Square").get(); 
     auto collider = square->addComponent<BoundingBox>();
@@ -42,9 +40,12 @@ void MainComponent::init() {
 
     // add some basic data to the renderer
     renderer->m_mesh = Mesh::primitive(Primitive::Cube);
-    renderer->m_shaderProgram = ShaderProgram::getShaderViaKey(program->getKey());
+    renderer->m_material->setAlbedoTx(Texture2D::createTextureFromPath("stuff=>textures/me trying to flirt.png"));
+    renderer->m_material->m_data.m_albedoFac.y = 0.4f;
+
     renderer2->m_mesh = Mesh::primitive(Primitive::Cube);
-    renderer2->m_shaderProgram = program;
+    renderer2->m_material->m_data.m_albedoFac = {0.0f, 1.0f, 0.0f, 1.0f};
+
     teenySquare->transform.setScale(0.1f);
     // create the camera entity
     cam = Entity::create("Camera").get();
@@ -56,15 +57,12 @@ void MainComponent::init() {
     // set the clear colour on the camera
     camComponent->m_clearCol = {0.1f, 0.1f, 0.1f, 0.0f};
 
-    Logging::Logger::get().logInfo("Camera clear colour: {}", camComponent->m_clearCol);
 
-
-    texture = Texture2D::createTextureFromPath("stuff=>textures/me trying to flirt.png");
-    texture->bindTexture();
-    program->setUniform("tx", texture);
 
     // set the target fps
     Window::get().setTargetFPS(240);
+    // free any archives.
+    ResourceManager::freeArchives();
 }
 
 void MainComponent::update(double delta) {

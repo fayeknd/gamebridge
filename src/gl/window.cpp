@@ -11,6 +11,7 @@
 #include <component/camera.hpp>
 #include <numeric>
 #include <input.hpp>
+#include <material.hpp>
 
 using namespace Engine;
 
@@ -270,6 +271,8 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxSlots); 
     GLContext::get().m_maxTextureSlots = maxSlots; 
 
+    // create the default shaders
+    ShaderProgram::_createDefaultShaders();
 
     // add the main entrypoint component to the root entity.
     Entity::s_root->addComponent<MainComponent>();

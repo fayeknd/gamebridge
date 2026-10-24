@@ -3,25 +3,36 @@
 #include <shader.hpp>
 
 namespace Engine {
+    
+    constexpr const char* materialUniform_albedoFac     = ".albedo_fac";
+    constexpr const char* materialUniform_emissionFac   = ".emission_fac";
+    constexpr const char* materialUniform_roughnessFac  = ".roughness_fac";
+    constexpr const char* materialUniform_metallicFac   = ".metallic_fac";
+    constexpr const char* materialUniform_ambientFac    = ".metallic_fac";
 
-    // love me type alias
-    using bitmask = uint32_t;
+    constexpr const char* materialUniform_hasAlbedo     = ".has_albedo_tx";
+    constexpr const char* materialUniform_hasNormal     = ".has_normal_tx";
+    constexpr const char* materialUniform_hasMetallic   = ".has_metallic_tx";
+    constexpr const char* materialUniform_hasEmission   = ".has_emission_tx";
 
-    // a bitmask that stores flags for textures.
-    // this is achieved with the bitwise operator
-    // and internally looks like: 1111
-    // |1| -> hasAlbedo is true
-    // |0| -> hasNormal is false
-    // |0| -> hasMetallic is false
-    // |1| -> hasEmission  is true
-    // set flags true with flags |= flag for true,
-    // and &= flag for false.
-    // example: m_data |= hasAbledo; //set hasAbledo to true
-    enum _MaterialTextureBitmask : bitmask {
-        hasAlbedo                  = 1 << 0,
-        hasNormal                  = 1 << 1,
-        hasMetallic                = 1 << 2,
-        hasEmission                = 1 << 3
+    constexpr const char* materialUniform_albedoTx      = "u_albedo_tx";
+    constexpr const char* materialUniform_normalTx      = "u_normal_tx";
+    constexpr const char* materialUniform_metallicTx    = "u_metallic_tx";
+    constexpr const char* materialUniform_emissionTx    = "u_emission_tx";
+
+    // the physically-based rendering data.
+    struct PBRData {
+        fm::vec4 m_albedoFac                            = {1.0f, 1.0f, 1.0f, 1.0f};
+        fm::vec4 m_emissionFac                          = {0.0f, 0.0f, 0.0f, 0.0f};
+        float m_roughnessFac                            = 0.5f;
+        float m_metallicFac                             = 0.0f;
+        float m_ambientFac                              = 1.0f;
+        
+        bool m_hasAlbedoTx                              = false;
+        bool m_hasNormalTx                              = false;
+        bool m_hasMetallicTx                            = false;
+        bool m_hasEmissionTx                            = false;
+
     };
 
     class Material : ICachable<Material> {
@@ -33,23 +44,12 @@ namespace Engine {
         std::shared_ptr<Texture2D> m_metallicTx;
         std::shared_ptr<Texture2D> m_emissionTx;
 
-        // shader storage buffer object !!!!!!!!!!!
-        static GLuint m_ssbo;
-        // has this function done generation of the ssbo?
-        bool m_generated = false;
 
-        // generate the ssbo 
-        void _genMaterial();
-        
     public:
 
         // this will run the _genMaterial() function.
         // also return a pointer to this instance.
         static std::shared_ptr<Material> create();
-
-        // yeah
-        const GLuint getSSBO() const { return m_ssbo; }
-        const bool isGenerated() const { return m_generated; }
 
         // texture setters/getters
         const std::shared_ptr<Texture2D> getAlbedoTx() const { return m_albedoTx; };
@@ -67,14 +67,7 @@ namespace Engine {
         // uhh if you wanna add any thing to this,
         // DON'T!! lmk and i'll do it cause
         // ssbo's are fragile 
-        struct PBRData {
-            fm::vec4 m_albedoFac     = {1.0f, 1.0f, 1.0f, 1.0f};
-            fm::vec4 m_emissionFac   = {0.0f, 0.0f, 0.0f, 0.0f};
-            float m_roughnessFac     = 0.5f;
-            float m_metallicFac      = 0.0f;
-            float m_ambientFac       = 1.0f;
-            bitmask m_txFlags        = {0};
-        } m_data;
+        PBRData m_data;
         
         // the shader program
         std::shared_ptr<ShaderProgram> m_program;

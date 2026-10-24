@@ -31,12 +31,10 @@ namespace Engine {
         static IDPool<CacheID>& instanceIDPool();
         
         // the map of cached instances
-        static std::unordered_map<CacheID, std::weak_ptr<ObjectRegistry>>& registry();
+        static std::unordered_map<CacheID, std::shared_ptr<ObjectRegistry>>& registry();
 
         // destructor
-        virtual ~ObjectRegistry() {
-            _unregister(); 
-        }
+        virtual ~ObjectRegistry() = default;
         ObjectRegistry() : m_cacheID(instanceIDPool().getNewID()) {};
 
         // register this instance to the registry
@@ -65,6 +63,9 @@ namespace Engine {
         CacheID getCacheID();
         bool getRegistered();
 
+        // if this is true, this object won't get cleared.
+        bool m_dontDelete = false;
+
     };
 
     // the actual ICachable class is unique for each TYPE of object. 
@@ -91,7 +92,7 @@ namespace Engine {
                 // often anyway.
                 // (static_cast just crashes if it fails, 
                 // and doesn't throw an error.)
-                auto inst = dynamic_pointer_cast<T>(it->second.lock()); 
+                auto inst = dynamic_pointer_cast<T>(it->second); 
                 
                 // is instance null?
                 if (!inst) {

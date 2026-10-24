@@ -14,6 +14,8 @@ namespace Engine
 
     using BoundingBoxID = uint16_t;
 
+    constexpr const char* colliderUniform_boxCol = "u_box_colour";
+
     // Bounding box data for collisions, anything between minimum and maximum
     class BoundingBox : public IComponent {
     protected:

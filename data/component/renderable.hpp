@@ -3,6 +3,7 @@
 #include <mesh.hpp>
 #include <shader.hpp>
 #include <gl_context.hpp>
+#include <material.hpp>
 
 namespace Engine {
     
@@ -18,10 +19,10 @@ namespace Engine {
         RenderData m_renderData = RenderData();
 
         // mesh to draw
-        std::shared_ptr<Mesh> m_mesh;
+        std::shared_ptr<Mesh> m_mesh = nullptr;
         
-        // shader to draw
-        std::shared_ptr<ShaderProgram> m_shaderProgram;
+        // material to use
+        std::shared_ptr<Material> m_material = nullptr;
 
         // marks if this instance should render or not
         bool m_render = true;

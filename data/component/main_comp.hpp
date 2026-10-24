@@ -18,7 +18,6 @@ namespace Engine {
         Entity* square;
         Entity* cam;
         Entity* teenySquare;
-        std::shared_ptr<Texture2D> texture;
         float sensitivity = 0.45;
 
     };

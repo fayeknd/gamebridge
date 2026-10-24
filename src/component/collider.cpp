@@ -13,7 +13,7 @@ BoundingBoxID BoundingBox::getBoxID() {
 
 void BoundingBox::setColour(fm::vec4 col) {
     m_program->useProgram();
-    m_program->setUniform("boxCol", col);
+    m_program->setUniform(colliderUniform_boxCol, col);
 }
 
 void BoundingBox::init() {
