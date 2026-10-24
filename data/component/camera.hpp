@@ -53,6 +53,8 @@ namespace Engine {
         // the active rendering camera
         static inline Camera* s_activeCamera = nullptr;
 
+        float m_orthoSize = 1.0f;
+
         // to ensure if the active camera is destroyed, 
         // we can set a new one.
         static inline std::queue<std::weak_ptr<Camera>> s_cameraQueue;
@@ -87,10 +89,12 @@ namespace Engine {
         float getFOV();
         float getNearClip(); 
         float getFarClip();
-        
+        float getOrthoSize();
+
         void setFOV(float v);
         void setNearClip(float v);
         void setFarClip(float v);
+        void setOrthoSize(float v);
 
         void init() override;
 

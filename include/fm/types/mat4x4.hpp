@@ -462,7 +462,7 @@ namespace fm {
             v.z = std::atan2(-m_data[0][1], m_data[1][1]);
         }
 
-        return (fm::radiansToDegrees(v.x), fm::radiansToDegrees(v.y), fm::radiansToDegrees(v.z));
+        return {fm::radiansToDegrees(v.x), fm::radiansToDegrees(v.y), fm::radiansToDegrees(v.z)};
     }
     template <typename T>
     // https://en.wikipedia.org/wiki/Cramer%27s_rule#:~:text=Finding%20inverse%20matrixedit

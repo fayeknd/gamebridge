@@ -108,7 +108,7 @@ namespace Engine {
         "\n    _transpilerID_position = gl_Position.xyz;\n"
         "    _transpilerID_colour = v_colour;\n"
         "    _transpilerID_uv = v_uv;\n"
-        "    _transpilerID_normal = v_normal;\n"
+        "    _transpilerID_normal = mat3(transpose(inverse(u_model_matrix))) * v_normal;\n"
     };
 
     // the material struct definition in GLSL.

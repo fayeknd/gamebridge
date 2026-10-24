@@ -88,7 +88,7 @@ void DebugUI::drawDebugger() {
         ImGui::Text("Performance");
         ImGui::Separator();
 
-        ImGui::Text("%.01f FPS\n%.01f Target FPS\n%.03f ms/frame", 
+        ImGui::Text("%.1f FPS\n%.1f Target FPS\n%.5f ms/frame", 
             static_cast<double>(Window::get().getFPS()),
             static_cast<double>(Window::get().getTargetFPS()), 
             Time::deltaTime());
@@ -100,6 +100,7 @@ void DebugUI::drawDebugger() {
     }
 
     ImGui::SetNextWindowPos(ImVec2(lastPos.x, nextY), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(150, 0));
     if (ImGui::Begin("info_wnd", NULL, flags)) {
 
         auto cam = Camera::activeCamera();
@@ -107,11 +108,19 @@ void DebugUI::drawDebugger() {
             ImGui::Text("Active Camera");
             ImGui::Separator();
 
+            ImGui::PushItemWidth(-1.0f); 
+
             ImGui::Text("Position");
             ImGui::Text("X:%.2f Y:%.2f Z:%.2f", 
                 cam->getEntity().transform.getGlobalPositionX(),
                 cam->getEntity().transform.getGlobalPositionY(),
                 cam->getEntity().transform.getGlobalPositionZ() 
+            );
+            ImGui::Text("Rotation");
+            ImGui::Text("X:%.2f Y:%.2f Z:%.2f", 
+                cam->getEntity().transform.getGlobalRotationX(),
+                cam->getEntity().transform.getGlobalRotationY(),
+                cam->getEntity().transform.getGlobalRotationZ() 
             );
             ImGui::Separator();
             ImGui::Text("Front");
@@ -132,6 +141,43 @@ void DebugUI::drawDebugger() {
                 cam->getEntity().transform.getGlobalUp().y,
                 cam->getEntity().transform.getGlobalUp().z 
             );
+            ImGui::Separator();
+
+            float fov = cam->getFOV();
+            float nc = cam->getNearClip();
+            float fc = cam->getFarClip();
+            float ortho = cam->getOrthoSize();
+            int proj = cam->getProjectionMode();
+            std::string projFormat;
+            switch (proj) {
+                case (1):  projFormat = "Orthographic";      break;
+                case (0):  projFormat = "Perspective";       break;
+            }
+            if (proj == 1) {
+                ImGui::Text("Ortho Size");
+                if (ImGui::SliderFloat("##Ortho Size", &ortho, 0.1, 10)) {
+                    cam->setOrthoSize(ortho);
+                }
+            }
+            else {
+                ImGui::Text("FOV");
+                if (ImGui::SliderFloat("##FOV", &fov, 30, 120)) {
+                    cam->setFOV(fov);
+                }
+            }
+            
+            ImGui::Text("Near Clip");
+            if (ImGui::SliderFloat("##Near Clip", &nc, 0.01, 1000)) {
+                cam->setNearClip(nc);
+            }
+            ImGui::Text("Far Clip");
+            if (ImGui::SliderFloat("##Far Clip", &fc, 0.01, 1000)) {
+                cam->setFarClip(fc);
+            }
+            ImGui::Text("Projection");
+            if (ImGui::SliderInt("##Projection", &proj, 0, 1, projFormat.c_str())) {
+                cam->setProjectionMode(static_cast<ProjectionMode>(proj));
+            }
         }
 
         lastPos = ImGui::GetWindowPos();

@@ -10,6 +10,16 @@ vec4 albedo(vec2 uv) {
     return albedo_texture * u_material.albedo_fac;
 }
 
+float depth() {
+    float near = 0.1; 
+    float far  = 100.0; 
+
+    float z = gl_FragCoord.z * 2.0 - 1.0; 
+    return (2.0 * near * far) / (far + near - z * (far - near)) / far;
+}
+
 void main() {
-    fragCol = albedo(v_uv);
+    fragCol = albedo(v_uv) * vec4(0.5 + (v_normal * 0.5) , 1);
+    //fragCol = vec4(0.5 + (v_normal * 0.5) , 1);
+    //fragCol = vec4(vec3(depth()), 1);
 }

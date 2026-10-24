@@ -86,17 +86,16 @@ fm::mat4 Camera::getProjectionMat() {
     // switch projection mode cases
     switch (m_projMode) {
         case ProjectionMode::Orthographic: {
-            // get the half aspect.
-            // used for the orthographic bounds
-            fm::uvec2 halfAspect = Window::get().getFractionalAspectRatio();
-            halfAspect /= 2;
+
+            float height = m_orthoSize;
+            float width = height * Window::get().getAspectRatio();
 
             // make the projection matrix
             m_projectionMatrix = fm::orthographic<float>(
-                -halfAspect.x,
-                 halfAspect.x,
-                -halfAspect.y,
-                 halfAspect.y, 
+                -width,
+                 width,
+                -height,
+                 height, 
                 m_nearClip, m_farClip);
             break;
             }
@@ -134,6 +133,9 @@ float Camera::getNearClip() {
 float Camera::getFarClip() {
     return m_farClip;
 }
+float Camera::getOrthoSize() {
+    return m_orthoSize;
+}
 
 void Camera::setFOV(float v) {
     m_fov = v;
@@ -145,5 +147,9 @@ void Camera::setNearClip(float v) {
 }
 void Camera::setFarClip(float v) {
     m_farClip = v;
+    m_projectionDirty = true;
+}
+void Camera::setOrthoSize(float v) {
+    m_orthoSize = v;
     m_projectionDirty = true;
 }

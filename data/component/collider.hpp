@@ -9,8 +9,7 @@
 
 using namespace Engine::Physics;
 
-namespace Engine
-{
+namespace Engine {
 
     using BoundingBoxID = uint16_t;
 
