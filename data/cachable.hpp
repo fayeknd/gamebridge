@@ -20,12 +20,13 @@ namespace Engine {
     // through every instance if we wanted to or not.)
     class ObjectRegistry : public std::enable_shared_from_this<ObjectRegistry> {
     private:
-        // the internal cache id, per-instance.
-        CacheID m_cacheID; 
  
         // has this instance been registere?
         bool m_registered = false;
     protected:
+
+        // the internal cache id, per-instance.
+        CacheID m_cacheID; 
 
         // the instance ID pool.
         static IDPool<CacheID>& instanceIDPool();
@@ -60,9 +61,10 @@ namespace Engine {
             return instance;
         }  
         static void cleanup(); 
-        CacheID getCacheID();
-        bool getRegistered();
 
+        const bool getRegistered() const { return m_registered; };
+        const CacheID getCacheID() const { return m_cacheID; }
+        
         // if this is true, this object won't get cleared.
         bool m_dontDelete = false;
 

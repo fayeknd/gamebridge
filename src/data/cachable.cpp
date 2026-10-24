@@ -21,14 +21,6 @@ std::unordered_map<CacheID, std::shared_ptr<ObjectRegistry>>& ObjectRegistry::re
     return *cache;
 }
 
-CacheID ObjectRegistry::getCacheID() {
-    return m_cacheID;
-}
-
-bool ObjectRegistry::getRegistered() {
-    return m_registered;
-}
-
 void ObjectRegistry::cleanup() {
     // track the erased object count
     int erasedObjs = 0;

@@ -438,8 +438,6 @@ void ShaderProgram::setUniform(const std::string& uniformLoc, const Material* un
     setUniform(uniformLoc + materialUniform_metallicFac,  uniform->m_data.m_metallicFac);
     setUniform(uniformLoc + materialUniform_ambientFac,   uniform->m_data.m_ambientFac);
 
-    Logging::Logger::get().logInfo("has albedo: {}", uniform->m_data.m_hasAlbedoTx);
-
     setUniform(uniformLoc + materialUniform_hasAlbedo,    uniform->m_data.m_hasAlbedoTx);
     setUniform(uniformLoc + materialUniform_hasNormal,    uniform->m_data.m_hasNormalTx);
     setUniform(uniformLoc + materialUniform_hasMetallic,  uniform->m_data.m_hasMetallicTx);

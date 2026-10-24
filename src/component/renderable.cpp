@@ -1,3 +1,4 @@
+#include "logger.hpp"
 #include "shader.hpp"
 #include <component/renderable.hpp>
 #include <entity.hpp>

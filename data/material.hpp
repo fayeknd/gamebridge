@@ -35,14 +35,14 @@ namespace Engine {
 
     };
 
-    class Material : ICachable<Material> {
+    class Material : public ICachable<Material> {
     protected:
 
         // texture pointers
-        std::shared_ptr<Texture2D> m_albedoTx;
-        std::shared_ptr<Texture2D> m_normalTx;
-        std::shared_ptr<Texture2D> m_metallicTx;
-        std::shared_ptr<Texture2D> m_emissionTx;
+        std::shared_ptr<Texture2D> m_albedoTx = nullptr;
+        std::shared_ptr<Texture2D> m_normalTx = nullptr;
+        std::shared_ptr<Texture2D> m_metallicTx = nullptr;
+        std::shared_ptr<Texture2D> m_emissionTx = nullptr;
 
 
     public:
