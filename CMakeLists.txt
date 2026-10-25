@@ -74,14 +74,12 @@ set(RSC_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/resources")
 set(RSC_TARGET "${CMAKE_CURRENT_BINARY_DIR}/${RSC_FILE}")
 file(GLOB_RECURSE RESOURCES_OUT CONFIGURE_DEPENDS "${RSC_SOURCE}/*")
 
-add_custom_command(
-    OUTPUT "${RSC_TARGET}"
+add_custom_target(resources
     COMMAND ${CMAKE_COMMAND} -E tar "cf" "${RSC_TARGET}" --format=zip "."
     WORKING_DIRECTORY "${RSC_SOURCE}"
-    DEPENDS ${RESOURCES_OUT}
     COMMENT "Compressing project resources into '${RSC_FILE}' archive..."
-)
-add_custom_target(resources DEPENDS "${RSC_TARGET}")
+    VERBATIM
+) 
 
 project(gamebridge VERSION 0.1.0 LANGUAGES C CXX)
 add_library(glad STATIC 
@@ -104,6 +102,7 @@ file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp"
 )
 add_executable(gamebridge ${PROJECT_SOURCES})
+add_compile_options(gamebridge -O0)
 add_dependencies(gamebridge resources)
 
 #debug stuff
@@ -122,7 +121,7 @@ endif()
 include(CTest)
 enable_testing()
 
-target_include_directories(gamebridge PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/data ${CMAKE_CURRENT_SOURCE_DIR}/utils)
+target_include_directories(gamebridge PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/data ${CMAKE_CURRENT_SOURCE_DIR}/data/utils)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

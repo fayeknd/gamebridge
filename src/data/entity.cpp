@@ -256,15 +256,28 @@ void Entity::_lateUpdateComponents(double delta) {
 }
 
 void Entity::_pollComponentBehaviours(double delta) {
-    // update all the components of all the entities 
+    // update all the components' update() functions. 
     for (const auto& e : Entity::s_entityList) {
         e.second->_updateComponents(delta);
     }
+    // update all the lateupdate() functions.
     for (const auto& e : Entity::s_entityList) {
         e.second->_lateUpdateComponents(delta);
     }
+    // update all the draw() functions.
     for (const auto& e : Entity::s_entityList) {
         e.second->_drawComponents();
+    }
+    // reset all the transformDirty flags.
+
+    // stupidly i had this reset at the end of the above loop, 
+    // but that could cause wasEntityTransformed()
+    // to be false on every other frame in certain cases.
+
+    // this drove me. up the fucking wall.
+    // for FOUR hours.
+    
+    for (const auto& e : Entity::s_entityList) {
         if (e.second->m_queueTransformReset) {
             // set transformDirty to false, this is the end
             // of the frame as far as behaviour is aware.

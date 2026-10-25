@@ -34,35 +34,35 @@ std::shared_ptr<Mesh> Primitives::_generateCubeImpl() {
     std::vector<GLushort> indices;
     vertices = {
         // Position                   Colour       UV              Normal
-        {fm::vec3(-0.5f, 0.5f, 0.5f), fm::vec4(1), fm::vec2(1, 0), fm::vec3::zAxis()},
-        {fm::vec3( 0.5f, 0.5f, 0.5f), fm::vec4(1), fm::vec2(0, 0), fm::vec3::zAxis()},
-        {fm::vec3( 0.5f,-0.5f, 0.5f), fm::vec4(1), fm::vec2(0, 1), fm::vec3::zAxis()},
-        {fm::vec3(-0.5f,-0.5f, 0.5f), fm::vec4(1), fm::vec2(1, 1), fm::vec3::zAxis()},
+        {fm::vec3(-0.5f, 0.5f, 0.5f), fm::vec4(1), fm::vec2(1, 0),-fm::vec3::zAxis()},
+        {fm::vec3( 0.5f, 0.5f, 0.5f), fm::vec4(1), fm::vec2(0, 0),-fm::vec3::zAxis()},
+        {fm::vec3( 0.5f,-0.5f, 0.5f), fm::vec4(1), fm::vec2(0, 1),-fm::vec3::zAxis()},
+        {fm::vec3(-0.5f,-0.5f, 0.5f), fm::vec4(1), fm::vec2(1, 1),-fm::vec3::zAxis()},
         
-        {fm::vec3( 0.5f, 0.5f,-0.5f), fm::vec4(1), fm::vec2(1, 0),-fm::vec3::zAxis()},
-        {fm::vec3(-0.5f, 0.5f,-0.5f), fm::vec4(1), fm::vec2(0, 0),-fm::vec3::zAxis()},
-        {fm::vec3(-0.5f,-0.5f,-0.5f), fm::vec4(1), fm::vec2(0, 1),-fm::vec3::zAxis()},
-        {fm::vec3( 0.5f,-0.5f,-0.5f), fm::vec4(1), fm::vec2(1, 1),-fm::vec3::zAxis()},
+        {fm::vec3( 0.5f, 0.5f,-0.5f), fm::vec4(1), fm::vec2(1, 0), fm::vec3::zAxis()},
+        {fm::vec3(-0.5f, 0.5f,-0.5f), fm::vec4(1), fm::vec2(0, 0), fm::vec3::zAxis()},
+        {fm::vec3(-0.5f,-0.5f,-0.5f), fm::vec4(1), fm::vec2(0, 1), fm::vec3::zAxis()},
+        {fm::vec3( 0.5f,-0.5f,-0.5f), fm::vec4(1), fm::vec2(1, 1), fm::vec3::zAxis()},
 
-        {fm::vec3(-0.5f, 0.5f,-0.5f), fm::vec4(1), fm::vec2(1, 0), fm::vec3::yAxis()},
-        {fm::vec3( 0.5f, 0.5f,-0.5f), fm::vec4(1), fm::vec2(0, 0), fm::vec3::yAxis()},
-        {fm::vec3( 0.5f, 0.5f, 0.5f), fm::vec4(1), fm::vec2(0, 1), fm::vec3::yAxis()},
-        {fm::vec3(-0.5f, 0.5f, 0.5f), fm::vec4(1), fm::vec2(1, 1), fm::vec3::yAxis()},
+        {fm::vec3(-0.5f, 0.5f,-0.5f), fm::vec4(1), fm::vec2(1, 0),-fm::vec3::yAxis()},
+        {fm::vec3( 0.5f, 0.5f,-0.5f), fm::vec4(1), fm::vec2(0, 0),-fm::vec3::yAxis()},
+        {fm::vec3( 0.5f, 0.5f, 0.5f), fm::vec4(1), fm::vec2(0, 1),-fm::vec3::yAxis()},
+        {fm::vec3(-0.5f, 0.5f, 0.5f), fm::vec4(1), fm::vec2(1, 1),-fm::vec3::yAxis()},
 
-        {fm::vec3(-0.5f,-0.5f, 0.5f), fm::vec4(1), fm::vec2(1, 0),-fm::vec3::yAxis()},
-        {fm::vec3( 0.5f,-0.5f, 0.5f), fm::vec4(1), fm::vec2(0, 0),-fm::vec3::yAxis()},
-        {fm::vec3( 0.5f,-0.5f,-0.5f), fm::vec4(1), fm::vec2(0, 1),-fm::vec3::yAxis()},
-        {fm::vec3(-0.5f,-0.5f,-0.5f), fm::vec4(1), fm::vec2(1, 1),-fm::vec3::yAxis()},
+        {fm::vec3(-0.5f,-0.5f, 0.5f), fm::vec4(1), fm::vec2(1, 0), fm::vec3::yAxis()},
+        {fm::vec3( 0.5f,-0.5f, 0.5f), fm::vec4(1), fm::vec2(0, 0), fm::vec3::yAxis()},
+        {fm::vec3( 0.5f,-0.5f,-0.5f), fm::vec4(1), fm::vec2(0, 1), fm::vec3::yAxis()},
+        {fm::vec3(-0.5f,-0.5f,-0.5f), fm::vec4(1), fm::vec2(1, 1), fm::vec3::yAxis()},
 
-        {fm::vec3( 0.5f, 0.5f, 0.5f), fm::vec4(1), fm::vec2(1, 0), fm::vec3::xAxis()},
-        {fm::vec3( 0.5f, 0.5f,-0.5f), fm::vec4(1), fm::vec2(0, 0), fm::vec3::xAxis()},
-        {fm::vec3( 0.5f,-0.5f,-0.5f), fm::vec4(1), fm::vec2(0, 1), fm::vec3::xAxis()},
-        {fm::vec3( 0.5f,-0.5f, 0.5f), fm::vec4(1), fm::vec2(1, 1), fm::vec3::xAxis()},
+        {fm::vec3( 0.5f, 0.5f, 0.5f), fm::vec4(1), fm::vec2(1, 0),-fm::vec3::xAxis()},
+        {fm::vec3( 0.5f, 0.5f,-0.5f), fm::vec4(1), fm::vec2(0, 0),-fm::vec3::xAxis()},
+        {fm::vec3( 0.5f,-0.5f,-0.5f), fm::vec4(1), fm::vec2(0, 1),-fm::vec3::xAxis()},
+        {fm::vec3( 0.5f,-0.5f, 0.5f), fm::vec4(1), fm::vec2(1, 1),-fm::vec3::xAxis()},
 
-        {fm::vec3(-0.5f, 0.5f,-0.5f), fm::vec4(1), fm::vec2(1, 0),-fm::vec3::xAxis()},
-        {fm::vec3(-0.5f, 0.5f, 0.5f), fm::vec4(1), fm::vec2(0, 0),-fm::vec3::xAxis()},
-        {fm::vec3(-0.5f,-0.5f, 0.5f), fm::vec4(1), fm::vec2(0, 1),-fm::vec3::xAxis()},
-        {fm::vec3(-0.5f,-0.5f,-0.5f), fm::vec4(1), fm::vec2(1, 1),-fm::vec3::xAxis()}
+        {fm::vec3(-0.5f, 0.5f,-0.5f), fm::vec4(1), fm::vec2(1, 0), fm::vec3::xAxis()},
+        {fm::vec3(-0.5f, 0.5f, 0.5f), fm::vec4(1), fm::vec2(0, 0), fm::vec3::xAxis()},
+        {fm::vec3(-0.5f,-0.5f, 0.5f), fm::vec4(1), fm::vec2(0, 1), fm::vec3::xAxis()},
+        {fm::vec3(-0.5f,-0.5f,-0.5f), fm::vec4(1), fm::vec2(1, 1), fm::vec3::xAxis()}
     };
 
     indices = {

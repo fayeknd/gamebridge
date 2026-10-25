@@ -1,8 +1,10 @@
+#include "logger.hpp"
 #include <shader.hpp>
 #include <iostream>
 #include <fstream>
 #include <resources.hpp>
 #include <engine.h>
+#include <material.hpp>
 
 using namespace Engine;
 
@@ -13,6 +15,22 @@ std::unordered_map<std::string, CacheID>& ShaderProgram::stringToIDMap() {
 
 ShaderProgram::~ShaderProgram() {
 
+}
+
+void ShaderProgram::_createDefaultShaders() {
+    // lit shader
+    std::shared_ptr<ShaderProgram> lit = createProgramFromPath("stuff=>shaders/shader_lit.glsl", shader_litShader);
+    // mark this shader as don't delete to avoid cleanup.
+    // we could just mark these as static but we could also do this.
+    // and this is cooler i think. 
+    lit->m_dontDelete = true;
+
+    std::shared_ptr<ShaderProgram> col = createProgramFromPath("stuff=>shaders/collider.glsl", shader_colliderShader);
+    col->m_dontDelete = true;
+
+    std::shared_ptr<ShaderProgram> line = createProgramFromPath("stuff=>shaders/line.glsl", shader_lineShader);
+    line->m_dontDelete = true;
+    // put any other permanent shaders here
 }
 
 // returns this shader's key (or name)
@@ -33,9 +51,16 @@ std::shared_ptr<ShaderProgram> ShaderProgram::createProgramFromPath(std::filesys
         shaderKey = shaderSource.filename().string();
 
         // remove the extension from the filename
-        size_t ind = shaderKey.find_last_of('.');
-        shaderKey = shaderKey.substr(0, ind);
+        size_t slash = shaderKey.find_last_of('/');
+        size_t dot   = shaderKey.find_last_of('.');
+        shaderKey = shaderKey.substr(slash + 1, dot - slash - 1);
     }
+    
+    // try get an existing shader using the key.
+    // if one is found, return that. otherwise continue.
+    auto _ = getShaderViaKey(shaderKey);
+    if (_) return _; 
+    // no cached shader found, continue.
     
     // attempt to read an archived file
     bytes rcFile = ResourceManager::loadRaw(shaderSource.string()); 
@@ -45,12 +70,6 @@ std::shared_ptr<ShaderProgram> ShaderProgram::createProgramFromPath(std::filesys
     }
     // file was not in any archives in the string, continue loading 
     // as a regular file on disk.
-
-    // try get an existing shader using the key.
-    // if one is found, return that. otherwise continue.
-    auto _ = getShaderViaKey(shaderKey);
-    if (_) return _; 
-    // no cached shader found, continue.
 
     // try read the file
     std::error_code ec;    
@@ -180,6 +199,7 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
             writeBuf = &fCode; 
             // add some more boilerplate we need
             line = shader_fragmentLayouts;
+            line += shader_materialUniform;
         }
         // possibility 3: something else
         else {
@@ -406,9 +426,35 @@ void ShaderProgram::setUniform(const std::string& uniformLoc, const fm::_mat4x4<
     glUniformMatrix4fv(getUniformLoc(uniformLoc), 1, GL_FALSE, uniform.data()); 
 }
 
+// pointers are dangerous, so do a null check
 void ShaderProgram::setUniform(const std::string& uniformLoc, const Texture2D* uniform) {
+    if (!uniform) return;
     setUniform(uniformLoc, static_cast<int>(uniform->getUnitID()));
 }
 void ShaderProgram::setUniform(const std::string& uniformLoc, const std::shared_ptr<Texture2D> uniform) {
+    if (!uniform) return;
+    setUniform(uniformLoc, uniform.get());
+}
+void ShaderProgram::setUniform(const std::string& uniformLoc, const Material* uniform) {
+    if (!uniform) return;
+    setUniform(uniformLoc + materialUniform_albedoFac,    uniform->m_data.m_albedoFac);
+    setUniform(uniformLoc + materialUniform_emissionFac,  uniform->m_data.m_emissionFac);
+    setUniform(uniformLoc + materialUniform_roughnessFac, uniform->m_data.m_roughnessFac);
+    setUniform(uniformLoc + materialUniform_metallicFac,  uniform->m_data.m_metallicFac);
+    setUniform(uniformLoc + materialUniform_ambientFac,   uniform->m_data.m_ambientFac);
+
+    setUniform(uniformLoc + materialUniform_hasAlbedo,    uniform->m_data.m_hasAlbedoTx);
+    setUniform(uniformLoc + materialUniform_hasNormal,    uniform->m_data.m_hasNormalTx);
+    setUniform(uniformLoc + materialUniform_hasMetallic,  uniform->m_data.m_hasMetallicTx);
+    setUniform(uniformLoc + materialUniform_hasEmission,  uniform->m_data.m_hasEmissionTx);
+
+    setUniform(uniformLoc + materialUniform_albedoTx,     uniform->getAlbedoTx());
+    setUniform(uniformLoc + materialUniform_normalTx,     uniform->getNormalTx());
+    setUniform(uniformLoc + materialUniform_metallicTx,   uniform->getMetallicTx());
+    setUniform(uniformLoc + materialUniform_emissionTx,   uniform->getEmissionTx());
+
+}
+void ShaderProgram::setUniform(const std::string& uniformLoc, const std::shared_ptr<Material> uniform) {
+    if (!uniform) return;
     setUniform(uniformLoc, uniform.get());
 }

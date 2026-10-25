@@ -7,8 +7,9 @@ using namespace Engine;
 using namespace Physics;
 
 
-RaycastHit Physics::Raycast(Ray ray, RaycastHit& rayCastHit, float distance) {
+RaycastHit Physics::Raycast(Ray ray, float distance) {
 
+    RaycastHit returnHit;
     // iterate through every bounding box (expensive!!)
     for (auto it : BoundingBox::getBoundingBoxList()) {
 
@@ -29,5 +30,5 @@ RaycastHit Physics::Raycast(Ray ray, RaycastHit& rayCastHit, float distance) {
             rayCastHit = hit;
     }
 
-    return rayCastHit;
+    return returnHit;
 }

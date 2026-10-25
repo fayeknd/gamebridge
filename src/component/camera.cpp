@@ -1,3 +1,4 @@
+#include "logger.hpp"
 #include <component/camera.hpp>
 #include <window.hpp>
 #include <entity.hpp>
@@ -77,23 +78,24 @@ ProjectionMode Camera::getProjectionMode() {
 fm::mat4 Camera::getProjectionMat() {
     // return if the projection matrix isn't dirty 
     // calculate anyway if the viewport changed
-    if (!m_projectionDirty && !Window::get().m_viewportDirty) return m_projectionMatrix;
+    if (!m_projectionDirty && !Window::get().m_viewportDirty ||  m_lastCalculatedFrame_p == Window::get().getFrame()) return m_projectionMatrix;
     m_projectionDirty = false;
+
+     m_lastCalculatedFrame_p = Window::get().getFrame();
 
     // switch projection mode cases
     switch (m_projMode) {
         case ProjectionMode::Orthographic: {
-            // get the half aspect.
-            // used for the orthographic bounds
-            fm::uvec2 halfAspect = Window::get().getFractionalAspectRatio();
-            halfAspect /= 2;
+
+            float height = m_orthoSize;
+            float width = height * Window::get().getAspectRatio();
 
             // make the projection matrix
             m_projectionMatrix = fm::orthographic<float>(
-                -halfAspect.x,
-                 halfAspect.x,
-                -halfAspect.y,
-                 halfAspect.y, 
+                -width,
+                 width,
+                -height,
+                 height, 
                 m_nearClip, m_farClip);
             break;
             }
@@ -109,10 +111,12 @@ fm::mat4 Camera::getProjectionMat() {
 }
 fm::mat4 Camera::getViewMat() {
     // return if the transform was not touched this frame
-    if (!entity.wasTransformDirty()) return m_viewMatrix;
+    if (!entity.wasTransformDirty() || m_lastCalculatedFrame_v == Window::get().getFrame()) return m_viewMatrix;
     entity.m_queueTransformReset = true;
     // (pos, pos + front, up)
 
+    m_lastCalculatedFrame_v = Window::get().getFrame();
+    
     m_viewMatrix = fm::lookAt(
         entity.transform.getGlobalPosition(),
         entity.transform.getGlobalPosition() + entity.transform.getGlobalFront(),
@@ -129,6 +133,9 @@ float Camera::getNearClip() {
 float Camera::getFarClip() {
     return m_farClip;
 }
+float Camera::getOrthoSize() {
+    return m_orthoSize;
+}
 
 void Camera::setFOV(float v) {
     m_fov = v;
@@ -140,5 +147,9 @@ void Camera::setNearClip(float v) {
 }
 void Camera::setFarClip(float v) {
     m_farClip = v;
+    m_projectionDirty = true;
+}
+void Camera::setOrthoSize(float v) {
+    m_orthoSize = v;
     m_projectionDirty = true;
 }

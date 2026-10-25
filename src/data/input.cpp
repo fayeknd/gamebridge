@@ -1,7 +1,17 @@
-#include "GLFW/glfw3.h"
+#include <debug.hpp>
 #include <input.hpp>
+#include <logger.hpp>
 
 using namespace Engine;
+using namespace Engine::Debug;
+
+void Input::setMouseHidden(bool v) {
+
+    if (v) glfwSetInputMode(s_wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    else   glfwSetInputMode(s_wnd, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+    s_mouseHidden = v;
+}
 
 // set the mouse position
 void Input::setMousePos(fm::dvec2 pos) {
@@ -9,8 +19,7 @@ void Input::setMousePos(fm::dvec2 pos) {
 }
 
 fm::dvec2 Input::getMouseDelta() {
-    if (!isWindowFocused()) return 0; 
-    return s_mousePos - s_mousePosLC;
+    return s_mouseDelta;
 }
 
 // Sets the key down state assuming key isnt held otherwise the key is held down
@@ -39,12 +48,16 @@ void Input::_mouse_button_callback(GLFWwindow*, int code, int action, int) {
 }
 
 void Input::_mouse_pos_callback(GLFWwindow *wnd, double x, double y) {
-    static bool first = true;
-    s_mousePos = fm::vec(x, y);
-    if (first || s_mouseEnteredTF) {
-        s_mousePosLC = s_mousePos;
-        first = false;
-    }
+    static double lastX = x;
+    static double lastY = y;
+
+    double deltaX = x - lastX;
+    double deltaY = y - lastY; 
+
+    lastX = x;
+    lastY = y;
+
+    s_accumulatedMouseDelta += {deltaX, deltaY};
 }
 
 // i don't know what the int is for
@@ -67,9 +80,24 @@ void Input::init(GLFWwindow* wnd) {
     glfwSetCursorPosCallback(wnd, _mouse_pos_callback);
     glfwSetCursorEnterCallback(wnd, _enter_window_callback);
     glfwSetWindowFocusCallback(wnd, _window_focus_callback);
+
+    // we need sub-pixel data
+    if (glfwRawMouseMotionSupported()) {
+        glfwSetInputMode(wnd, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    }
 }
 
-void Input::poll() {
+void Input::pollStart() {
+    if (!isWindowFocused()) {
+        s_mouseDelta              = fm::dvec2::zero();
+        s_accumulatedMouseDelta   = fm::dvec2::zero();
+        return;
+    }
+    s_mouseDelta = s_accumulatedMouseDelta;
+    s_accumulatedMouseDelta = fm::dvec2::zero(); 
+}
+
+void Input::pollEnd() {
     s_mousePosLC = s_mousePos;
     s_mouseEnteredTF = false;
     s_mouseExitedTF = false;

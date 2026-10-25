@@ -15,6 +15,8 @@
 
 namespace Engine {
 
+    class Material; // love a cheeky forward declaration
+
     // TODO : create a function to set default uniforms for a shader
     // to reduce verbosity / boilerplate
 
@@ -40,11 +42,19 @@ namespace Engine {
     constexpr const char* shader_FragmentIdentifier = "#FRAGMENT";
 
     // a constant for the model matrix
-    constexpr const char* shader_ModelMatrix = "model_matrix";
+    constexpr const char* shader_ModelMatrix = "u_model_matrix";
 
     // a constant for the view/projection matrix
-    constexpr const char* shader_ViewProjectionMatrix = "vp_matrix";
+    constexpr const char* shader_ViewProjectionMatrix = "u_vp_matrix";
 
+    // a constant for the default material
+    constexpr const char* shader_defaultMaterial = "u_material";
+
+    // the default lit shader.
+    // if a shader doesn't have a shader key, it will just use the path as the key
+    constexpr const char* shader_litShader = "lit_shader";
+    constexpr const char* shader_colliderShader = "collider_shader";
+    constexpr const char* shader_lineShader = "line_shader";
 
     // some pregenerated code.
 
@@ -79,8 +89,8 @@ namespace Engine {
         "out vec2 _transpilerID_uv;\n"
         "out vec3 _transpilerID_normal;\n"
 
-        "uniform mat4 model_matrix;\n"
-        "uniform mat4 vp_matrix;\n"
+        "uniform mat4 u_model_matrix;\n"
+        "uniform mat4 u_vp_matrix;\n"
     };
 
 
@@ -91,7 +101,7 @@ namespace Engine {
         "in vec3 _transpilerID_position;\n"
         "in vec4 _transpilerID_colour;\n"
         "in vec2 _transpilerID_uv;\n"
-        "in vec3 _transpilerID_normal;\n"
+        "in vec3 _transpilerID_normal;\n\n"
     };
 
     // this gets added to the main function of the vertex shader
@@ -100,7 +110,29 @@ namespace Engine {
         "\n    _transpilerID_position = gl_Position.xyz;\n"
         "    _transpilerID_colour = v_colour;\n"
         "    _transpilerID_uv = v_uv;\n"
-        "    _transpilerID_normal = v_normal;\n"
+        "    _transpilerID_normal = mat3(transpose(inverse(u_model_matrix))) * v_normal;\n"
+    };
+
+    // the material struct definition in GLSL.
+    // this will be within the vertex shader.
+    constexpr const char* shader_materialUniform = {
+        "struct pbrData {\n"
+        "   vec4  albedo_fac;\n"
+        "   vec4  emission_fac;\n"
+        "   float roughness_fac;\n"
+        "   float metallic_fac;\n"
+        "   float ambient_fac;\n"
+            
+        "   bool  has_albedo_tx;\n"
+        "   bool  has_normal_tx;\n"
+        "   bool  has_metallic_tx;\n"
+        "   bool  has_emission_tx;\n"
+        "};\n\n"
+        "uniform pbrData   u_material;\n\n"
+        "uniform sampler2D u_albedo_tx;\n"
+        "uniform sampler2D u_normal_tx;\n"
+        "uniform sampler2D u_metallic_tx;\n"
+        "uniform sampler2D u_emission_tx;\n"
     };
 
     // like i said earlier, the program finds any v_vars in the frag
@@ -158,6 +190,12 @@ namespace Engine {
 
         // create program from a string stream. this string stream gets passed right through to _compileProgram().
         static std::shared_ptr<ShaderProgram> _createProgramFromStringStream(std::stringstream& ss, std::string shaderKey = UNNAMED_SHADER);
+
+        // create some default shaders.
+        static void _createDefaultShaders();
+
+        friend class Window;
+
     public:
 
         ~ShaderProgram();
@@ -232,7 +270,9 @@ namespace Engine {
         // sets a texture by name and value.
         void setUniform(const std::string& uniformLoc, const Texture2D* uniform);
         void setUniform(const std::string& uniformLoc, const std::shared_ptr<Texture2D> uniform);
-         
+      
+        void setUniform(const std::string& uniformLoc, const Material* uniform);
+        void setUniform(const std::string& uniformLoc, const std::shared_ptr<Material> uniform);
+            
     };
-
 }

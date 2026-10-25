@@ -12,7 +12,7 @@ namespace Engine {
     namespace Physics {
 
         // Shoots a ray from the ray origin in the ray direction and returns a raycasthit
-        RaycastHit Raycast(Ray ray, RaycastHit& rayCastHit, float distance = physics_defaultRayDistance);
+        RaycastHit Raycast(Ray ray, float distance = physics_defaultRayDistance);
     };
 }
 

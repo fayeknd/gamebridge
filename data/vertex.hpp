@@ -26,5 +26,21 @@ namespace Engine {
             normal = n;
         }
 
+        Vertex(fm::vec3 p) {
+            position = p;
+            colour = {1};
+            uv = {0};
+            normal = {0};
+        }
+
+        Vertex(fm::vec3 p, fm::vec4 c) {
+            position = p;
+            colour = c;
+            uv = {0};
+            normal = {0};
+        }
+
     };
+
+    using Point = Vertex;
 }

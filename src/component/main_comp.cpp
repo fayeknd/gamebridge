@@ -1,7 +1,7 @@
-#include "gl_context.hpp"
-#include "logger.hpp"
-#include "ray.hpp"
-#include "shader.hpp"
+#include <cachable.hpp>
+#include <logger.hpp>
+#include <ray.hpp>
+#include <shader.hpp>
 #include <component/collider.hpp>
 #include <component/boundingbox.hpp>
 #include <component/main_comp.hpp>
@@ -28,9 +28,6 @@ void MainComponent::init() {
 
     Window::get().setWndSize({1280, 720});
 
-    auto program = ShaderProgram::createProgramFromPath("stuff=>shaders/shader.glsl");
-    ResourceManager::freeArchives();
-
     // create entity and add component
     square = Entity::create("Test Square").get(); 
     auto collider = square->addComponent<BoundingBox>();
@@ -43,16 +40,12 @@ void MainComponent::init() {
     square->transform.addPosition(1.1f);
     square->transform.addScaleY(.3f);
 
-    // TODO : implement copying entities
-    teenySquare = Entity::create("hitSquare").get();
-    auto renderer2 = teenySquare->addComponent<IRenderable>();
-
     // add some basic data to the renderer
     renderer->m_mesh = Mesh::primitive(Primitive::Cube);
-    renderer->m_shaderProgram = ShaderProgram::getShaderViaKey(program->getKey());
-    renderer2->m_mesh = Mesh::primitive(Primitive::Cube);
-    renderer2->m_shaderProgram = program;
-    teenySquare->transform.setScale(0.1f);
+    renderer->m_material->setAlbedoTx(Texture2D::createTextureFromPath("stuff=>textures/me trying to flirt.png"));
+    renderer->m_material->m_data.m_albedoFac.y = 0.4f;
+
+
     // create the camera entity
     cam = Entity::create("Camera").get();
     // add a camera component
@@ -61,62 +54,75 @@ void MainComponent::init() {
     // push the camera back a bit in the world
     cam->transform.addPositionZ(-5);
     // set the clear colour on the camera
-    camComponent->m_clearCol = {0.1f, 0.1f, 0.1f, 0.0f};
-
-    Logging::Logger::get().logInfo("Camera clear colour: {}", camComponent->m_clearCol);
-
-
-    texture = Texture2D::createTextureFromPath("stuff=>textures/me trying to flirt.png");
-    texture->bindTexture();
-    program->setUniform("tx", texture);
+    camComponent->m_clearCol = {0.1f, 0.1f, 0.1f, 0.7f};
 
     // set the target fps
+    //Window::get().setVSyncMode(VSyncMode::On);
     Window::get().setTargetFPS(240);
+    // free any archives.
+    ResourceManager::freeArchives();
 }
 
 void MainComponent::update(double delta) {
     square->transform.setScaleX((sin(Time::sinceStartup()) / 10.0f) + 1.0f);
 
-    auto mdelta = Input::getMouseDelta();
-    if (mdelta != fm::dvec2::zero()) {
-        cam->transform.addRotationX(mdelta.y * sensitivity);
-        cam->transform.addRotationY(mdelta.x * sensitivity);
-        cam->transform.setRotationX(std::clamp(cam->transform.getRotationX(), -90.0f, 90.0f));
+    if (Input::getActionDown(Key::F1)) {
+        DebugUI::get().m_drawDebugger = !DebugUI::get().m_drawDebugger;
     }
 
+    if (DebugUI::get().m_drawDebugger && Input::getAction(MouseBtn::RightMouse) || 
+       (!DebugUI::get().m_drawDebugger)) {
+        
+        if (!DebugUI::get().getIO().WantCaptureMouse) Input::setMouseHidden(true);
+
+        auto mdelta = Input::getMouseDelta();
+        if (mdelta != fm::dvec2::zero()) {
+            cam->transform.addRotationX(mdelta.y * sensitivity);
+            cam->transform.addRotationY(mdelta.x * sensitivity);
+            cam->transform.setRotationX(std::clamp(cam->transform.getRotationX(), -90.0f, 90.0f));
+        }
+    }
+    else {
+        Input::setMouseHidden(false);
+    }
     // basic input handling test
     if (Input::getAction(Key::W)) {
-        cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getFront());
+        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getFront() * speed);
     }
     if (Input::getAction(Key::D)) {
-        cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getRight());
+        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getRight() * speed);
     }
     if (Input::getAction(Key::E)) {
-        cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getUp());
+        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getUp() * speed);
     }
 
     if (Input::getAction(Key::S)) {
-        cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getBack());
+        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getBack() * speed);
     }
     if (Input::getAction(Key::A)) {
-        cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getLeft());
+        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getLeft() * speed);
     }
     if (Input::getAction(Key::Q)) {
-        cam->transform.addPosition(static_cast<float>(1 * delta) * cam->transform.getDown());
+        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getDown() * speed);
     }
+
+    static fm::vec3 ray_start;
+    static fm::vec3 ray_end;
+
     if (Input::getActionDown(Key::F)) {
-        // then idk good job
+        RaycastHit out = Physics::Raycast({cam->transform.getGlobalPosition(), cam->transform.getGlobalFront()});
+
+        ray_start = cam->transform.getGlobalPosition();
+        ray_end = ray_start + (cam->transform.getGlobalFront() * out.m_hitInfo.m_distance);
+
+        Logging::Logger::get().logInfo("Made a Raycast. Did it hit? {}", out.m_hitInfo.m_hasHit);
     }
 
-
-    RaycastHit out;    
-    if(Physics::Raycast({cam->transform.getPosition(), cam->transform.getFront()}, out)) {
-        teenySquare->forceSetEnabled(true);
-        teenySquare->transform.setPosition(out.m_hitInfo.m_hitPoint);
-    }
-    else {
-        teenySquare->setEnabled(false);
-    }
+    static DebugLine line;
+    line.draw({
+        Point({ray_start}),
+        Point({ray_end})
+    });
 }
 
 void MainComponent::lateUpdate(double delta) {

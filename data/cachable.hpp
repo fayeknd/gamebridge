@@ -20,23 +20,22 @@ namespace Engine {
     // through every instance if we wanted to or not.)
     class ObjectRegistry : public std::enable_shared_from_this<ObjectRegistry> {
     private:
-        // the internal cache id, per-instance.
-        CacheID m_cacheID; 
  
         // has this instance been registere?
         bool m_registered = false;
     protected:
 
+        // the internal cache id, per-instance.
+        CacheID m_cacheID; 
+
         // the instance ID pool.
         static IDPool<CacheID>& instanceIDPool();
         
         // the map of cached instances
-        static std::unordered_map<CacheID, std::weak_ptr<ObjectRegistry>>& registry();
+        static std::unordered_map<CacheID, std::shared_ptr<ObjectRegistry>>& registry();
 
         // destructor
-        virtual ~ObjectRegistry() {
-            _unregister(); 
-        }
+        virtual ~ObjectRegistry() = default;
         ObjectRegistry() : m_cacheID(instanceIDPool().getNewID()) {};
 
         // register this instance to the registry
@@ -62,8 +61,12 @@ namespace Engine {
             return instance;
         }  
         static void cleanup(); 
-        CacheID getCacheID();
-        bool getRegistered();
+
+        const bool getRegistered() const { return m_registered; };
+        const CacheID getCacheID() const { return m_cacheID; }
+        
+        // if this is true, this object won't get cleared.
+        bool m_dontDelete = false;
 
     };
 
@@ -91,7 +94,7 @@ namespace Engine {
                 // often anyway.
                 // (static_cast just crashes if it fails, 
                 // and doesn't throw an error.)
-                auto inst = dynamic_pointer_cast<T>(it->second.lock()); 
+                auto inst = dynamic_pointer_cast<T>(it->second); 
                 
                 // is instance null?
                 if (!inst) {

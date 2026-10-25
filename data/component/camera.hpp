@@ -39,6 +39,9 @@ namespace Engine {
         // orthographic or perspective?
         ProjectionMode m_projMode = ProjectionMode::Perspective;
         
+        int m_lastCalculatedFrame_v = -1;
+        int m_lastCalculatedFrame_p = -1;
+
         // for the lazy calculations
         bool m_projectionDirty = true;
         // we would have an m_viewDirty 
@@ -49,6 +52,8 @@ namespace Engine {
         
         // the active rendering camera
         static inline Camera* s_activeCamera = nullptr;
+
+        float m_orthoSize = 1.0f;
 
         // to ensure if the active camera is destroyed, 
         // we can set a new one.
@@ -84,10 +89,12 @@ namespace Engine {
         float getFOV();
         float getNearClip(); 
         float getFarClip();
-        
+        float getOrthoSize();
+
         void setFOV(float v);
         void setNearClip(float v);
         void setFarClip(float v);
+        void setOrthoSize(float v);
 
         void init() override;
 

@@ -20,7 +20,7 @@ namespace fm {
     // possibly rediscover, so this is in desperate need
     // of documenting.
 
-    static inline bool flipY = true;
+    static inline bool flipY = false;
     static inline bool flipX = false;
     static inline bool flipZ = false;
 
@@ -287,18 +287,24 @@ namespace fm {
     }
     template <typename T>
     inline _mat4x4<T> lookAt(_vec3<T> pos, _vec3<T> target, _vec3<T> up = {0.0f, 1.0f, 0.0f}) {
-        _mat4x4<T> _;
-        _vec3<T> f = (pos - target).normalized();
-        _vec3<T> r = up.cross(f).normalized();
-        _vec3<T> u = r.cross(f);
-        
-        if (flipZ) f = -f;
-        if (flipX) r = -r;
-        if (flipY) u = -u;
+        _mat4x4<T> _ = _mat4x4<T>::identity(); 
 
-        _.m_data[0][0] = r.x; _.m_data[1][0] = r.y; _.m_data[2][0] = r.z; _.m_data[3][0] = -r.dot(pos); 
-        _.m_data[0][1] = u.x; _.m_data[1][1] = u.y; _.m_data[2][1] = u.z; _.m_data[3][1] = -u.dot(pos); 
-        _.m_data[0][2] = f.x; _.m_data[1][2] = f.y; _.m_data[2][2] = f.z; _.m_data[3][2] = -f.dot(pos); 
+        _vec3<T> f = (pos - target).normalized(); 
+        _vec3<T> r = up.cross(f).normalized(); 
+        _vec3<T> u = f.cross(r); 
+
+        T translateX = -r.dot(pos);
+        T translateY = -u.dot(pos);
+        T translateZ = -f.dot(pos);
+
+        if (flipZ) { f = -f; translateZ = -translateZ; }
+        if (flipX) { r = -r; translateX = -translateX; }
+        if (flipY) { u = -u; translateY = -translateY; }
+
+        _.m_data[0][0] = r.x; _.m_data[0][1] = u.x; _.m_data[0][2] = f.x; _.m_data[0][3] = 0.0f;
+        _.m_data[1][0] = r.y; _.m_data[1][1] = u.y; _.m_data[1][2] = f.y; _.m_data[1][3] = 0.0f;
+        _.m_data[2][0] = r.z; _.m_data[2][1] = u.z; _.m_data[2][2] = f.z; _.m_data[2][3] = 0.0f;
+        _.m_data[3][0] = translateX; _.m_data[3][1] = translateY; _.m_data[3][2] = translateZ; _.m_data[3][3] = 1.0f;
 
         return _;
     }
@@ -462,7 +468,7 @@ namespace fm {
             v.z = std::atan2(-m_data[0][1], m_data[1][1]);
         }
 
-        return (fm::radiansToDegrees(v.x), fm::radiansToDegrees(v.y), fm::radiansToDegrees(v.z));
+        return {fm::radiansToDegrees(v.x), fm::radiansToDegrees(v.y), fm::radiansToDegrees(v.z)};
     }
     template <typename T>
     // https://en.wikipedia.org/wiki/Cramer%27s_rule#:~:text=Finding%20inverse%20matrixedit

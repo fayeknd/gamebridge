@@ -1,5 +1,5 @@
-#include "cachable.hpp"
-#include "gl_context.hpp"
+#include <cachable.hpp>
+#include <gl_context.hpp>
 #include <window.hpp>
 
 #include <GLFW/glfw3native.h>
@@ -11,6 +11,9 @@
 #include <component/camera.hpp>
 #include <numeric>
 #include <input.hpp>
+#include <material.hpp>
+#include <debug.hpp>
+#include <thread>
 
 using namespace Engine;
 
@@ -261,7 +264,10 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     setTargetFPS(60);
     
     // set the vsync mode
-    setVSyncMode(VSyncMode::Off);
+    setVSyncMode(VSyncMode::On);
+
+    // create the imgui context 
+    Debug::DebugUI::get()._createImGuiContext(m_wnd);
 
     // the max slots amount differs on GPUs. it's either 16 or 32.
     // we aren't really going to run into a gpu that only allows 16,
@@ -270,6 +276,8 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxSlots); 
     GLContext::get().m_maxTextureSlots = maxSlots; 
 
+    // create the default shaders
+    ShaderProgram::_createDefaultShaders();
 
     // add the main entrypoint component to the root entity.
     Entity::s_root->addComponent<MainComponent>();
@@ -297,6 +305,7 @@ void Window::_default_window_hints() {
     glfwWindowHint(GLFW_BLUE_BITS, 8);
     glfwWindowHint(GLFW_ALPHA_BITS, 8);
 
+
     // only required on linux. forces the window to run under wayland instead of x11 (if available).
     #ifndef _WIN32
     glfwWindowHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
@@ -321,8 +330,10 @@ void Window::_framebuffer_resize_callback(GLFWwindow* wnd, int w, int h) {
 // any cleanup stuff to perform after the program stops.
 void Window::beginGameLoop() {
 
+    // start the timer
     Time::s_deltaTimer.start();
-
+    Timer swapBufferTimer;
+    
     // while glfw believes the window should not close
     while (!glfwWindowShouldClose(m_wnd)) {
 
@@ -334,22 +345,22 @@ void Window::beginGameLoop() {
         if (Time::deltaTimeNow() < m_targetFrameDelta) {
             continue;
         }
-        auto cam = Camera::activeCamera();
-        // reset the delta timer at the start of this frame
-        Time::_resetDeltaTimer();
-        // and get the delta time
-        double dt = Time::deltaTime();
-        m_currentFramesPerSecond = static_cast<double>(1) / static_cast<double>(dt);
 
-        // increment the frame counter
-        m_frame++;
+        // reset the delta timer
+        Time::_resetDeltaTimer();
+        // get the delta time
+        double dt = Time::deltaTime();
+        // calculate fps. round it to avoid int truncation too
+        m_currentFramesPerSecond = std::round(1.0 / dt);
+        // poll some events including glfwPollEvents.
+        preFramePollEvents(); 
         
+
+        auto cam = Camera::activeCamera();
         // poll the window events. this calls any callbacks first
         // this should have actually been done earlier but oh well.
         // without this, inputs would be handled on the NEXT frame
         // instead of this one.
-        preFramePollEvents();
-
         if (!cam) {
             Logging::Logger::get().logError("No active camera in game! There has to be an active camera for any behaviour to occurr.");
         }
@@ -357,17 +368,8 @@ void Window::beginGameLoop() {
             glClear(cam->m_clearFlags);
             glClearColor(cam->m_clearCol.x, cam->m_clearCol.y, cam->m_clearCol.z, cam->m_clearCol.w);
         }
-
         // poll all component behaviours
         Entity::_pollComponentBehaviours(dt);
-
-        // cycle the glfw front and back buffers
-        glfwSwapBuffers(m_wnd); 
-        
-        // end of frame, viewport no longer dirty
-        // comes before glfwPollEvents because the 
-        // framebuffer resize gets called there.
-        m_viewportDirty = false;
 
         // moved Input::NewFrame() to postFramePollEvents 
         // (and renamed it to poll()) to clean up.
@@ -375,6 +377,17 @@ void Window::beginGameLoop() {
         // have to go here so it's nicer to have them
         // all in one place.
         postFramePollEvents();
+
+        // cycle the glfw front and back buffers
+        glfwSwapBuffers(m_wnd); 
+        glFinish();
+
+        // end of frame, viewport no longer dirty
+        // comes before glfwPollEvents because the 
+        // framebuffer resize gets called there.
+        m_viewportDirty = false;
+        // increment the frame counter
+        m_frame++;
     }
     // we have left the loop, so the program is attempting to close.
     cleanup();
@@ -384,18 +397,26 @@ void Window::preFramePollEvents() {
     // poll glfw events.
     glfwPollEvents(); 
     ObjectRegistry::pollGC();
+    Input::pollStart();
 }
 
 // poll the various program events
 void Window::postFramePollEvents() {
     // update the input system
-    Input::poll();
+    Debug::DebugUI::get().drawImGuiInterface_framebegin();
+    Debug::DebugUI::get().drawImGuiInterface_frameend();
+    Input::pollEnd();
 }
 
 // clean up the program after exiting
 void Window::cleanup() {
     Logging::Logger::get().logInfo("Program recieved shutdown request, or was shutdown by the user. Attempting to clean up resources before closing...");
+    // free any archives that were kept loaded for whatever reason
     ResourceManager::freeArchives();
+    // destroy the imgui context
+    Debug::DebugUI::get()._destroyImGuiContext();
+    // destroy the gl context
     GLContext::get().destroyGLContext();
+    // close the log file
     Logging::Logger::closeLog();
 }

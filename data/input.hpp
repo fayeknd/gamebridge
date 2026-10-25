@@ -5,7 +5,7 @@
 
 namespace Engine {
 
-    #define _INTERNAL_KEY_COUNT 256
+    #define _INTERNAL_KEY_COUNT 298
 
     // Input Class, handles input by storing the flag state of every key in the game and allows
     // for input to be handled by GetKeyPressed, GetKeyDown & GetKeyUp
@@ -35,16 +35,26 @@ namespace Engine {
         static inline bool s_mouseExitedTF;
 
         // mouse pos last callback (as double to match glfw)
-        static inline fm::dvec2 s_mousePosLC       = {0};
-        // mouse pos this callback 
-        static inline fm::dvec2 s_mousePos         = {0}; 
+        static inline fm::dvec2 s_mousePosLC            = {0};
+        // mouse pos this callback    
+        static inline fm::dvec2 s_mousePos              = {0}; 
         
+        // accumulate mouse delta over time. 
+        // fixes some high fps issues.
+        static inline fm::dvec2 s_accumulatedMouseDelta = {0};
+        // the cached mouse delta.
+        static inline fm::dvec2 s_mouseDelta            = {0};
+
         // is the window focused? 
         static inline bool s_windowFocused = true;
+        
+        // is the mouse hidden?
+        static inline bool s_mouseHidden = false;
 
         static inline GLFWwindow* s_wnd = nullptr; // store a ref to the window.
         // don't use window.hpp because that can cause issues. i hate this solution.
 
+        
     public:
 
         static inline bool getMouseEnteredWindow() { return s_mouseEnteredTF; }
@@ -53,8 +63,10 @@ namespace Engine {
         // get the mouse pos
         static inline fm::dvec2 getMousePos() { return s_mousePos; }
         static inline fm::dvec2 getMousePosLastCallback() { return s_mousePosLC; } // if you want this? idk what you'd want it for
-
-        static inline void setMousePos(fm::dvec2 pos);
+        static inline bool isMouseHidden() { return s_mouseHidden; }
+        
+        static void setMouseHidden(bool v);
+        static void setMousePos(fm::dvec2 pos);
 
         // get the amount the mouse moved this frame
         static fm::dvec2 getMouseDelta();
@@ -81,8 +93,10 @@ namespace Engine {
         static bool getActionDown(int key) { return s_keyPressed[key]; }
         // Returns the state of if the key is released
         static bool getActionUp(int key)   { return s_keyReleased[key]; }
-
-        // Resets the key pressed and released states for the new frame
-        static void poll();
+        
+        // update values at the end of the frame.
+        static void pollEnd();
+        // update values at the start of the frame.
+        static void pollStart(); 
     };  
 }

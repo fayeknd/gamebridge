@@ -9,7 +9,7 @@ IDPool<CacheID>& ObjectRegistry::instanceIDPool() {
 }
 
 // the program cache stores a shared_ptr to the shader, and a string as an identifier. (m_key)
-std::unordered_map<CacheID, std::weak_ptr<ObjectRegistry>>& ObjectRegistry::registry() {
+std::unordered_map<CacheID, std::shared_ptr<ObjectRegistry>>& ObjectRegistry::registry() {
     // create regsitry
     // this is actually purposefully leaking memory
     // but it's okay because it will be deallocated
@@ -17,16 +17,8 @@ std::unordered_map<CacheID, std::weak_ptr<ObjectRegistry>>& ObjectRegistry::regi
     // it leaks to MAKE SURE it is deleted after
     // other objects.
     // this is kind of evil though and i hate it and im sorry
-    static auto* cache = new std::unordered_map<CacheID, std::weak_ptr<ObjectRegistry>>();
+    static auto* cache = new std::unordered_map<CacheID, std::shared_ptr<ObjectRegistry>>();
     return *cache;
-}
-
-CacheID ObjectRegistry::getCacheID() {
-    return m_cacheID;
-}
-
-bool ObjectRegistry::getRegistered() {
-    return m_registered;
 }
 
 void ObjectRegistry::cleanup() {
@@ -36,14 +28,14 @@ void ObjectRegistry::cleanup() {
     // loop through every item in the cache
     for (auto it = registry().begin(); it != registry().end();) {
         // if the instance total references is less than or equal to 1,
-        // (that 1 being the cache itself)
-        // then nothing is referencing and it is viable for cleanup.
-        if (it->second.use_count() <= 1) {
+        // (that 1 being the cache itself) and the object is not marked
+        // as don't delete, then is viable for cleanup.
+        if (it->second.use_count() <= 1 && !it->second->m_dontDelete) {
             // delete the instance.
             // this forces the count to drop to 0
             // and the smart pointer automatically
             // deletes the program. 
-            it = registry().erase(it);
+            it->second->_unregister();
             erasedObjs++; // we erased an object, increment.
         }
         else {
@@ -62,7 +54,7 @@ void ObjectRegistry::cleanup() {
 void ObjectRegistry::_register() {
     log().logInfo("Registering new cached instance with CacheID {}.", m_cacheID);
     // the constructor generates a new id, we don't have to worry about that.
-    registry().emplace(m_cacheID, weak_from_this());
+    registry().emplace(m_cacheID, shared_from_this());
     m_registered = true; 
 }
 
