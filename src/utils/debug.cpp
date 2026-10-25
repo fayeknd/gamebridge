@@ -1,5 +1,5 @@
 #include "imgui/imgui.h"
-#include <debug.hpp>
+#include <utils/debug.hpp>
 #include <window.hpp>
 #include <resources.hpp>
 #include <component/camera.hpp>

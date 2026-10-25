@@ -26,8 +26,8 @@ RaycastHit Physics::Raycast(Ray ray, float distance) {
 
         // did we hit?
         // we hit bitches - hunter
-        if(hit.m_hitInfo.m_distance < rayCastHit.m_hitInfo.m_distance)
-            rayCastHit = hit;
+        if(hit.m_hitInfo.m_distance < returnHit.m_hitInfo.m_distance)
+            returnHit = hit;
     }
 
     return returnHit;
