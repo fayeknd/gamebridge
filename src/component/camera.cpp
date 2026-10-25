@@ -116,7 +116,7 @@ fm::mat4 Camera::getViewMat() {
     // (pos, pos + front, up)
 
     m_lastCalculatedFrame_v = Window::get().getFrame();
-
+    
     m_viewMatrix = fm::lookAt(
         entity.transform.getGlobalPosition(),
         entity.transform.getGlobalPosition() + entity.transform.getGlobalFront(),

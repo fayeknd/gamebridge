@@ -8,4 +8,5 @@ void RenderData::useRenderData() {
     glCullFace(m_cullFace);
     glPolygonMode(m_setPoly, m_polyMode);
     glBlendFunc(m_blendFuncOpt, m_blendFuncVal);
+    glLineWidth(m_lineWidth);
 }

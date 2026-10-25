@@ -14,7 +14,6 @@
 #include <time.hpp>
 #include <input.hpp>
 #include <texture.hpp>
-#include <debug.hpp>
 
 using namespace Engine;
 using namespace Engine::Debug;
@@ -37,19 +36,12 @@ void MainComponent::init() {
     square->transform.addPosition(1.1f);
     square->transform.addScaleY(.3f);
 
-    // TODO : implement copying entities
-    teenySquare = Entity::create("hitSquare").get();
-    auto renderer2 = teenySquare->addComponent<IRenderable>();
-
     // add some basic data to the renderer
     renderer->m_mesh = Mesh::primitive(Primitive::Cube);
     renderer->m_material->setAlbedoTx(Texture2D::createTextureFromPath("stuff=>textures/me trying to flirt.png"));
     renderer->m_material->m_data.m_albedoFac.y = 0.4f;
 
-    renderer2->m_mesh = Mesh::primitive(Primitive::Cube);
-    renderer2->m_material->m_data.m_albedoFac = {0.0f, 1.0f, 0.0f, 1.0f};
 
-    teenySquare->transform.setScale(0.1f);
     // create the camera entity
     cam = Entity::create("Camera").get();
     // add a camera component
@@ -109,19 +101,28 @@ void MainComponent::update(double delta) {
     if (Input::getAction(Key::Q)) {
         cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getDown() * speed);
     }
+
+    static fm::vec3 ray_start;
+    static fm::vec3 ray_end;
+
     if (Input::getActionDown(Key::F)) {
-        // then idk good job
+        RaycastHit out;
+        bool hit = false;
+        if (Physics::Raycast({cam->transform.getGlobalPosition(), cam->transform.getGlobalFront()}, out)) {
+            hit = true;
+        }
+
+        ray_start = cam->transform.getGlobalPosition();
+        ray_end = ray_start + (cam->transform.getGlobalFront() * out.m_hitInfo.m_distance);
+
+        Logging::Logger::get().logInfo("Made a Raycast. Did it hit? {}", hit);
     }
 
-
-    RaycastHit out;    
-    if(Physics::Raycast({cam->transform.getPosition(), cam->transform.getFront()}, out)) {
-        teenySquare->forceSetEnabled(true);
-        teenySquare->transform.setPosition(out.m_hitInfo.m_hitPoint);
-    }
-    else {
-        teenySquare->setEnabled(false);
-    }
+    static DebugLine line;
+    line.draw({
+        Point({ray_start}),
+        Point({ray_end})
+    });
 }
 
 void MainComponent::lateUpdate(double delta) {

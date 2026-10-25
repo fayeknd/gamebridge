@@ -1,6 +1,5 @@
-#include <GLFW/glfw3.h>
-#include <input.hpp>
 #include <debug.hpp>
+#include <input.hpp>
 #include <logger.hpp>
 
 using namespace Engine;

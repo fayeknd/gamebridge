@@ -1,6 +1,7 @@
 #pragma once
 #include <component/component.hpp>
 #include <texture.hpp>
+#include <debug.hpp>
 
 namespace Engine {
     
@@ -17,7 +18,6 @@ namespace Engine {
 
         Entity* square;
         Entity* cam;
-        Entity* teenySquare;
         float sensitivity = 0.25;
         float speed = 3.0f;
 

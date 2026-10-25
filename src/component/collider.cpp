@@ -27,9 +27,10 @@ void BoundingBox::init() {
 
     // create some debug drawing stuff
     m_boxMesh = Mesh::primitive(Primitive::Cube);
-    m_program = ShaderProgram::createProgramFromPath("stuff=>shaders/collider.glsl");
+    m_program = ShaderProgram::getShaderViaKey(shader_colliderShader);
     // set the box draw colour
     setColour(m_boxDebugCol);
+    ;m_renderData.m_lineWidth = 5.0f;
 }
 
 void BoundingBox::onDestroy() {
@@ -70,10 +71,8 @@ void BoundingBox::draw() {
 
     // draw the mesh
     glDrawElements(m_boxMesh->getTopology(), m_boxMesh->getIndexCount(), GL_UNSIGNED_SHORT, 0);
-    glLineWidth(5);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glDrawElements(m_boxMesh->getTopology(), m_boxMesh->getIndexCount(), GL_UNSIGNED_SHORT, 0);
-    m_renderData.useRenderData();
 }
 
 bool BoundingBox::checkBoxIntersection(BoundingBox& a, BoundingBox& b) {

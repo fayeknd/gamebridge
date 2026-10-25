@@ -207,7 +207,8 @@ void DebugUI::drawDebugger() {
 
         ImGui::PushItemWidth(-1.0f); 
 
-        ImGui::Checkbox("Draw hitboxes?", &m_drawHitboxes);
+        ImGui::Checkbox("Draw hitboxes", &m_drawHitboxes);
+        ImGui::Checkbox("Draw Lines", &m_drawLines);
         ImGui::Text("Target FPS");
         if (ImGui::SliderFloat("##Target FPS", &fps, 1, 240, "%.01f")) {
             Window::get().setTargetFPS(fps);
@@ -226,3 +227,68 @@ void DebugUI::drawImGuiInterface_frameend() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
+
+void DebugLine::_genLine() {
+    m_program = ShaderProgram::getShaderViaKey(shader_lineShader);
+    glGenVertexArrays(1, &m_vao);
+    glGenBuffers(1, &m_vbo);
+
+    glBindVertexArray(m_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+    
+    // position
+    glVertexAttribPointer(shaderVertexAttrib_Position, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)offsetof(Vertex, position));
+    glEnableVertexAttribArray(shaderVertexAttrib_Position);
+
+    //colour
+    glVertexAttribPointer(shaderVertexAttrib_Colour,   4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)offsetof(Vertex, colour));
+    glEnableVertexAttribArray(shaderVertexAttrib_Colour);
+
+    glBindVertexArray(0);
+}
+
+void DebugLine::_deleteLine() {
+    glDeleteBuffers(1, &m_vbo);
+    glDeleteVertexArrays(1, &m_vao);
+}
+
+DebugLine::DebugLine() {
+    _genLine();
+}
+
+DebugLine::~DebugLine() {
+    _deleteLine();
+}
+
+// Accepts any number of points using an initializer list: DrawLines(mvp, color, {a, b, c})
+void DebugLine::draw(std::initializer_list<Engine::Vertex> points) {
+    if (!m_program || !DebugUI::get().m_drawLines) return;
+    m_renderData.useRenderData();
+
+
+    // don't bother with anything smaller than 2 points
+    if (points.size() < 2) return;
+
+    // ViewProjection matrix
+    fm::mat4 vpMat = fm::mat4::identity();
+    // if main camera exists
+    if (Camera::activeCamera()) {
+        // vpMat is the main camera projection * view
+        vpMat = Camera::activeCamera()->getProjectionMat() * Camera::activeCamera()->getViewMat();
+    }
+    m_program->setUniform(shader_ViewProjectionMatrix, vpMat);
+
+    // bind the vertex array
+    glBindVertexArray(m_vao);
+    // bind the vertex buffer
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+
+    // upload the points dynamically.
+    // this is a debug tool, so it's not performant.
+    // we can just upload the data every frame.
+    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(Vertex), points.begin(), GL_STREAM_DRAW);
+    glDrawArrays(GL_LINE_STRIP, 0, static_cast<GLsizei>(points.size()));
+
+    glBindVertexArray(0);
+}
+

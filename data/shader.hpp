@@ -53,6 +53,8 @@ namespace Engine {
     // the default lit shader.
     // if a shader doesn't have a shader key, it will just use the path as the key
     constexpr const char* shader_litShader = "lit_shader";
+    constexpr const char* shader_colliderShader = "collider_shader";
+    constexpr const char* shader_lineShader = "line_shader";
 
     // some pregenerated code.
 

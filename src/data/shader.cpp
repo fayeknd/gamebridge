@@ -25,6 +25,11 @@ void ShaderProgram::_createDefaultShaders() {
     // and this is cooler i think. 
     lit->m_dontDelete = true;
 
+    std::shared_ptr<ShaderProgram> col = createProgramFromPath("stuff=>shaders/collider.glsl", shader_colliderShader);
+    col->m_dontDelete = true;
+
+    std::shared_ptr<ShaderProgram> line = createProgramFromPath("stuff=>shaders/line.glsl", shader_lineShader);
+    line->m_dontDelete = true;
     // put any other permanent shaders here
 }
 

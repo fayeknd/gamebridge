@@ -25,6 +25,8 @@ namespace Engine {
         unsigned int m_blendFuncOpt = GL_SRC_ALPHA;
         unsigned int m_blendFuncVal = GL_ONE_MINUS_SRC_ALPHA;
         
+        float m_lineWidth = 2.0f;
+
         // apply the render data
         void useRenderData();
     };
@@ -37,7 +39,8 @@ namespace Engine {
             v1.m_setPoly      == v2.m_setPoly      &&
             v1.m_polyMode     == v2.m_polyMode     &&
             v1.m_blendFuncOpt == v2.m_blendFuncOpt &&
-            v1.m_blendFuncVal == v2.m_blendFuncVal
+            v1.m_blendFuncVal == v2.m_blendFuncVal &&
+            v1.m_lineWidth    == v2.m_lineWidth
         );
     }
 }
