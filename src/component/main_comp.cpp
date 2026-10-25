@@ -106,16 +106,12 @@ void MainComponent::update(double delta) {
     static fm::vec3 ray_end;
 
     if (Input::getActionDown(Key::F)) {
-        RaycastHit out;
-        bool hit = false;
-        if (Physics::Raycast({cam->transform.getGlobalPosition(), cam->transform.getGlobalFront()}, out)) {
-            hit = true;
-        }
+        RaycastHit out = Physics::Raycast({cam->transform.getGlobalPosition(), cam->transform.getGlobalFront()});
 
         ray_start = cam->transform.getGlobalPosition();
         ray_end = ray_start + (cam->transform.getGlobalFront() * out.m_hitInfo.m_distance);
 
-        Logging::Logger::get().logInfo("Made a Raycast. Did it hit? {}", hit);
+        Logging::Logger::get().logInfo("Made a Raycast. Did it hit? {}", out.m_hitInfo.m_hasHit);
     }
 
     static DebugLine line;
