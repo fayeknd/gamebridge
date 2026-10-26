@@ -136,6 +136,7 @@ void MainComponent::lateUpdate(double delta) {
 }
 
 void MainComponent::physicsUpdate(double delta) {
+    rb->addForce(fm::vec3(0, -1, 0), Rigidbody::ForceMode::Impulse); // just testing
     Logging::Logger::get().logInfo("Velocity: {}", rb->getVelocity());
 }
 

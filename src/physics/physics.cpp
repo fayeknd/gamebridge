@@ -34,7 +34,7 @@ RaycastHit Physics::Raycast(Ray ray, float distance) {
     return returnHit;
 }
 
-void PhysicsImpl::PhysicsUpdate()
+void PhysicsImpl::pollPhysics()
 {
     // begin the timer if it hasn't started
     if (!physicsTick.isCounting()) physicsTick.start();
