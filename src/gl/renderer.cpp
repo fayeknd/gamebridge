@@ -418,6 +418,7 @@ void Renderer::postFramePollEvents() {
     flushRenderCommands(); // draw using the render commands and flush them after.
     Debug::DebugUI::get().drawImGuiInterface_framebegin();
     Debug::DebugUI::get().drawImGuiInterface_frameend();
+    Entity::_transformFlagReset();
     Input::pollEnd();
 }
 

@@ -122,6 +122,8 @@ namespace Engine {
         // polls physics behaviours for all components
         static void _pollPhysicsBehaviours(double delta);
 
+        static void _transformFlagReset();
+
         // invalidate all the child transforms
         void _invalidateChildTransforms(); 
 

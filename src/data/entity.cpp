@@ -310,6 +310,9 @@ void Entity::_pollComponentBehaviours(double delta) {
     for (const auto& e : Entity::s_entityList) {
         e.second->_drawComponents();
     }
+}
+
+void Entity::_transformFlagReset() {
     // reset all the transformDirty flags.
 
     // stupidly i had this reset at the end of the above loop, 

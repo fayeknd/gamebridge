@@ -65,7 +65,7 @@ void MainComponent::init() {
     renderer2->m_material->m_data.m_hasTransparency = true;
     //renderer2->m_material->m_data.m_albedoFac.y = 0.4f;
 
-    square->setLayer(Layer::create("TestLayer", 1));
+    //square->setLayer(Layer::create("TestLayer", 1));
     //square->getLayer()->m_ignoreRaycast = true;
 
     // create the camera entity
@@ -132,10 +132,7 @@ void MainComponent::update(double delta) {
     static fm::vec3 ray_end;
 
     if (Input::getActionDown(Key::F)) {
-        RaycastHit out = Physics::Raycast(
-            {cam->transform.getGlobalPosition(), cam->transform.getGlobalFront()},
-            LayerMasks::All & ~Layer::getMask("TestLayer") 
-        );
+        RaycastHit out = Physics::Raycast({cam->transform.getGlobalPosition(), cam->transform.getGlobalFront()}, LayerMasks::All);
 
         ray_start = cam->transform.getGlobalPosition();
         ray_end = ray_start + (cam->transform.getGlobalFront() * out.m_hitInfo.m_distance);
