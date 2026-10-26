@@ -22,8 +22,11 @@ namespace Engine {
 
     // Controls the physics ticks system
     class PhysicsImpl {
-            public:
-            static void PhysicsUpdate();
-        };
+    private:
+
+        static void pollPhysics();
+
+        friend class Window;
+    };
 }
 

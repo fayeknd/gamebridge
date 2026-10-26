@@ -1,5 +1,5 @@
 #pragma once
-#include "gl_context.hpp"
+#include <debug.hpp>
 #include <fm/fmath.hpp>
 #include <component/component.hpp>
 #include <physics/physics.hpp>
@@ -28,19 +28,12 @@ namespace Engine
         BoundingBoxID m_boxID;
 
         // the box draw colour
-        fm::vec4 m_boxDebugCol = {0.3f, 0.7f, 1.0f, 0.6f};
-
-        // the mesh to represent the box
-        std::shared_ptr<Mesh> m_boxMesh;
-        std::shared_ptr<ShaderProgram> m_program;
-
-        // Render data (didnt comment this faye >:C - hunter)
-        RenderData m_renderData = RenderData(); 
+        fm::vec4 m_boxDebugCol = {1.0f, 0.9f, 0.8f, 1.0f};
 
 
     public:
 
-        bool m_renderBounds = false;
+        bool m_renderBounds = true;
         fm::vec4 getColour() { return m_boxDebugCol; }
         void setColour(fm::vec4 col);
 

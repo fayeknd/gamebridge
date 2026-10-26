@@ -26,7 +26,6 @@ namespace Engine
 
             Collider(const fm::vec3& min, const fm::vec3& max);
 
-
             Collider(const fm::vec3& center, const float& radius);
 
             Collider(ColliderShape shape);

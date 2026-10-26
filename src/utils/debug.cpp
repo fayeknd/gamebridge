@@ -207,8 +207,7 @@ void DebugUI::drawDebugger() {
 
         ImGui::PushItemWidth(-1.0f); 
 
-        ImGui::Checkbox("Draw hitboxes", &m_drawHitboxes);
-        ImGui::Checkbox("Draw Lines", &m_drawLines);
+        ImGui::Checkbox("Draw Debug", &m_drawDebugTools);
         ImGui::Text("Target FPS");
         if (ImGui::SliderFloat("##Target FPS", &fps, 1, 240, "%.01f")) {
             Window::get().setTargetFPS(fps);
@@ -262,7 +261,7 @@ DebugLine::~DebugLine() {
 
 // Accepts any number of points using an initializer list: DrawLines(mvp, color, {a, b, c})
 void DebugLine::draw(std::initializer_list<Engine::Vertex> points) {
-    if (!m_program || !DebugUI::get().m_drawLines) return;
+    if (!m_program || !DebugUI::get().m_drawDebugTools) return;
     m_renderData.useRenderData();
 
 

@@ -20,6 +20,7 @@
 
 using namespace Engine;
 using namespace Engine::Debug;
+using namespace Engine::Debug;
 
 Entity* square;
 Entity* cam;
@@ -33,14 +34,14 @@ void MainComponent::init() {
 
     // create entity and add component
     square = Entity::create("Test Square").get(); 
-    auto collider = square->addComponent<BoundingBox>();
+    auto box = square->addComponent<BoundingBox>();
     auto renderer = square->addComponent<IRenderable>();
     rb = square->addComponent<Rigidbody>();
     rb->m_mass = 1000.f;
-    collider->m_renderBounds = false;
-    collider->m_max += {0.1f};
-    collider->m_min -= {0.1f};
-    collider->collider = std::shared_ptr<Collider>(new Collider(ColliderShape::Sphere));
+    
+    box->m_max += {0.1f};
+    box->m_min -= {0.1f};
+    box->collider = std::shared_ptr<Collider>(new Collider(ColliderShape::Sphere));
 
     square->transform.addPosition(1.1f);
     square->transform.addScaleY(.3f);

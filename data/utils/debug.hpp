@@ -26,9 +26,8 @@ namespace Engine{
                 return instance;
             }
 
-            bool m_drawLines    = false;
-            bool m_drawDebugger = false;
-            bool m_drawHitboxes = false;
+            bool m_drawDebugTools    = false;
+            bool m_drawDebugger      = false;
 
 
             void drawImGuiInterface_framebegin();

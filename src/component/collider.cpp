@@ -2,6 +2,8 @@
 
 using namespace Engine;
 
+// :face_with_raised_eyebrow:       -faye
+
 Collider::Collider(const fm::vec3& min, const fm::vec3& max)
 {
     m_shape = ColliderShape::Box;
@@ -23,15 +25,38 @@ Collider::Collider(ColliderShape shape)
 
 bool Collider::IsCollidingWith(Collider& collider)
 {
-    if (this->m_shape == ColliderShape::Box && collider.m_shape == ColliderShape::Box)
-        return CheckBoxIntersection(*this, collider);
-    else if (this->m_shape == ColliderShape::Sphere && collider.m_shape == ColliderShape::Sphere)
-        return CheckSphereIntersection(*this, collider);
-    else if (this->m_shape == ColliderShape::Sphere && collider.m_shape == ColliderShape::Box 
-        || this->m_shape == ColliderShape::Box && collider.m_shape == ColliderShape::Sphere)
-        return CheckSphereBoxIntersection(*this, collider);
-    else
-        return false;
+
+    switch (this->m_shape) {
+        case (ColliderShape::Box) : {
+
+            switch (collider.m_shape) {
+
+                case (ColliderShape::Sphere) : {
+                    return CheckSphereBoxIntersection(*this, collider);
+                }
+                case (ColliderShape::Box) : {
+                    return CheckBoxIntersection(*this, collider);
+                }
+
+            }
+            break;
+        }
+        case (ColliderShape::Sphere) : {
+
+            switch (collider.m_shape) {
+
+                case (ColliderShape::Sphere) : {
+                    return CheckSphereBoxIntersection(*this, collider);
+                }
+                case (ColliderShape::Box) : {
+                    return CheckSphereBoxIntersection(collider, *this);
+                }
+
+            }
+            break;
+        }
+    }
+    return false;
 }
 
 bool Collider::CheckBoxIntersection(Collider& a, Collider& b) {
@@ -92,7 +117,7 @@ bool Collider::CheckSphereBoxIntersection(Collider& a, Collider& b)
 
     // gets the closest point of each of the box's axis to the center of the sphere in each axis to get the distance
     closestPoint.x = std::max(boxMin.x, std::min(sphereCenter.x, boxMax.x));
-    closestPoint.y= std::max(boxMin.y, std::min(sphereCenter.y, boxMax.y));
+    closestPoint.y = std::max(boxMin.y, std::min(sphereCenter.y, boxMax.y));
     closestPoint.z = std::max(boxMin.z, std::min(sphereCenter.z, boxMax.z));
 
     // Calculates the distance of the sphere center from the closest point on the box

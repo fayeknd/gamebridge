@@ -7,14 +7,16 @@
 
 using namespace Engine;
 using namespace Physics;
+using namespace Debug;
 
 BoundingBoxID BoundingBox::getBoxID() {
     return m_boxID;
 }
 
 void BoundingBox::setColour(fm::vec4 col) {
-    m_program->useProgram();
-    m_program->setUniform("boxCol", col);
+    m_boxDebugCol = col;
+    //m_program->useProgram();
+    //m_program->setUniform("boxCol", col);
 }
 
 void BoundingBox::init() {
@@ -25,11 +27,6 @@ void BoundingBox::init() {
     // register ourselves with the bounding box list
     s_boundingBoxList.emplace(m_boxID, this);
 
-    // create some debug drawing stuff
-    m_boxMesh = Mesh::primitive(Primitive::Cube);
-    m_program = ShaderProgram::createProgramFromPath("stuff=>shaders/collider.glsl");
-    // set the box draw colour
-    setColour(m_boxDebugCol);
 }
 
 void BoundingBox::onDestroy() {
@@ -42,38 +39,58 @@ void BoundingBox::onDestroy() {
 }
 
 void BoundingBox::draw() {
-    if (!m_boxMesh || !m_program || !entity.isEnabled() || !m_renderBounds) return;
-    m_renderData.useRenderData();
+    if (!entity.isEnabled() || !m_renderBounds || !DebugUI::get().m_drawDebugTools) return;
 
-    // bind the mesh
-    m_boxMesh->bindMesh();
+    static DebugLine line;
+    fm::vec3 globalPos = entity.transform.getGlobalPosition();
+    fm::vec3 entityScale = entity.transform.getGlobalScale();
 
-    // use the program 
-    m_program->useProgram();
+    switch (this->collider->m_shape) {
+        case (ColliderShape::Box) : {
+            m_min = (this->collider->m_min * entityScale) + globalPos;
+            m_max = (this->collider->m_max * entityScale) + globalPos;
+            break;
+        }
+        case (ColliderShape::Sphere) : {
 
-    fm::vec3 boxCenter = m_min.lerp(m_max, 0.5f);
+            fm::vec3 globalCenter = (this->collider->center * entityScale) + globalPos;
+            
+            fm::vec3 radius = fm::vec3(this->collider->radius) * entityScale;
 
-    // set basic uniforms
-    m_program->setUniform(shader_ModelMatrix, entity.transform.getGlobalMatrix() * fm::model(
-        boxCenter,
-        (m_max.abs() + m_min.abs()),
-        {0}, {0}
-    ));
-    // ViewProjection matrix
-    fm::mat4 vpMat = fm::mat4::identity();
-    // if main camera exists
-    if (Camera::activeCamera()) {
-        // vpMat is the main camera projection * view
-        vpMat = Camera::activeCamera()->getProjectionMat() * Camera::activeCamera()->getViewMat();
+            m_min = globalCenter - radius;
+            m_max = globalCenter + radius;
+            break;
+        }
     }
-    m_program->setUniform(shader_ViewProjectionMatrix, vpMat);
 
-    // draw the mesh
-    glDrawElements(m_boxMesh->getTopology(), m_boxMesh->getIndexCount(), GL_UNSIGNED_SHORT, 0);
-    glLineWidth(5);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glDrawElements(m_boxMesh->getTopology(), m_boxMesh->getIndexCount(), GL_UNSIGNED_SHORT, 0);
-    m_renderData.useRenderData();
+    fm::vec3 v0 = m_min;
+    fm::vec3 v1 = fm::vec3(m_max.x, m_min.y, m_min.z);
+    fm::vec3 v2 = fm::vec3(m_max.x, m_max.y, m_min.z);
+    fm::vec3 v3 = fm::vec3(m_min.x, m_max.y, m_min.z);
+
+    fm::vec3 v4 = fm::vec3(m_min.x, m_min.y, m_max.z);
+    fm::vec3 v5 = fm::vec3(m_max.x, m_min.y, m_max.z);
+    fm::vec3 v6 = m_max;
+    fm::vec3 v7 = fm::vec(m_min.x, m_max.y, m_max.z);
+    
+    line.draw({
+        Point(v0, m_boxDebugCol),
+        Point(v1, m_boxDebugCol),
+        Point(v2, m_boxDebugCol),
+        Point(v3, m_boxDebugCol),
+        Point(v0, m_boxDebugCol),
+        Point(v4, m_boxDebugCol),
+        Point(v5, m_boxDebugCol),
+        Point(v1, m_boxDebugCol),
+        Point(v5, m_boxDebugCol),
+        Point(v6, m_boxDebugCol),
+        Point(v2, m_boxDebugCol),
+        Point(v6, m_boxDebugCol),
+        Point(v7, m_boxDebugCol),
+        Point(v3, m_boxDebugCol),
+        Point(v7, m_boxDebugCol),
+        Point(v4, m_boxDebugCol),
+    });
 }
 
 bool BoundingBox::checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit) {
@@ -182,44 +199,46 @@ bool BoundingBox::rayAABoxIntersection(const Ray& ray, const Collider* box, Rayc
 
 bool BoundingBox::rayAASphereIntersection(const Ray& ray, const Collider* sphere, RaycastHit& outRaycastHit) {
 
+    // get sphere center and length of origin to sphere center (negative)
     fm::vec3 sphereCenter = sphere->center + sphere->offset;
+    fm::vec3 length = ray.m_origin - sphereCenter;
 
-    fm::vec3 length = sphereCenter - ray.m_origin;
+    // discriminants
+    float rdr = ray.m_direction.dot(ray.m_direction); // red dead redemption (raydir dot raydir)
+    float ldr = 2.0 * length.dot(ray.m_direction); // left dead redemption (length dot raydir)
+    float ldl = length.dot(length) - (sphere->radius * sphere->radius); // left dead ledemption (length dot length)
 
-    float tca = length.dot(ray.m_direction);
+    // if the discriminant is less than zero, the ray missed 
+    float discriminant = (ldr * ldr) - (4.0f * rdr * ldl);
+    if (discriminant < 0) return false;
 
-    if (tca < 0.0f)
-    {
-        float distSqFromCenter = length.dot(length);
-        if (distSqFromCenter > sphere->radius * sphere->radius)
+    // discriminant square root
+    float discSqrt = std::sqrt(discriminant);
+    float rdr2 = 2.0f * rdr; // red dead redemption 2
+
+    // maths i dont quite understand -faye
+    // nearest hit point
+    float near = (-ldr - discSqrt) / rdr2;
+    // furthest hit point
+    float far = (-ldr + discSqrt) / rdr2;
+
+    // if near is negative, the ray missed.
+    if (near < 0.0f) {
+        near = far;
+        if (near < 0.0f)
             return false;
     }
 
-    float distSq = length.dot(length) - (tca * tca);
-    float radiusSq = sphere->radius * sphere->radius;
-
-    if (distSq > radiusSq)
-        return false;
-
-    float thc = std::sqrt(radiusSq - distSq);
-
-    float t0 = tca - thc;
-    float t1 = tca + thc;
-
-    if (t0 < 0.0f)
-    {
-        t0 = t1;
-        if (t0 < 0.0f)
-            return false;
-    }
 
     RaycastHitInfo& outHitInfo = outRaycastHit.m_hitInfo;
 
+    // get the world matrix
     fm::mat4 worldMatrix = outRaycastHit.m_hitEntity->transform.getGlobalMatrix();
 
-    outHitInfo.m_hitPoint    = (ray.m_origin + ray.m_direction * t0).transformed(worldMatrix);
-    outHitInfo.m_farHitPoint = (ray.m_origin + ray.m_direction * t1).transformed(worldMatrix);
-    outHitInfo.m_distance    = t0;
+    // set some hit info
+    outHitInfo.m_hitPoint    = (ray.m_origin + ray.m_direction * near).transformed(worldMatrix);
+    outHitInfo.m_farHitPoint = (ray.m_origin + ray.m_direction * far).transformed(worldMatrix);
+    outHitInfo.m_distance    = near;
     outHitInfo.m_hasHit      = true;
 
     return true;

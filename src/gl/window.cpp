@@ -399,7 +399,7 @@ void Window::preFramePollEvents() {
     glfwPollEvents(); 
     ObjectRegistry::pollGC();
     Input::pollStart();
-    PhysicsImpl::PhysicsUpdate();
+    PhysicsImpl::pollPhysics();
 }
 
 // poll the various program events
