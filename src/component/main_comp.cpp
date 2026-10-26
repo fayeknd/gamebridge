@@ -52,6 +52,7 @@ void MainComponent::init() {
 
 
     square->transform.addPosition(2.1f);
+    square2->transform.addPosition({-1.0f, 0.0f, 0.0f});
 
     // add some basic data to the renderer
     renderer->m_mesh = Mesh::primitive(Primitive::Cube);
@@ -152,7 +153,7 @@ void MainComponent::lateUpdate(double delta) {
 }
 
 void MainComponent::physicsUpdate(double delta) {
-    //rb->addForce(fm::vec3(0, -1, 0), Rigidbody::ForceMode::Impulse); // just testing
+    rb->addForce(fm::vec3(0, -1, 0), Rigidbody::ForceMode::Impulse); // just testing
     //Logging::Logger::get().logInfo("Velocity: {}", rb->getVelocity());
 }
 

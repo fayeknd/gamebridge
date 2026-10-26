@@ -52,7 +52,7 @@ void BoundingBox::draw() {
 
 bool BoundingBox::checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit) {
 
-    fm::mat4 worldMatrixInversed = outRaycastHit.m_hitEntity->transform.getGlobalMatrix().inversed();
+    fm::mat4 worldMatrixInversed = outRaycastHit.m_hitEntity->getRealMatrix().inversed();
 
     // construct our local ray 
     Ray localRay(
@@ -140,7 +140,7 @@ bool BoundingBox::rayAABoxIntersection(const Ray& ray, const Collider* box, Rayc
         // we hit!!
         // set some values and then we GET OUTTA HERE!!!
 
-        fm::mat4 worldMatrix = outRaycastHit.m_hitEntity->transform.getGlobalMatrix();
+        fm::mat4 worldMatrix = outRaycastHit.m_hitEntity->getRealMatrix();
 
         outHitInfo.m_hitPoint    = (ray.m_origin + ray.m_direction * tNearMax).transformed(worldMatrix);
         outHitInfo.m_farHitPoint = (ray.m_origin + ray.m_direction * tFarMin).transformed(worldMatrix);
@@ -190,7 +190,7 @@ bool BoundingBox::rayAASphereIntersection(const Ray& ray, const Collider* sphere
     RaycastHitInfo& outHitInfo = outRaycastHit.m_hitInfo;
 
     // get the world matrix
-    fm::mat4 worldMatrix = outRaycastHit.m_hitEntity->transform.getGlobalMatrix();
+    fm::mat4 worldMatrix = outRaycastHit.m_hitEntity->getRealMatrix();
 
     // set some hit info
     outHitInfo.m_hitPoint    = (ray.m_origin + ray.m_direction * near).transformed(worldMatrix);
