@@ -60,5 +60,12 @@ namespace Engine
         // get a list of valid bounding boxes
         static std::unordered_map<BoundingBoxID, BoundingBox*> getBoundingBoxList();
 
+        bool intersects(const BoundingBox& other) const;
+
+        static BoundingBox merge(const BoundingBox& a, const BoundingBox& b);
+
+        float getSurfaceArea() const;
+
+        
     };
 }

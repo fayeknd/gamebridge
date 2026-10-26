@@ -39,8 +39,6 @@ void MainComponent::init() {
 
     auto box = square->addComponent<BoundingBox>();
     auto renderer = square->addComponent<IRenderable>();
-    rb = square->addComponent<Rigidbody>();
-    rb->m_mass = 1000.f;
     
     //box->collider->m_max += {0.1f};
     //box->collider->m_min -= {0.1f};
@@ -49,6 +47,8 @@ void MainComponent::init() {
     auto box2 = square2->addComponent<BoundingBox>();
     auto renderer2 = square2->addComponent<IRenderable>();
     box2->collider = std::shared_ptr<Collider>(new Collider(ColliderShape::Sphere));
+    rb = square->addComponent<Rigidbody>();
+    rb->m_mass = 1000.f;
 
 
     square->transform.addPosition(2.1f);

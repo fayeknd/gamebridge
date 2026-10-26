@@ -210,3 +210,23 @@ void BoundingBox::setBounds(fm::vec3 min, fm::vec3 max) {
 std::unordered_map<BoundingBoxID, BoundingBox*> BoundingBox::getBoundingBoxList() {
     return s_boundingBoxList; // readonly
 }
+
+bool BoundingBox::intersects(const BoundingBox& other) const {
+        return (m_min.x <= other.m_max.x && m_max.x >= other.m_min.x) &&
+               (m_min.y <= other.m_max.y && m_max.y >= other.m_min.y) &&
+               (m_min.z <= other.m_max.z && m_max.z >= other.m_min.z);
+}
+
+BoundingBox BoundingBox::merge(const BoundingBox& a, const BoundingBox& b) {
+        BoundingBox box;
+        box.m_min = fm::vec3(std::min(a.m_min.x, b.m_min.x), std::min(a.m_min.y, b.m_min.y), std::min(a.m_min.z, b.m_min.z));
+        box.m_max = fm::vec3(std::max(a.m_max.x, b.m_max.x), std::max(a.m_max.y, b.m_max.y), std::max(a.m_max.z, b.m_max.z));
+        return box;        
+}
+
+float BoundingBox::getSurfaceArea() const {
+    float dx = m_max.x - m_min.x;
+        float dy = m_max.y - m_min.y;
+        float dz = m_max.z - m_min.z;
+        return 2.0f * (dx * dy + dy * dz + dz * dx);
+}

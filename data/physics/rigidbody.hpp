@@ -2,6 +2,7 @@
 
 #pragma once
 #include <component/component.hpp>
+#include <physics/bvhcollision.hpp>
 #include <fm/fmath.hpp>
 
 namespace Engine {
@@ -27,6 +28,12 @@ namespace Engine {
 
             // force to apply on next physics tick
             fm::vec3 m_force = fm::vec3::zero();
+
+            void updateCollisions();
+            void resolveCollisions(Collider* colA, Collider* colB, const Collider::IntersectionData& data);
+            DynamicBVH m_bvh = DynamicBVH();
+            Collider* collider;
+            void init() override;
         public:
             // whether the component should use gravity
             bool m_useGravity = false;
