@@ -10,7 +10,7 @@
 
 #include <component/renderable.hpp>
 #include <resources.hpp>
-#include <window.hpp>
+#include <renderer.hpp>
 #include <component/camera.hpp>
 #include <time.hpp>
 #include <input.hpp>
@@ -31,7 +31,7 @@ float sensitivity = 0.45;
 
 void MainComponent::init() {
 
-    Window::get().setWndSize({1280, 720});
+    Renderer::get().setWndSize({1280, 720});
 
     // create entity and add component
     square = Entity::create("Test Square").get(); 
@@ -56,12 +56,17 @@ void MainComponent::init() {
     // add some basic data to the renderer
     renderer->m_mesh = Mesh::primitive(Primitive::Cube);
     renderer->m_material->setAlbedoTx(Texture2D::createTextureFromPath("stuff=>textures/me trying to flirt.png"));
-    renderer->m_material->m_data.m_albedoFac.y = 0.4f;
+    renderer->m_material->m_data.m_albedoFac.w = 0.4f;
+    renderer->m_material->m_data.m_hasTransparency = true;
 
     renderer2->m_mesh = Mesh::primitive(Primitive::Cube);
     renderer2->m_material->setAlbedoTx(Texture2D::createTextureFromPath("stuff=>textures/me trying to flirt.png"));
+    renderer2->m_material->m_data.m_albedoFac.w = 0.4f;
+    renderer2->m_material->m_data.m_hasTransparency = true;
     //renderer2->m_material->m_data.m_albedoFac.y = 0.4f;
 
+    //square->setLayer(Layer::create("TestLayer", 1));
+    //square->getLayer()->m_ignoreRaycast = true;
 
     // create the camera entity
     cam = Entity::create("Camera").get();
@@ -74,8 +79,8 @@ void MainComponent::init() {
     camComponent->m_clearCol = {0.1f, 0.1f, 0.1f, 0.7f};
 
     // set the target fps
-    //Window::get().setVSyncMode(VSyncMode::On);
-    Window::get().setTargetFPS(240);
+    //Renderer::get().setVSyncMode(VSyncMode::On);
+    Renderer::get().setTargetFPS(240);
     // free any archives.
     ResourceManager::freeArchives();
 }
@@ -132,7 +137,7 @@ void MainComponent::update(double delta) {
         ray_start = cam->transform.getGlobalPosition();
         ray_end = ray_start + (cam->transform.getGlobalFront() * out.m_hitInfo.m_distance);
 
-        Logging::Logger::get().logInfo("Made a Raycast. Did it hit? {}", out.m_hitInfo.m_hasHit);
+        DBG.logInfo("Made a Raycast. Did it hit? {}", out.m_hitInfo.m_hasHit);
     }
 
     static DebugLine line;

@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <transform.hpp>
 #include <logger.hpp>
+#include <layer.hpp>
+#include <material.hpp>
 
 namespace Engine {
 
@@ -73,12 +75,26 @@ namespace Engine {
         // has this component's init() been run?
         bool m_hasInit;
 
+        static inline void _distributeDraw(IComponent* instance) { instance->draw(); }
+
     protected:
 
         // init() is called when the component is added to an entity, once.
         virtual void init() {};
 
     public:
+
+        // material to use
+        // this was moved here so we don't have to dyanmic
+        // cast to an IRenderable when sending render data.
+        // if the material is null, no render data.
+        // else, we can determine if the material is transparent,
+        // and use the appropriate depth function.
+        std::shared_ptr<Material> m_material = nullptr;
+
+        // marks if this instance should render or not 
+        // (given it can even be rendered)
+        bool m_render = true;
 
         // returns if the init function has been run yet.
         bool hasInitRun(); 
@@ -145,6 +161,9 @@ namespace Engine {
 
         // final stage in the game loop. used for anything to do with drawing.
         virtual void draw() {};
+
+        // adds draw() to the render bucket callback in renderer.hpp
+        virtual void drawImpl(const Layer* layer);
 
         // called right before the object gets destroyed. (or dereferenced, 
         // the object won't be destroyed if there is a shared_ptr to it.

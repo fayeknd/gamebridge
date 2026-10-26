@@ -69,7 +69,7 @@ namespace Engine {
         // reset the delta timer 
         static void _resetDeltaTimer();
 
-        friend class Window;
+        friend class Renderer;
         
     public:
 

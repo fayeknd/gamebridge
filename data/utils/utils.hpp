@@ -9,7 +9,7 @@ namespace Engine {
     // this program will never be ported to all these platforms but like whatever
         static std::string inline getPlatform() {
             #if defined(_WIN32) || defined(_WIN64)
-                return "Windows";
+                return "Renderers";
             #elif defined(__APPLE__) || defined(__MACH__)
                 #include <TargetConditionals.h>
                 #if TARGET_OS_IPHONE

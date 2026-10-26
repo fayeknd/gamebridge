@@ -3,7 +3,6 @@
 
 using namespace Engine;
 
-// assign the root entity
 std::shared_ptr<Entity> Entity::s_root = Entity::create("Root");
 
 // creat the entity!
@@ -49,6 +48,7 @@ void Entity::_init() {
     setParent(s_root.get());
     // assign the transform entity reference
     transform.m_entity = this;
+    if (this != s_root.get()) m_layer = LayerRegistry::get().getLayerViaName(layer_defaultLayer)->m_layerID;
 }
 
 Entity::~Entity() {
@@ -202,6 +202,35 @@ Entity* Entity::getChildByName(std::string name) {
     return nullptr;
 }
 
+void Entity::setLayer(LayerID id,       bool cascade) {
+    if (!LayerRegistry::get().getLayerViaID(id)) return; // return if the ID is not valid
+    m_layer = id;
+
+    // cascade down and register all children under this layer too.
+    if (cascade) {
+        for (const auto& e : m_children) {
+            setLayer(id, true);
+        }
+    }
+}
+void Entity::setLayer(std::string name, bool cascade) {
+
+    auto layer = LayerRegistry::get().getLayerViaName(name);
+    if (!layer) return;
+
+    m_layer = layer->m_layerID;
+
+    // same thing, still setting these via id though.
+    if (cascade) {
+        for (const auto& e : m_children) {
+            setLayer(m_layer, true);
+        }
+    }
+}
+void Entity::setLayer(Layer* layer,     bool cascade) {
+    setLayer(layer->m_layerID, cascade);
+}
+
 // get the index of this entity in it's parent's child vector
 size_t Entity::getIndex() {
     return m_entityIndexToParent;
@@ -311,9 +340,14 @@ void Entity::_pollPhysicsBehaviours(double delta) {
 void Entity::_drawComponents() {
     if (!m_enabled) return;
     
-    // loop through every component and call draw.
+    auto layer = LayerRegistry::get().getLayerViaID(m_layer);
+    if (!layer || !layer->m_enabled) return; // if the layer is null for whatever reason
+
+    // loop through every component and call drawImpl.
+    // this sends the render commands to the renderer's
+    // bucket array.
     for (const auto& component : m_componentMap) {
-        component.second->draw();
+        component.second->drawImpl(layer);
     }
     _updateEnabled();
 }

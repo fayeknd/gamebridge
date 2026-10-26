@@ -172,8 +172,8 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
     while (std::getline(shaderSource, line)) {
         
 #ifdef _WIN32
-        // windows line endings, strip the \r from the end of the line if it exists.
-        // yeah no thanks windows. thanks. yeah thanks. thanks. thanks windows.
+        // Renderers line endings, strip the \r from the end of the line if it exists.
+        // yeah no thanks Renderers. thanks. yeah thanks. thanks. thanks Renderers.
         if (!line.empty() && line.back() == '\r') {
             line.pop_back();
         }
@@ -246,6 +246,15 @@ int ShaderProgram::_compileProgram(std::stringstream& shaderSource) {
         // go back 1
         lastVertBrace -= 1;
         vCode.insert(lastVertBrace, shader_vertexOut);
+    }
+
+    // insert the transparency correction code at the 
+    // end of the fragment main() function.
+    size_t lastFragBrace = fCode.find_last_of('}');
+    if (lastFragBrace != std::string::npos) {
+        // go back 1
+        lastFragBrace -= 1;
+        fCode.insert(lastFragBrace, shader_fragmentFixTransparency);
     }
 
     //std::cout << "Shader code: " << vCode << std::endl << fCode << std::endl;
@@ -447,6 +456,7 @@ void ShaderProgram::setUniform(const std::string& uniformLoc, const Material* un
     setUniform(uniformLoc + materialUniform_hasNormal,    uniform->m_data.m_hasNormalTx);
     setUniform(uniformLoc + materialUniform_hasMetallic,  uniform->m_data.m_hasMetallicTx);
     setUniform(uniformLoc + materialUniform_hasEmission,  uniform->m_data.m_hasEmissionTx);
+    setUniform(uniformLoc + materialUniform_hasTransp,    uniform->m_data.m_hasTransparency);
 
     setUniform(uniformLoc + materialUniform_albedoTx,     uniform->getAlbedoTx());
     setUniform(uniformLoc + materialUniform_normalTx,     uniform->getNormalTx());

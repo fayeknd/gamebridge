@@ -55,6 +55,8 @@ namespace Engine {
                 return instance;
             }
 
+            #define DBG Logging::Logger::get()
+
             // unsupported
             std::string m_logCol  = DBG_WHITE;
             std::string m_logName = logger_emptyName;

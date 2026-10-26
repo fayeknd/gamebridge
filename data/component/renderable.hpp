@@ -22,10 +22,7 @@ namespace Engine {
         std::shared_ptr<Mesh> m_mesh = nullptr;
         
         // material to use
-        std::shared_ptr<Material> m_material = nullptr;
-
-        // marks if this instance should render or not
-        bool m_render = true;
+        //std::shared_ptr<Material> m_material = nullptr; moved to component.hpp (explanation there)
 
         // general setup
         void init() override;

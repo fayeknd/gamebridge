@@ -26,7 +26,7 @@ namespace Engine {
 
         static void pollPhysics();
 
-        friend class Window;
+        friend class Renderer;
     };
 }
 

@@ -1,6 +1,6 @@
 #include "imgui/imgui.h"
 #include <utils/debug.hpp>
-#include <window.hpp>
+#include <renderer.hpp>
 #include <resources.hpp>
 #include <component/camera.hpp>
 #include <entity.hpp>
@@ -89,8 +89,8 @@ void DebugUI::drawDebugger() {
         ImGui::Separator();
 
         ImGui::Text("%.1f FPS\n%.1f Target FPS\n%.5f ms/frame", 
-            static_cast<double>(Window::get().getFPS()),
-            static_cast<double>(Window::get().getTargetFPS()), 
+            static_cast<double>(Renderer::get().getFPS()),
+            static_cast<double>(Renderer::get().getTargetFPS()), 
             Time::deltaTime());
 
         lastPos = ImGui::GetWindowPos();
@@ -195,8 +195,8 @@ void DebugUI::drawDebugger() {
         ImGui::Text("Draw Options");
         ImGui::Separator();
 
-        float fps = Window::get().getTargetFPS();
-        int vsm = Window::get().getVSyncMode();
+        float fps = Renderer::get().getTargetFPS();
+        int vsm = Renderer::get().getVSyncMode();
         std::string vsmFormat;
 
         switch (vsm) {
@@ -210,11 +210,11 @@ void DebugUI::drawDebugger() {
         ImGui::Checkbox("Draw Debug", &m_drawDebugTools);
         ImGui::Text("Target FPS");
         if (ImGui::SliderFloat("##Target FPS", &fps, 1, 240, "%.01f")) {
-            Window::get().setTargetFPS(fps);
+            Renderer::get().setTargetFPS(fps);
         }
         ImGui::Text("VSync Mode");
         if (ImGui::SliderInt("##Vsync mode", &vsm, -1, 1, vsmFormat.c_str())) {
-            Window::get().setVSyncMode(static_cast<VSyncMode>(vsm));
+            Renderer::get().setVSyncMode(static_cast<VSyncMode>(vsm));
         }
 
         ImGui::End();

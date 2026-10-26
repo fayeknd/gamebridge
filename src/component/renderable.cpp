@@ -3,7 +3,7 @@
 #include <component/renderable.hpp>
 #include <entity.hpp>
 #include <component/camera.hpp>
-#include <window.hpp>
+#include <renderer.hpp>
 
 using namespace Engine;
 
@@ -19,7 +19,7 @@ void IRenderable::init() {
 // draw
 void IRenderable::draw() {
     // if the mesh or material or shader is null, or if the renderer is disabled, return early
-    if (!m_mesh || !m_material || !m_material->m_program || !m_render) return;
+    if (!m_mesh) return;
     m_renderData.useRenderData(); // use our render data
 
     // bind the mesh

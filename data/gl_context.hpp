@@ -23,7 +23,7 @@ namespace Engine {
         // maximum allowed bound textures
         uint8_t m_maxTextureSlots;
 
-        friend class Window;
+        friend class Renderer;
         
     public:
 
@@ -49,16 +49,16 @@ namespace Engine {
         bool& isGLReady();
 
         // creates the gl glfw context. will only create the glfw context if m_glInit is false.
-        // window hints and extra window hints are lambda functions passed in and called inside the function.
-        // window_hints is the function for the default glfw window hints (i.e GLFW_TRANSPARENT_FRAMEBUFFER).
-        // these are set in window.hpp.
+        // Renderer hints and extra Renderer hints are lambda functions passed in and called inside the function.
+        // Renderer_hints is the function for the default glfw Renderer hints (i.e GLFW_TRANSPARENT_FRAMEBUFFER).
+        // these are set in Renderer.hpp.
 
-        // extra_window_hints is an additional optional stage for setting any extra alternative window hints. not required.
-        int createGLFWContext(void(*window_hints)(), void(*extra_window_hints)() = nullptr);
+        // extra_Renderer_hints is an additional optional stage for setting any extra alternative Renderer hints. not required.
+        int createGLFWContext(void(*Renderer_hints)(), void(*extra_Renderer_hints)() = nullptr);
 
         // this one is annoying. the GLAD context is actually responsible for creating the GL context and ideally would have
         // been created with the createGLFWContext function, combining into the createGLContext function.
-        // unfortunately, the glad context HAS to be made after the main window.
+        // unfortunately, the glad context HAS to be made after the main Renderer.
         int createGLADContext();
 
         // destroys the gl(fw) context. again, will only destroy the context if m_glInit is true.

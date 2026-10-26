@@ -3,6 +3,7 @@
 #include <idpool.hpp>
 #include <queue>
 #include <logger.hpp>
+#include <layer.hpp>
 
 namespace Engine {
     
@@ -123,8 +124,22 @@ namespace Engine {
 
         // invalidate all the child transforms
         void _invalidateChildTransforms(); 
+
+        // what layer is this on?
+        LayerID m_layer;
+
     public:
-    
+
+        // get layer stuff
+        const LayerID getLayerID() const { return m_layer; } 
+        const Layer* getLayer() const { return LayerRegistry::get().getLayerViaID(m_layer); };
+        Layer* getLayer() { return LayerRegistry::get().getLayerViaID(m_layer); }
+        
+        // set layer via multiple means
+        void setLayer(LayerID id,       bool cascade = true);
+        void setLayer(std::string name, bool cascade = true);
+        void setLayer(Layer* layer,     bool cascade = true); 
+
         // queue the m_transformDirty var to get reset
         bool m_queueTransformReset = false;
 
@@ -271,9 +286,9 @@ namespace Engine {
         // force the entity to change it's enabled state immediately.
         void forceSetEnabled(bool enabled);
 
-        // update loop happens in window, allow private function calling from
-        // the window class.
-        friend class Window; 
+        // update loop happens in Renderer, allow private function calling from
+        // the Renderer class.
+        friend class Renderer; 
         // let the transform call _invalidateChildTransforms();
         friend class Transform;
 

@@ -1,6 +1,6 @@
 #include "logger.hpp"
 #include <component/camera.hpp>
-#include <window.hpp>
+#include <renderer.hpp>
 #include <entity.hpp>
 using namespace Engine;
 
@@ -78,17 +78,17 @@ ProjectionMode Camera::getProjectionMode() {
 fm::mat4 Camera::getProjectionMat() {
     // return if the projection matrix isn't dirty 
     // calculate anyway if the viewport changed
-    if (!m_projectionDirty && !Window::get().m_viewportDirty ||  m_lastCalculatedFrame_p == Window::get().getFrame()) return m_projectionMatrix;
+    if (!m_projectionDirty && !Renderer::get().m_viewportDirty ||  m_lastCalculatedFrame_p == Renderer::get().getFrame()) return m_projectionMatrix;
     m_projectionDirty = false;
 
-     m_lastCalculatedFrame_p = Window::get().getFrame();
+     m_lastCalculatedFrame_p = Renderer::get().getFrame();
 
     // switch projection mode cases
     switch (m_projMode) {
         case ProjectionMode::Orthographic: {
 
             float height = m_orthoSize;
-            float width = height * Window::get().getAspectRatio();
+            float width = height * Renderer::get().getAspectRatio();
 
             // make the projection matrix
             m_projectionMatrix = fm::orthographic<float>(
@@ -102,7 +102,7 @@ fm::mat4 Camera::getProjectionMat() {
         default: // ProjectionMode::Perspective
             m_projectionMatrix = fm::perspective<float>(
                 m_fov,
-                Window::get().getAspectRatio(),
+                Renderer::get().getAspectRatio(),
                 m_nearClip,
                 m_farClip);
             break;
@@ -111,11 +111,11 @@ fm::mat4 Camera::getProjectionMat() {
 }
 fm::mat4 Camera::getViewMat() {
     // return if the transform was not touched this frame
-    if (!entity.wasTransformDirty() || m_lastCalculatedFrame_v == Window::get().getFrame()) return m_viewMatrix;
+    if (!entity.wasTransformDirty() || m_lastCalculatedFrame_v == Renderer::get().getFrame()) return m_viewMatrix;
     entity.m_queueTransformReset = true;
     // (pos, pos + front, up)
 
-    m_lastCalculatedFrame_v = Window::get().getFrame();
+    m_lastCalculatedFrame_v = Renderer::get().getFrame();
     
     m_viewMatrix = fm::lookAt(
         entity.transform.getGlobalPosition(),

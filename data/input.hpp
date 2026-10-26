@@ -26,12 +26,12 @@ namespace Engine {
         static void _key_callback(GLFWwindow* wnd, int code, int scancode, int action, int mods);
         static void _mouse_button_callback(GLFWwindow* wnd, int code, int action, int mods);
         static void _mouse_pos_callback(GLFWwindow* wnd, double x, double y);
-        static void _enter_window_callback(GLFWwindow* wnd, int state);
+        static void _enter_Renderer_callback(GLFWwindow* wnd, int state);
         static void _window_focus_callback(GLFWwindow* wnd, int state);
 
-        // has the mouse entered the window this frame?
+        // has the mouse entered the Renderer this frame?
         static inline bool s_mouseEnteredTF;
-        // has the mouse left the window this frame?
+        // has the mouse left the Renderer this frame?
         static inline bool s_mouseExitedTF;
 
         // mouse pos last callback (as double to match glfw)
@@ -45,21 +45,21 @@ namespace Engine {
         // the cached mouse delta.
         static inline fm::dvec2 s_mouseDelta            = {0};
 
-        // is the window focused? 
-        static inline bool s_windowFocused = true;
+        // is the Renderer focused? 
+        static inline bool s_RendererFocused = true;
         
         // is the mouse hidden?
         static inline bool s_mouseHidden = false;
 
-        static inline GLFWwindow* s_wnd = nullptr; // store a ref to the window.
-        // don't use window.hpp because that can cause issues. i hate this solution.
+        static inline GLFWwindow* s_wnd = nullptr; // store a ref to the Renderer.
+        // don't use Renderer.hpp because that can cause issues. i hate this solution.
 
         
     public:
 
-        static inline bool getMouseEnteredWindow() { return s_mouseEnteredTF; }
-        static inline bool getMouseExitedWindow() { return s_mouseEnteredTF; }
-        static inline bool isWindowFocused() { return s_windowFocused; }
+        static inline bool getMouseEnteredRenderer() { return s_mouseEnteredTF; }
+        static inline bool getMouseExitedRenderer() { return s_mouseEnteredTF; }
+        static inline bool isRendererFocused() { return s_RendererFocused; }
         // get the mouse pos
         static inline fm::dvec2 getMousePos() { return s_mousePos; }
         static inline fm::dvec2 getMousePosLastCallback() { return s_mousePosLC; } // if you want this? idk what you'd want it for
@@ -78,7 +78,7 @@ namespace Engine {
         // this also means we can just pass a MouseBtn enum or
         // a Key enum or anything else
 
-        // Initialize the window for the input class
+        // Initialize the Renderer for the input class
         static void init(GLFWwindow* wnd);
 
         // Sets the key down state assuming key isnt held otherwise the key is held down

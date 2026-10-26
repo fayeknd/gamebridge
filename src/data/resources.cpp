@@ -79,7 +79,7 @@ const std::filesystem::path& ResourceManager::getBinaryDir() {
     GetModuleFileNameW(NULL, path, MAX_PATH);
     s_binaryDir = path;
 #else
-    // theres probably a way to do this but on windows.
+    // theres probably a way to do this but on Renderers.
     s_binaryDir = std::filesystem::canonical("/proc/self/exe");
 #endif
     

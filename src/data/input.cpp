@@ -61,7 +61,7 @@ void Input::_mouse_pos_callback(GLFWwindow *wnd, double x, double y) {
 }
 
 // i don't know what the int is for
-void Input::_enter_window_callback(GLFWwindow *wnd, int state) {
+void Input::_enter_Renderer_callback(GLFWwindow *wnd, int state) {
     if (state) 
         s_mouseEnteredTF = true;
     else
@@ -69,7 +69,7 @@ void Input::_enter_window_callback(GLFWwindow *wnd, int state) {
 }
 
 void Input::_window_focus_callback(GLFWwindow *wnd, int state) {
-    s_windowFocused = state;
+    s_RendererFocused = state;
 }
 
 // Sets the keycallback context and mouse button context
@@ -78,7 +78,7 @@ void Input::init(GLFWwindow* wnd) {
     glfwSetKeyCallback(wnd, _key_callback);
     glfwSetMouseButtonCallback(wnd, _mouse_button_callback);
     glfwSetCursorPosCallback(wnd, _mouse_pos_callback);
-    glfwSetCursorEnterCallback(wnd, _enter_window_callback);
+    glfwSetCursorEnterCallback(wnd, _enter_Renderer_callback);
     glfwSetWindowFocusCallback(wnd, _window_focus_callback);
 
     // we need sub-pixel data
@@ -88,7 +88,7 @@ void Input::init(GLFWwindow* wnd) {
 }
 
 void Input::pollStart() {
-    if (!isWindowFocused()) {
+    if (!isRendererFocused()) {
         s_mouseDelta              = fm::dvec2::zero();
         s_accumulatedMouseDelta   = fm::dvec2::zero();
         return;

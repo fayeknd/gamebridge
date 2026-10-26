@@ -2,7 +2,7 @@
 #include <transform.hpp>
 #include <entity.hpp>
 #include <component/camera.hpp>
-#include <window.hpp>
+#include <renderer.hpp>
 
 using namespace Engine;
 
@@ -24,6 +24,15 @@ fm::mat4 Transform::getMatrix(bool forceRecompute) {
 
     // updated, set m_dirty to false.
     m_dirty = false;
+    // we always want this to be true every frame.
+    // the issue with depth calculations is they use
+    // the camera positions, and we don't know
+    // if or when those change, but we also
+    // don't want to recalculate it EVERY time it's 
+    // called, just once per frame maximum.
+    // so we set this to true, and then if depth is
+    // calculated, we don't need to calculate it again.
+    m_depthDirty = true;
     // return the new model matrix
     return m_modelMat;
 
@@ -55,6 +64,24 @@ fm::mat4 Transform::getGlobalMatrix() {
     //if (fm::flipZ) m_globalFront = -m_globalFront;
 
     return m_globalModelMat;
+}
+
+float Transform::getDepth(fm::vec3 camPos, fm::vec3 camFront, DepthType type) {
+    
+    if (!m_depthDirty) return m_depthFromCamera;
+    m_depthDirty = false;
+
+    fm::vec3 pos = getGlobalPosition();
+    fm::vec3 relative = pos - camPos;
+    
+    // get the relative distance from this to the camera
+    switch (type) {
+        case (DepthType::Planar) :       relative = relative.dot(camFront); break; // opaque depth
+        case (DepthType::SquaredRadial): relative = relative.dot(relative); break; // transparent depth
+    }
+    // project the relative distance onto the camera front vector
+    m_depthFromCamera = relative.dot(camFront);
+    return m_depthFromCamera; 
 }
 
 // check if the entity has a parent

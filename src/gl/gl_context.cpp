@@ -1,5 +1,5 @@
 #include <gl_context.hpp>
-#include <window.hpp>
+#include <renderer.hpp>
 using namespace Engine;
 
 
@@ -9,12 +9,12 @@ bool& GLContext::isGLReady() {
 }
 
 // creates the glfw context. will only create the gl context if m_glInit is false.
-// window hints and extra window hints are lambda functions passed in and called inside the function.
-// window_hints is the function for the default glfw window hints (i.e GLFW_TRANSPARENT_FRAMEBUFFER).
-// these are set in window.hpp.
+// Renderer hints and extra Renderer hints are lambda functions passed in and called inside the function.
+// Renderer_hints is the function for the default glfw Renderer hints (i.e GLFW_TRANSPARENT_FRAMEBUFFER).
+// these are set in Renderer.hpp.
 
-// extra_window_hints is an additional optional stage for setting any extra alternative window hints. not required.
-int GLContext::createGLFWContext(void(*window_hints)(), void(*extra_window_hints)()) {
+// extra_Renderer_hints is an additional optional stage for setting any extra alternative Renderer hints. not required.
+int GLContext::createGLFWContext(void(*Renderer_hints)(), void(*extra_Renderer_hints)()) {
 
     // context has already been created, just return early
     if (isGLReady()) return ERR_CONTEXT_EXISTS;
@@ -22,10 +22,10 @@ int GLContext::createGLFWContext(void(*window_hints)(), void(*extra_window_hints
     // glfwinit failed lol
     if (!glfwInit()) return ERR_GLFW_INIT_FAILED;
 
-    // run the window_hints function (belonging to the window class)
-    window_hints();
-    // if the extra_window_hints function is not a nullptr, then run that too.
-    if (extra_window_hints) extra_window_hints();
+    // run the Renderer_hints function (belonging to the Renderer class)
+    Renderer_hints();
+    // if the extra_Renderer_hints function is not a nullptr, then run that too.
+    if (extra_Renderer_hints) extra_Renderer_hints();
 
     // glInit is now true.
     m_glInit = true;
@@ -33,11 +33,11 @@ int GLContext::createGLFWContext(void(*window_hints)(), void(*extra_window_hints
 }
 // this one is annoying. the GLAD context is actually responsible for creating the GL context and ideally would have
 // been created with the createGLFWContext function, combining into the createGLContext function.
-// unfortunately, the glad context HAS to be made after the main window.
+// unfortunately, the glad context HAS to be made after the main Renderer.
 int GLContext::createGLADContext() {
 
     // i genuinely don't know what this does or why it has to look like this.
-    // like everyone, I just took this from learnopengl.com. (https://learnopengl.com/Getting-started/Hello-Window)
+    // like everyone, I just took this from learnopengl.com. (https://learnopengl.com/Getting-started/Hello-Renderer)
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 
         // if we made it into here, the glad loader failed.
@@ -56,8 +56,8 @@ int GLContext::destroyGLContext() {
     // quick return if the context already doesn't exist
     if (!isGLReady()) return ERR_CONTEXT_NULL;
 
-    // destroy the window first
-    glfwDestroyWindow(Window::get().getWndHandle());
+    // destroy the Renderer first
+    glfwDestroyWindow(Renderer::get().getWndHandle());
     
     // then terminate the glfw instance.
     glfwTerminate();

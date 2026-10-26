@@ -4,6 +4,7 @@
 #include "shader.hpp"
 #include <component/boundingbox.hpp>
 #include <component/camera.hpp>
+#include <entity.hpp>
 
 using namespace Engine;
 using namespace Physics;
@@ -14,7 +15,7 @@ BoundingBoxID BoundingBox::getBoxID() {
 }
 
 void BoundingBox::setColour(fm::vec4 col) {
-    m_boxDebugCol = col;
+    m_material->m_data.m_albedoFac = col;
     //m_program->useProgram();
     //m_program->setUniform("boxCol", col);
 }
@@ -27,6 +28,12 @@ void BoundingBox::init() {
     // register ourselves with the bounding box list
     s_boundingBoxList.emplace(m_boxID, this);
 
+    // create a static material to satisfy IRenderable.
+    // this does not need to exist really. it just holds 
+    // colour. 
+    static std::shared_ptr<Material> boundingBoxMaterial = Material::create();
+    boundingBoxMaterial->m_data.m_albedoFac = {1.0f, 0.9f, 0.8f, 1.0f};
+    m_material = boundingBoxMaterial;
 }
 
 void BoundingBox::onDestroy() {
@@ -39,8 +46,7 @@ void BoundingBox::onDestroy() {
 }
 
 void BoundingBox::draw() {
-    if (!entity.isEnabled() || !m_renderBounds || !DebugUI::get().m_drawDebugTools) return;
-
+    if (!DebugUI::get().m_drawDebugTools) return;
     this->collider->draw(entity.transform.getGlobalPosition(), entity.transform.getGlobalScale());
 }
 
@@ -69,6 +75,8 @@ bool BoundingBox::checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit
 }
 
 bool BoundingBox::rayAABoxIntersection(const Ray& ray, const Collider* box, RaycastHit& outRaycastHit) {
+
+    if (outRaycastHit.m_hitEntity->getLayer()->m_ignoreRaycast) return false;
 
     float tNearMax = -std::numeric_limits<float>::max();
     float tFarMin  =  std::numeric_limits<float>::max();
@@ -149,6 +157,8 @@ bool BoundingBox::rayAABoxIntersection(const Ray& ray, const Collider* box, Rayc
 }
 
 bool BoundingBox::rayAASphereIntersection(const Ray& ray, const Collider* sphere, RaycastHit& outRaycastHit) {
+
+    if (outRaycastHit.m_hitEntity->getLayer()->m_ignoreRaycast) return false;
 
     // get sphere center and length of origin to sphere center (negative)
     fm::vec3 sphereCenter = sphere->center + sphere->offset;

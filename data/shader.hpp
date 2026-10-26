@@ -113,6 +113,10 @@ namespace Engine {
         "    _transpilerID_normal = mat3(transpose(inverse(u_model_matrix))) * v_normal;\n"
     };
 
+    constexpr const char* shader_fragmentFixTransparency = {
+        "\n    fragCol.w = (u_material.has_transparency) ? fragCol.w : 1.0f;\n"
+    };
+
     // the material struct definition in GLSL.
     // this will be within the vertex shader.
     constexpr const char* shader_materialUniform = {
@@ -127,6 +131,7 @@ namespace Engine {
         "   bool  has_normal_tx;\n"
         "   bool  has_metallic_tx;\n"
         "   bool  has_emission_tx;\n"
+        "   bool  has_transparency;\n"
         "};\n\n"
         "uniform pbrData   u_material;\n\n"
         "uniform sampler2D u_albedo_tx;\n"
@@ -194,7 +199,7 @@ namespace Engine {
         // create some default shaders.
         static void _createDefaultShaders();
 
-        friend class Window;
+        friend class Renderer;
 
     public:
 

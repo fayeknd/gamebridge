@@ -8,6 +8,7 @@
 #include <shader.hpp>
 #include <mesh.hpp>
 #include <component/collider.hpp>
+#include <component/renderable.hpp>
 
 // TODO : calculate bounds if the entity transform is dirty rather than just when drawing
 
@@ -17,7 +18,7 @@ namespace Engine
     using BoundingBoxID = uint16_t;
 
     // Bounding box data for collisions, anything between minimum and maximum
-    class BoundingBox : public IComponent {
+    class BoundingBox : public IRenderable  /* includes IComponent */{
     protected:
 
         // ID pool for easy and efficient unordered map management
@@ -29,13 +30,9 @@ namespace Engine
         // this instance's id
         BoundingBoxID m_boxID;
 
-        // the box draw colour
-        fm::vec4 m_boxDebugCol = {1.0f, 0.9f, 0.8f, 1.0f};
-
     public:
 
-        bool m_renderBounds = true;
-        fm::vec4 getColour() { return m_boxDebugCol; }
+        fm::vec4 getColour() { return m_material->m_data.m_albedoFac; }
         void setColour(fm::vec4 col);
 
         // get this box ID

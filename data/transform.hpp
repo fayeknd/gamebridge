@@ -3,6 +3,11 @@
 
 namespace Engine {
     
+    enum DepthType {
+        Planar, // used for opaque sorting (clipping planes and such)
+        SquaredRadial // used for transparent sorting
+    };
+
     // forward declaration 
     class Entity;
 
@@ -28,6 +33,7 @@ namespace Engine {
 
         bool m_globalDirty = true;
 
+        bool m_depthDirty = true;
         // our actual 3d spatial transforms
 
         // position, initialised to (0,0,0).
@@ -67,6 +73,10 @@ namespace Engine {
         // the transform matrix itself.
         fm::mat4 m_modelMat;
         fm::mat4 m_globalModelMat;
+
+        // how far is this object from the camera?
+        // used for transparency sorting
+        float m_depthFromCamera = 0;
 
         // small optimisation trick. if the last accessed
         // value was global, then the next accessed global
@@ -110,6 +120,9 @@ namespace Engine {
         fm::mat4 _getParentInv();
 
     public:
+
+        // return how far this transform is from the camera.
+        float getDepth(fm::vec3 camPos, fm::vec3 camFront, DepthType type); 
 
         // return the matrix. if dirty, also calculates the matrix.
         fm::mat4 getMatrix(bool forceCompute = false);

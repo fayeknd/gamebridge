@@ -14,6 +14,7 @@ namespace Engine {
     constexpr const char* materialUniform_hasNormal     = ".has_normal_tx";
     constexpr const char* materialUniform_hasMetallic   = ".has_metallic_tx";
     constexpr const char* materialUniform_hasEmission   = ".has_emission_tx";
+    constexpr const char* materialUniform_hasTransp     = ".has_transparency";
 
     constexpr const char* materialUniform_albedoTx      = "u_albedo_tx";
     constexpr const char* materialUniform_normalTx      = "u_normal_tx";
@@ -33,6 +34,7 @@ namespace Engine {
         bool m_hasMetallicTx                            = false;
         bool m_hasEmissionTx                            = false;
 
+        bool m_hasTransparency                          = false;
     };
 
     class Material : public ICachable<Material> {

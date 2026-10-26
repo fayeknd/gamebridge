@@ -1,6 +1,6 @@
 #include <cachable.hpp>
 #include <gl_context.hpp>
-#include <window.hpp>
+#include <renderer.hpp>
 
 #include <GLFW/glfw3native.h>
 #include <resources.hpp>
@@ -15,43 +15,44 @@
 #include <debug.hpp>
 #include <thread>
 #include <physics/physics.hpp>
+#include <layer.hpp>
 
 using namespace Engine;
 
-// returns the glfw window handle. (different from the HWND window handle.)
-GLFWwindow* Window::getWndHandle() const {
+// returns the glfw Renderer handle. (different from the HWND Renderer handle.)
+GLFWwindow* Renderer::getWndHandle() const {
     return m_wnd;
 }
 
-// returns the window size.
-fm::uvec2 Window::getWndSize() {
+// returns the Renderer size.
+fm::uvec2 Renderer::getWndSize() {
     return m_wndSize;
 }
 
-// sets the window size via glfwSetWindowSize(m_wnd, v.x, v.y).
-void Window::setWndSize(fm::uvec2 v) {
+// sets the Renderer size via glfwSetRendererSize(m_wnd, v.x, v.y).
+void Renderer::setWndSize(fm::uvec2 v) {
     m_wndSize = v;
     if (GLContext::get().isGLReady()) glfwSetWindowSize(m_wnd, v.x, v.y);
 }
 
-// returns the window title. 
-std::string Window::getWndTitle() {
+// returns the Renderer title. 
+std::string Renderer::getWndTitle() {
     return m_wndTitle;
 }
 
-// sets the window title via glfwSetWindowTitle(m_wnd, s.c_str()).
-void Window::setWndTitle(std::string s) {
+// sets the Renderer title via glfwSetRendererTitle(m_wnd, s.c_str()).
+void Renderer::setWndTitle(std::string s) {
     m_wndTitle = s;
     if (GLContext::get().isGLReady()) glfwSetWindowTitle(m_wnd, s.c_str());
 }
 
-// returns the current window fullscreen state.
-FullscreenMode Window::getFullscreenMode() {
+// returns the current Renderer fullscreen state.
+FullscreenMode Renderer::getFullscreenMode() {
     return m_fsMode;
 }
 
-// sets the window state via a switch statement. 
-void Window::setFullscreenMode(FullscreenMode fm) {
+// sets the Renderer state via a switch statement. 
+void Renderer::setFullscreenMode(FullscreenMode fm) {
 
     // if the current FullscreenMode is already this, just return early.
     if (fm == m_fsMode) return; 
@@ -65,7 +66,7 @@ void Window::setFullscreenMode(FullscreenMode fm) {
             // cache width and height to old size
             m_wndSize_old = fm::uvec2(w, h);
 
-            // get current x and y position of the window
+            // get current x and y position of the Renderer
             int x, y;
             glfwGetWindowPos(m_wnd, &x, &y);
 
@@ -75,47 +76,47 @@ void Window::setFullscreenMode(FullscreenMode fm) {
             // get the monitor video mode for the width and height and refresh of the main monitor to fullscreen to.
             const GLFWvidmode* vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
-            // set the window to fullscreen on the primary monitor with the OS video mode current options.
+            // set the Renderer to fullscreen on the primary monitor with the OS video mode current options.
             glfwSetWindowMonitor(m_wnd, glfwGetPrimaryMonitor(), 0, 0, vidMode->width, vidMode->height, vidMode->refreshRate); 
             break; }
 
-        case FullscreenMode::Windowed: { // swap to windowed
+        case FullscreenMode::Renderered: { // swap to Renderered
             
-            // if swapping from fullscreen, use the cached old variables to restore window to original size and pos.
+            // if swapping from fullscreen, use the cached old variables to restore Renderer to original size and pos.
             if (m_fsMode == FullscreenMode::Fullscreen) {
 
                 glfwSetWindowMonitor(m_wnd, NULL, m_wndPos_old.x, m_wndPos_old.y, m_wndSize_old.x, m_wndSize_old.y, 0);
                 break;
             }
 
-            // GLFW_DECORATED determines if the window borderless or not.
+            // GLFW_DECORATED determines if the Renderer borderless or not.
             // true means it is not borderless, false means it is.
             // it could be set to false, so change it back just in case.
 
             glfwSetWindowAttrib(m_wnd, GLFW_DECORATED, GLFW_TRUE);
             break; } 
 
-            // Don't know if this works on windows, should do
-        case FullscreenMode::BorderlessWindowed: { // swap to borderless windowed
+            // Don't know if this works on Renderers, should do
+        case FullscreenMode::BorderlessRenderered: { // swap to borderless Renderered
 
-            // this isn't needed on windows but it is on linux. hide the window to make quick changes then show it again.
+            // this isn't needed on Renderers but it is on linux. hide the Renderer to make quick changes then show it again.
             glfwHideWindow(m_wnd);
 
             // set the decorated attrib
             glfwSetWindowAttrib(m_wnd, GLFW_DECORATED, GLFW_FALSE);
 
-            // update window
+            // update Renderer
             glfwPollEvents();
 
-            // show the window again
+            // show the Renderer again
             glfwShowWindow(m_wnd);
 
             // make sure it's focused
             glfwFocusWindow(m_wnd);
             
-            // this is borderless windowed, so make sure the window is not maximised. 
-            // glfwMaximiseWindow() is named weirdly. if the window is maximised when this is run,
-            // it will un-maximise the window.
+            // this is borderless Renderered, so make sure the Renderer is not maximised. 
+            // glfwMaximiseRenderer() is named weirdly. if the Renderer is maximised when this is run,
+            // it will un-maximise the Renderer.
             if (glfwGetWindowAttrib(m_wnd, GLFW_MAXIMIZED) == GLFW_FALSE) {
                 glfwMaximizeWindow(m_wnd);
             }
@@ -136,50 +137,50 @@ void Window::setFullscreenMode(FullscreenMode fm) {
             }
             break; } 
     }
-    // make sure the window fullscreenmode is equal to the new fullscreenmode.
+    // make sure the Renderer fullscreenmode is equal to the new fullscreenmode.
     m_fsMode = fm;
 }
 
 // get the target fps
-uint16_t Window::getTargetFPS() {
+uint16_t Renderer::getTargetFPS() {
     return m_targetFramesPerSecond;
 }
 
-uint16_t Window::getFPS() {
+uint16_t Renderer::getFPS() {
     return m_currentFramesPerSecond;
 }
 
 // get the target frame delta
-double Window::getTargetFrameDelta() {
+double Renderer::getTargetFrameDelta() {
     return m_targetFrameDelta;
 }
 
 // set the target fps.
-void Window::setTargetFPS(uint16_t fps) {
+void Renderer::setTargetFPS(uint16_t fps) {
     m_targetFramesPerSecond = fps;
     // also calculate the new target delta.
     m_targetFrameDelta = static_cast<double>(1) / static_cast<double>(fps);
 }
 
 // set the target delta time.
-void Window::setTargetFrameDelta(double delta) {
+void Renderer::setTargetFrameDelta(double delta) {
     m_targetFrameDelta = delta;
     // also calculate the new target fps.
     m_targetFramesPerSecond = static_cast<double>(1) / static_cast<double>(delta);
 }
 
 // get the current vsync mode
-VSyncMode Window::getVSyncMode() {
+VSyncMode Renderer::getVSyncMode() {
     return m_vsyncMode;
 }
 
 // set the current vsync mode
-void Window::setVSyncMode(VSyncMode vsm) {
+void Renderer::setVSyncMode(VSyncMode vsm) {
     m_vsyncMode = vsm;
     glfwSwapInterval(static_cast<int>(vsm));
 }
 
-fm::uvec2 Window::getFractionalAspectRatio() {
+fm::uvec2 Renderer::getFractionalAspectRatio() {
     // get the greatest common divisor
     int div = std::gcd(m_wndSize.x, m_wndSize.y);
     // get ratio width
@@ -190,60 +191,65 @@ fm::uvec2 Window::getFractionalAspectRatio() {
     return {rWidth, rHeight};
 }
 
-double Window::getAspectRatio() {
+double Renderer::getAspectRatio() {
     // width / height = aspect
     return static_cast<double>(m_wndSize.x) / static_cast<double>(m_wndSize.y);
 }
 
-// creates the window. this should be the first function to run.
+// creates the Renderer. this should be the first function to run.
 // a run through of what the parameters defaults are for:
 
-// size: the window size. leave at -1 for the default value of 800x800. 
-// title: window title. -1 for default also.
-// fsMode: fullscreen mode. by default is just windowed.
+// size: the Renderer size. leave at -1 for the default value of 800x800. 
+// title: Renderer title. -1 for default also.
+// fsMode: fullscreen mode. by default is just Renderered.
 // monitor: leave null for now.
-// share: i don't really know what this does, it just gets passed through to glfwCreateWindow.
-// extra_window_hints: a lambda function to add your own window hints in. create a function that
-// has glfwWindowHint() functions and pass that function through as a parameter. not required.
-int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMode, GLFWmonitor *monitor, GLFWwindow *share, void(*extra_window_hints)()) {
+// share: i don't really know what this does, it just gets passed through to glfwCreateRenderer.
+// extra_Renderer_hints: a lambda function to add your own Renderer hints in. create a function that
+// has GLFWwindowHint() functions and pass that function through as a parameter. not required.
+int Renderer::createWnd(fm::uvec2 size, std::string title, FullscreenMode fsMode, GLFWmonitor *monitor, GLFWwindow *share, void(*extra_Renderer_hints)()) {
 
-    // if opengl is ready for use, the window has already been created. return early.
+    // if opengl is ready for use, the Renderer has already been created. return early.
     if (GLContext::get().isGLReady()) return ERR_CONTEXT_EXISTS;
 
     // if the glfw context creation failed, also return early.
-    if (GLContext::get().createGLFWContext(_default_window_hints, extra_window_hints) != GL_CREATE_CONTEXT_SUCCESS)
+    if (GLContext::get().createGLFWContext(_default_Renderer_hints, extra_Renderer_hints) != GL_CREATE_CONTEXT_SUCCESS)
         return ERR_WINDOW_CREATION_FAILED;
 
     // if for whatever reason the m_wnd has already been assigned, return early. 
     if (m_wnd) return ERR_WINDOW_CREATION_FAILED;
+
+    // create the default layer.
+    LayerID layer = Layer::create(layer_defaultLayer, 0);
 
     // if the root entity is null, something is wrong. return.
     if (!Entity::s_root) {
         return ERR_NO_ROOT_ENTITY;
     }
 
+    Entity::s_root->setLayer(layer);
+
     // check for default parameter values and set them to the true defaults accordingly.
     // the reason they are -1 is to allow setting defaults to be done with the original variables
-    // in window.hpp instead.
+    // in Renderer.hpp instead.
     if (size == fm::uvec2(-1)) size = m_wndSize;
     if (title == "-1") title = m_wndTitle;
     
-    // actually create the window. unsure what share does.
+    // actually create the Renderer. unsure what share does.
     m_wnd = glfwCreateWindow(size.x, size.y, title.c_str(), monitor, share);
 
-    // set the window variables to the passed through variables
+    // set the Renderer variables to the passed through variables
     m_wndSize = size;
     m_wndTitle = title;
     
-    // if glfwCreateWindow failed, return.
+    // if glfwCreateRenderer failed, return.
     if (!m_wnd) {
         return ERR_WINDOW_CREATION_FAILED;
     }
 
-    // make sure the internal opengl context is tied to this window
+    // make sure the internal opengl context is tied to this Renderer
     glfwMakeContextCurrent(m_wnd);
 
-    // set the callback that is called whenever the window changes size.
+    // set the callback that is called whenever the Renderer changes size.
     glfwSetFramebufferSizeCallback(m_wnd, _framebuffer_resize_callback);
 
     // Initializes the input class
@@ -254,7 +260,7 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
         return ERR_WINDOW_CREATION_FAILED;
     }
     
-    // ensure the glViewport is set to the window size properly.
+    // ensure the glViewport is set to the Renderer size properly.
     glViewport(0, 0, size.x, size.y);
     m_viewportDirty = true;
 
@@ -283,14 +289,14 @@ int Window::createWindow(fm::uvec2 size, std::string title, FullscreenMode fsMod
     // add the main entrypoint component to the root entity.
     Entity::s_root->addComponent<MainComponent>();
 
-    // window creation succeeded!!
+    // Renderer creation succeeded!!
     return WINDOW_CREATION_SUCCESS;
 }
 
-// this function defines what glfw window hints are set by default.
-// i.e glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-// this is passed through to the GLContext on window creation as a lambda.
-void Window::_default_window_hints() {
+// this function defines what glfw Renderer hints are set by default.
+// i.e GLFWwindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+// this is passed through to the GLContext on Renderer creation as a lambda.
+void Renderer::_default_Renderer_hints() {
 
     // set the opengl version. in our case, OpenGL 4.6.
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -307,7 +313,7 @@ void Window::_default_window_hints() {
     glfwWindowHint(GLFW_ALPHA_BITS, 8);
 
 
-    // only required on linux. forces the window to run under wayland instead of x11 (if available).
+    // only required on linux. forces the Renderer to run under wayland instead of x11 (if available).
     #ifndef _WIN32
     glfwWindowHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
     #endif    
@@ -317,25 +323,27 @@ void Window::_default_window_hints() {
 }
 
 // handles changing the m_wndSize value and glViewport.
-void Window::_framebuffer_resize_callback(GLFWwindow* wnd, int w, int h) {
+void Renderer::_framebuffer_resize_callback(GLFWwindow* wnd, int w, int h) {
 
     // keep the viewport up to date
     glViewport(0, 0, w, h);
     get().m_viewportDirty = true;
 
     // make sure m_wndSize is aware of the updated size
-    Window::get().m_wndSize = fm::vec<unsigned int>(w,h);
+    Renderer::get().m_wndSize = fm::vec<unsigned int>(w,h);
 }
+
+#pragma region MainLoop
 
 // begins the program rendering and logic loop. in main(), this should come last unless you have
 // any cleanup stuff to perform after the program stops.
-void Window::beginGameLoop() {
+void Renderer::beginGameLoop() {
 
     // start the timer
     Time::s_deltaTimer.start();
     Timer swapBufferTimer;
     
-    // while glfw believes the window should not close
+    // while glfw believes the Renderer should not close
     while (!glfwWindowShouldClose(m_wnd)) {
 
         // if the delta timer is less than the target frame delta, 
@@ -358,7 +366,7 @@ void Window::beginGameLoop() {
         
 
         auto cam = Camera::activeCamera();
-        // poll the window events. this calls any callbacks first
+        // poll the Renderer events. this calls any callbacks first
         // this should have actually been done earlier but oh well.
         // without this, inputs would be handled on the NEXT frame
         // instead of this one.
@@ -394,7 +402,9 @@ void Window::beginGameLoop() {
     cleanup();
 }
 
-void Window::preFramePollEvents() {
+#pragma endregion MainLoop
+
+void Renderer::preFramePollEvents() {
     // poll glfw events.
     glfwPollEvents(); 
     ObjectRegistry::pollGC();
@@ -403,15 +413,16 @@ void Window::preFramePollEvents() {
 }
 
 // poll the various program events
-void Window::postFramePollEvents() {
+void Renderer::postFramePollEvents() {
     // update the input system
+    flushRenderCommands(); // draw using the render commands and flush them after.
     Debug::DebugUI::get().drawImGuiInterface_framebegin();
     Debug::DebugUI::get().drawImGuiInterface_frameend();
     Input::pollEnd();
 }
 
 // clean up the program after exiting
-void Window::cleanup() {
+void Renderer::cleanup() {
     Logging::Logger::get().logInfo("Program recieved shutdown request, or was shutdown by the user. Attempting to clean up resources before closing...");
     // free any archives that were kept loaded for whatever reason
     ResourceManager::freeArchives();
@@ -421,4 +432,74 @@ void Window::cleanup() {
     GLContext::get().destroyGLContext();
     // close the log file
     Logging::Logger::closeLog();
+}
+
+void Renderer::queueRenderCommand(uint8_t layer, uint64_t sortKey, IComponent* component, void(*draw_callback)(IComponent*)) {
+    m_commandBuckets[layer].push_back({sortKey, component, draw_callback});
+    m_bucketHasData[layer] = true;
+}
+
+void Renderer::flushRenderCommands() {
+    // LayerRegistry::get() is annoying to type
+    LayerRegistry& registry = LayerRegistry::get();
+
+    // iterate through all our layers
+    for (const auto& layer : registry.getLayerStack()) {
+        // if there is no data for this layer, skip it.
+        if (!m_bucketHasData[layer.m_layerID]) continue;
+
+        // get the render command bucket
+        auto& bucket = m_commandBuckets[layer.m_layerID];
+
+        // sort the render commands
+        std::sort(bucket.begin(), bucket.end(), [](const RenderCommand& a, const RenderCommand& b) {
+            return a.m_sortKey < b.m_sortKey;
+        });
+
+        // run the draw functions 
+        for (const auto& command : bucket) {
+            command.drawCallback(command.m_component);
+        }
+
+        // draw callback ran, we can clear the bucket now.
+        bucket.clear(); 
+        m_bucketHasData[layer.m_layerID] = false;
+
+    }
+}
+
+uint64_t Renderer::genSortKey(bool transparent, Material *mat, float depth) {
+
+    // materials have more than an albedo key, but albedo is the most common
+    // and therefore the texture we should prioritise
+    uint16_t albedoKey = (mat->m_data.m_hasAlbedoTx) ? 
+        static_cast<uint16_t>(mat->getAlbedoTx()->getUnitID() & 0xFFFF) : 0;
+    // get the shader program ID
+    uint16_t programID = mat->m_program->getProgramID();
+
+    // reduce the depth key down to a 32-bit int for bit shifting
+    uint32_t depthKey = std::bit_cast<uint32_t>(depth);
+    uint64_t key = 0;
+
+    // ensure we prioritise the right values in different cases.
+    // std::sort will eat this shit up
+    if (!transparent) {
+        // set up the key
+        key |= (static_cast<uint64_t>(programID) << 48);    // shader program has priority
+        key |= (static_cast<uint64_t>(albedoKey) << 32);    // second priority is the albedo texture
+        key |= depthKey;                                    // Priority 3: Depth tie-breaker (32 bits)
+        return key;
+    }
+    else {
+        depthKey = ~depthKey; // invert the depth key (back-to-front sorting)
+        key |= (static_cast<uint64_t>(depthKey) << 32);      // for transparency, depth has to take priority
+        key |= (static_cast<uint64_t>(programID) << 16);     // then the shader program
+        key |= albedoKey;                                    // finally the albedo texture
+        return key;
+    }
+}
+
+uint16_t Renderer::compressPtrToHash(const void* ptr) {
+    uintptr_t ptrVal = reinterpret_cast<uintptr_t>(ptr);
+    return static_cast<uint16_t>((ptrVal ^ (ptrVal >> 16) ^ (ptrVal >> 32)) & 0xFFFF);
 }
