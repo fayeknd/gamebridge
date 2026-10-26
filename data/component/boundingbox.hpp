@@ -2,7 +2,7 @@
 #include "gl_context.hpp"
 #include <fm/fmath.hpp>
 #include <component/component.hpp>
-#include <physics.hpp>
+#include <physics/physics.hpp>
 #include <unordered_map>
 #include <idpool.hpp>
 #include <shader.hpp>

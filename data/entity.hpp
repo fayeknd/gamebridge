@@ -106,6 +106,9 @@ namespace Engine {
         // call every update function on all components
         void _updateComponents(double delta);
 
+        // calls every physics update function on all components
+        void _updatePhysicsComponents(double delta);
+
         // call every lateUpdate function on all components
         void _lateUpdateComponents(double delta);
 
@@ -114,6 +117,9 @@ namespace Engine {
 
         // poll the behaviour of all components
         static void _pollComponentBehaviours(double delta);
+
+        // polls physics behaviours for all components
+        static void _pollPhysicsBehaviours(double delta);
 
         // invalidate all the child transforms
         void _invalidateChildTransforms(); 
@@ -271,6 +277,7 @@ namespace Engine {
         // let the transform call _invalidateChildTransforms();
         friend class Transform;
 
+        friend class PhysicsImpl;
     };
 
 }

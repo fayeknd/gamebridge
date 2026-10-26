@@ -13,7 +13,8 @@ namespace Engine {
 
         void init() override;
         void update(double delta) override;
-        void lateUpdate(double delta) override; 
+        void lateUpdate(double delta) override;
+        void physicsUpdate(double delta) override; 
         void onDestroy() override;
 
         Entity* square;

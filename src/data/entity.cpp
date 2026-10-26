@@ -244,6 +244,19 @@ void Entity::_updateComponents(double delta) {
     _updateEnabled();
 }
 
+// call every update function on all components
+void Entity::_updatePhysicsComponents(double delta) {
+    if (!m_enabled) return; // return early if entity is not enabled
+
+    // loop through every component and call update.
+    for (const auto& component : m_componentMap) {
+        component.second->physicsUpdate(delta);
+    }
+    // update this entity's enabled state.
+    // does nothing if the enabled state isnt queued to change.
+    _updateEnabled();
+}
+
 // call every lateUpdate function on all components
 void Entity::_lateUpdateComponents(double delta) {
     if (!m_enabled) return;
@@ -284,6 +297,13 @@ void Entity::_pollComponentBehaviours(double delta) {
             e.second->m_transformDirty = false; 
             e.second->m_queueTransformReset = false;
         }
+    }
+}
+
+void Entity::_pollPhysicsBehaviours(double delta) {
+    // update all the components' physics() functions. 
+    for (const auto& e : Entity::s_entityList) {
+        e.second->_updatePhysicsComponents(delta);
     }
 }
 

@@ -1,6 +1,6 @@
 #include "gl_context.hpp"
 #include "mesh.hpp"
-#include "ray.hpp"
+#include "physics/ray.hpp"
 #include "shader.hpp"
 #include <component/boundingbox.hpp>
 #include <component/camera.hpp>

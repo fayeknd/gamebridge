@@ -140,6 +140,9 @@ namespace Engine {
         // are called after all update functions are finished calling.
         virtual void lateUpdate(double delta) {};
 
+        // physics update calls an update every 50ms (same as minecraft yippee)
+        virtual void physicsUpdate(double delta) {};
+
         // final stage in the game loop. used for anything to do with drawing.
         virtual void draw() {};
 

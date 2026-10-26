@@ -14,6 +14,7 @@
 #include <material.hpp>
 #include <debug.hpp>
 #include <thread>
+#include <physics/physics.hpp>
 
 using namespace Engine;
 
@@ -398,6 +399,7 @@ void Window::preFramePollEvents() {
     glfwPollEvents(); 
     ObjectRegistry::pollGC();
     Input::pollStart();
+    PhysicsImpl::PhysicsUpdate();
 }
 
 // poll the various program events

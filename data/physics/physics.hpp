@@ -1,7 +1,8 @@
 #pragma once
 #include <fm/fmath.hpp>
 #include <entity.hpp>
-#include <ray.hpp>
+#include <physics/ray.hpp>
+#include <time.hpp>
 
 namespace Engine {
 
@@ -11,8 +12,18 @@ namespace Engine {
     // Mhm yes physics
     namespace Physics {
 
+        // Physics tick, 20 ticks per second
+        static inline Timer physicsTick;
+        // Ticks per second
+        static inline uint16_t tps = 20;
         // Shoots a ray from the ray origin in the ray direction and returns a raycasthit
         RaycastHit Raycast(Ray ray, float distance = physics_defaultRayDistance);
     };
+
+    // Controls the physics ticks system
+    class PhysicsImpl {
+            public:
+            static void PhysicsUpdate();
+        };
 }
 

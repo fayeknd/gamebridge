@@ -1,12 +1,12 @@
 #include <cachable.hpp>
 #include <logger.hpp>
-#include <ray.hpp>
+#include <physics/ray.hpp>
 #include <shader.hpp>
 #include <component/collider.hpp>
 #include <component/boundingbox.hpp>
 #include <component/main_comp.hpp>
 #include <entity.hpp>
-#include <physics.hpp>
+#include <physics/physics.hpp>
 
 #include <component/renderable.hpp>
 #include <resources.hpp>
@@ -15,13 +15,16 @@
 #include <time.hpp>
 #include <input.hpp>
 #include <texture.hpp>
+#include <utils/debug.hpp>
+#include <physics/rigidbody.hpp>
 
 using namespace Engine;
-using namespace Physics;
+using namespace Engine::Debug;
 
 Entity* square;
 Entity* cam;
 Entity* teenySquare;
+Rigidbody* rb;
 float sensitivity = 0.45;
 
 void MainComponent::init() {
@@ -32,6 +35,8 @@ void MainComponent::init() {
     square = Entity::create("Test Square").get(); 
     auto collider = square->addComponent<BoundingBox>();
     auto renderer = square->addComponent<IRenderable>();
+    rb = square->addComponent<Rigidbody>();
+    rb->m_mass = 1000.f;
     collider->m_renderBounds = false;
     collider->m_max += {0.1f};
     collider->m_min -= {0.1f};
@@ -127,6 +132,10 @@ void MainComponent::update(double delta) {
 
 void MainComponent::lateUpdate(double delta) {
 
+}
+
+void MainComponent::physicsUpdate(double delta) {
+    Logging::Logger::get().logInfo("Velocity: {}", rb->getVelocity());
 }
 
 void MainComponent::onDestroy() {

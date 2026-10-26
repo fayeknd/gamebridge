@@ -1,7 +1,8 @@
-#include <physics.hpp>
+#include <physics/physics.hpp>
 #include <logger.hpp>
 #include <component/boundingbox.hpp>
 #include <vector>
+#include <entity.hpp>
 
 using namespace Engine;
 using namespace Physics;
@@ -31,4 +32,18 @@ RaycastHit Physics::Raycast(Ray ray, float distance) {
     }
 
     return returnHit;
+}
+
+void PhysicsImpl::PhysicsUpdate()
+{
+    // begin the timer if it hasn't started
+    if (!physicsTick.isCounting()) physicsTick.start();
+    double d = 1.0 / static_cast<double>(tps);
+
+    // is the timer past the tick interval?
+    if (physicsTick.count() >= d) {
+        // yes, push through physics poll and reset the timer
+        Entity::_pollPhysicsBehaviours(d);
+        physicsTick.reset(); 
+    }
 }
