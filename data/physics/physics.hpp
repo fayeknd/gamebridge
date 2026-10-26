@@ -3,6 +3,7 @@
 #include <entity.hpp>
 #include <physics/ray.hpp>
 #include <time.hpp>
+#include <layer.hpp>
 
 namespace Engine {
 
@@ -17,7 +18,7 @@ namespace Engine {
         // Ticks per second
         static inline uint16_t tps = 20;
         // Shoots a ray from the ray origin in the ray direction and returns a raycasthit
-        RaycastHit Raycast(Ray ray, float distance = physics_defaultRayDistance);
+        RaycastHit Raycast(Ray ray, LayerMask layers = LayerMasks::All, float distance = physics_defaultRayDistance);
     };
 
     // Controls the physics ticks system

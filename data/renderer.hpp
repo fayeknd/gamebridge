@@ -7,7 +7,7 @@
 
 namespace Engine {
 
-    constexpr size_t renderer_maxLayers = 256;
+    constexpr size_t renderer_maxLayers = 64;
 
     // forward declarations
     class Mesh;

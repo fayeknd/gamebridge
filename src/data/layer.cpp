@@ -1,10 +1,15 @@
 #include <layer.hpp>
 #include <algorithm>
+#include <renderer.hpp>
 
 using namespace Engine;
 
 LayerID Layer::create(const std::string& layerName, int32_t ordering) {
     return LayerRegistry::get().createLayer(layerName, ordering);
+}
+
+LayerMask Layer::getMask(const std::string& layerName) {
+    return LayerRegistry::get().getLayerViaName(layerName)->m_layerID;
 }
 
 LayerID LayerRegistry::createLayer(const std::string &layerName, int32_t ordering) {
@@ -14,8 +19,15 @@ LayerID LayerRegistry::createLayer(const std::string &layerName, int32_t orderin
         log().logWarning("A layer with name '{}' already exists! Returning that layer's ID instead.", layerName);
         return layer->m_layerID;
     }
-    // next id
-    LayerID id = static_cast<LayerID>(m_layerStack.size());
+
+    size_t count = m_layerStack.size();
+    if (count >= renderer_maxLayers) {
+        log().logError("Maximum layer count reached!");
+        return 0;
+    }
+
+    // next id (doubles as a bitmask)
+    LayerID id = (1u << count);
 
     // create the new layer.
     m_layerStack.push_back({id, layerName, ordering});

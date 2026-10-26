@@ -8,14 +8,20 @@ using namespace Engine;
 using namespace Physics;
 
 
-RaycastHit Physics::Raycast(Ray ray, float distance) {
+RaycastHit Physics::Raycast(Ray ray, LayerMask mask, float distance) {
 
     RaycastHit returnHit;
+    returnHit.m_hitInfo.m_mask = mask;
     // iterate through every bounding box (expensive!!)
     for (auto it : BoundingBox::getBoundingBoxList()) {
 
         // get the bounding box pointer
-        auto bb = it.second;
+        BoundingBox* bb = it.second;
+
+        // check this entity is not blacklisted from the layer mask
+        if ((bb->getEntity().getLayerID() & mask) == 0 || bb->getEntity().getLayer()->m_ignoreRaycast) {
+            continue;
+        }
 
         // set some hit values
         RaycastHit hit;

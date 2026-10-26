@@ -6,9 +6,15 @@
 namespace Engine {
 
     // we will only have 256 layers max
-    using LayerID = uint8_t;
+    using LayerID = uint64_t;
+    using LayerMask = LayerID;
 
     constexpr std::string layer_defaultLayer = "DefaultLayer";
+
+    namespace LayerMasks {
+        constexpr LayerMask None = 0;           // no layers
+        constexpr LayerMask All = 0xFFFFFFFF;   // all layers
+    }
 
     struct Layer {
         LayerID m_layerID;
@@ -18,6 +24,7 @@ namespace Engine {
         bool m_ignoreRaycast = false;
     
         static LayerID create(const std::string& layerName, int32_t ordering);
+        static LayerMask getMask(const std::string& layerName);
     };
 
     // the layer registry holds all the active layers.

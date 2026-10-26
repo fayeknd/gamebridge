@@ -1,6 +1,7 @@
 #pragma once
 #include <fm/fmath.hpp>
 #include <limits>
+#include <layer.hpp>
 
 namespace Engine {
 
@@ -16,6 +17,7 @@ namespace Engine {
         // and the normal of the hit
 
         struct RaycastHitInfo {
+            LayerMask m_mask           = LayerMasks::All; 
             bool m_hasHit            = false;
             float m_distance         = physics_defaultRayDistance;
             fm::vec3 m_hitPoint      = {};
@@ -35,8 +37,7 @@ namespace Engine {
             }
         };
 
-        struct Ray
-        {
+        struct Ray {
             fm::vec3 m_origin        = {};
             fm::vec3 m_direction     = {};
         };

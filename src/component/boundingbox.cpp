@@ -76,8 +76,6 @@ bool BoundingBox::checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit
 
 bool BoundingBox::rayAABoxIntersection(const Ray& ray, const Collider* box, RaycastHit& outRaycastHit) {
 
-    if (outRaycastHit.m_hitEntity->getLayer()->m_ignoreRaycast) return false;
-
     float tNearMax = -std::numeric_limits<float>::max();
     float tFarMin  =  std::numeric_limits<float>::max();
 
@@ -157,8 +155,6 @@ bool BoundingBox::rayAABoxIntersection(const Ray& ray, const Collider* box, Rayc
 }
 
 bool BoundingBox::rayAASphereIntersection(const Ray& ray, const Collider* sphere, RaycastHit& outRaycastHit) {
-
-    if (outRaycastHit.m_hitEntity->getLayer()->m_ignoreRaycast) return false;
 
     // get sphere center and length of origin to sphere center (negative)
     fm::vec3 sphereCenter = sphere->center + sphere->offset;
