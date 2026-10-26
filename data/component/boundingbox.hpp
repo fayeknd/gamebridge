@@ -9,6 +9,8 @@
 #include <mesh.hpp>
 #include <component/collider.hpp>
 
+// TODO : calculate bounds if the entity transform is dirty rather than just when drawing
+
 namespace Engine
 {
     using namespace Physics;
@@ -29,7 +31,6 @@ namespace Engine
 
         // the box draw colour
         fm::vec4 m_boxDebugCol = {1.0f, 0.9f, 0.8f, 1.0f};
-
 
     public:
 

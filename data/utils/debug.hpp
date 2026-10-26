@@ -56,7 +56,7 @@ namespace Engine{
 
             DebugLine();
             ~DebugLine();
-            void draw(std::initializer_list<Vertex> points);
+            void draw(std::vector<Vertex> points);
 
         };
     }

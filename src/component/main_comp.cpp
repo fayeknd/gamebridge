@@ -23,6 +23,7 @@ using namespace Engine::Debug;
 using namespace Engine::Debug;
 
 Entity* square;
+Entity* square2; 
 Entity* cam;
 Entity* teenySquare;
 Rigidbody* rb;
@@ -34,22 +35,32 @@ void MainComponent::init() {
 
     // create entity and add component
     square = Entity::create("Test Square").get(); 
+    square2 = Entity::create("Test Square 2").get();
+
     auto box = square->addComponent<BoundingBox>();
     auto renderer = square->addComponent<IRenderable>();
     rb = square->addComponent<Rigidbody>();
     rb->m_mass = 1000.f;
     
-    box->m_max += {0.1f};
-    box->m_min -= {0.1f};
-    box->collider = std::shared_ptr<Collider>(new Collider(ColliderShape::Sphere));
+    //box->collider->m_max += {0.1f};
+    //box->collider->m_min -= {0.1f};
+    box->collider = std::shared_ptr<Collider>(new Collider(ColliderShape::Box));
 
-    square->transform.addPosition(1.1f);
-    square->transform.addScaleY(.3f);
+    auto box2 = square2->addComponent<BoundingBox>();
+    auto renderer2 = square2->addComponent<IRenderable>();
+    box2->collider = std::shared_ptr<Collider>(new Collider(ColliderShape::Sphere));
+
+
+    square->transform.addPosition(2.1f);
 
     // add some basic data to the renderer
     renderer->m_mesh = Mesh::primitive(Primitive::Cube);
     renderer->m_material->setAlbedoTx(Texture2D::createTextureFromPath("stuff=>textures/me trying to flirt.png"));
     renderer->m_material->m_data.m_albedoFac.y = 0.4f;
+
+    renderer2->m_mesh = Mesh::primitive(Primitive::Cube);
+    renderer2->m_material->setAlbedoTx(Texture2D::createTextureFromPath("stuff=>textures/me trying to flirt.png"));
+    //renderer2->m_material->m_data.m_albedoFac.y = 0.4f;
 
 
     // create the camera entity
@@ -70,7 +81,7 @@ void MainComponent::init() {
 }
 
 void MainComponent::update(double delta) {
-    square->transform.setScaleX((sin(Time::sinceStartup()) / 10.0f) + 1.0f);
+    //square->transform.setScaleX((sin(Time::sinceStartup()) / 10.0f) + 1.0f);
 
     if (Input::getActionDown(Key::F1)) {
         DebugUI::get().m_drawDebugger = !DebugUI::get().m_drawDebugger;
@@ -136,8 +147,8 @@ void MainComponent::lateUpdate(double delta) {
 }
 
 void MainComponent::physicsUpdate(double delta) {
-    rb->addForce(fm::vec3(0, -1, 0), Rigidbody::ForceMode::Impulse); // just testing
-    Logging::Logger::get().logInfo("Velocity: {}", rb->getVelocity());
+    //rb->addForce(fm::vec3(0, -1, 0), Rigidbody::ForceMode::Impulse); // just testing
+    //Logging::Logger::get().logInfo("Velocity: {}", rb->getVelocity());
 }
 
 void MainComponent::onDestroy() {

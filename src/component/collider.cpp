@@ -1,6 +1,8 @@
 #include <component/collider.hpp>
+#include <debug.hpp>
 
 using namespace Engine;
+using namespace Engine::Debug;
 
 // :face_with_raised_eyebrow:       -faye
 
@@ -131,4 +133,119 @@ bool Collider::CheckSphereBoxIntersection(Collider& a, Collider& b)
 
     // returns a intersection if the distance between the box and the sphere is less than the sphere's radius
     return distSq <= radiusSq;
+}
+
+void Collider::draw(fm::vec3 pos, fm::vec3 scale) {
+
+    static DebugLine line;
+    fm::vec3 globalPos = pos;
+    fm::vec3 entityScale = scale;
+    
+    switch (m_shape) {
+        case (ColliderShape::Box) : {
+            fm::vec3 min = (m_min * entityScale) + globalPos;
+            fm::vec3 max = (m_max * entityScale) + globalPos;
+            _drawBox(min, max, line);
+            break;
+        }
+        case (ColliderShape::Sphere) : {
+
+            fm::vec3 globalCenter = (center * entityScale) + globalPos;
+            fm::vec3 scaledRadius = fm::vec3(radius) * entityScale;
+
+            _drawSphere(globalCenter, scaledRadius, line);
+            break;
+        }
+    }
+}
+
+void Collider::_drawBox(fm::vec3 min, fm::vec3 max, Debug::DebugLine& line) {
+    fm::vec3 v0 = min;
+    fm::vec3 v1 = fm::vec3(max.x, min.y, min.z);
+    fm::vec3 v2 = fm::vec3(max.x, max.y, min.z);
+    fm::vec3 v3 = fm::vec3(min.x, max.y, min.z);
+
+    fm::vec3 v4 = fm::vec3(min.x, min.y, max.z);
+    fm::vec3 v5 = fm::vec3(max.x, min.y, max.z);
+    fm::vec3 v6 = max;
+    fm::vec3 v7 = fm::vec(min.x, max.y, max.z);
+    
+    line.draw({
+        Point(v0, m_drawCol),
+        Point(v1, m_drawCol),
+        Point(v2, m_drawCol),
+        Point(v3, m_drawCol),
+        Point(v0, m_drawCol),
+        Point(v4, m_drawCol),
+        Point(v5, m_drawCol),
+        Point(v1, m_drawCol),
+        Point(v5, m_drawCol),
+        Point(v6, m_drawCol),
+        Point(v2, m_drawCol),
+        Point(v6, m_drawCol),
+        Point(v7, m_drawCol),
+        Point(v3, m_drawCol),
+        Point(v7, m_drawCol),
+        Point(v4, m_drawCol),
+    });
+}
+
+void Collider::_drawSphere(fm::vec3 center, fm::vec3 scaledRadius, Debug::DebugLine &line) {
+    
+    // how many segments each circle has
+    const int segments = 48;
+    // how big is the angle for each step through the circle?
+    const float angleStep = 2.0f * fm::PI / static_cast<float>(segments);
+    
+    // XZ plane
+    std::vector<Point> xzPoints;
+    xzPoints.reserve(segments + 1);
+
+    for (int i = 0; i <= segments; ++i) {
+
+        float angle = i * angleStep;
+        // this same math can be used to calculate directional vectors i believe. fun fact
+        fm::vec3 pos(
+            center.x + std::cos(angle) * scaledRadius.x,
+            center.y,
+            center.z + std::sin(angle) * scaledRadius.z
+        );
+        xzPoints.push_back(Point(pos, m_drawCol));
+    }
+
+    line.draw(xzPoints); // draw ring 1
+
+    // XY plane
+    std::vector<Point> xyPoints;
+    xyPoints.reserve(segments + 1);
+
+    for (int i = 0; i <= segments; ++i) {
+        
+        float angle = i * angleStep;
+        
+        fm::vec3 pos(
+            center.x + std::cos(angle) * scaledRadius.x,
+            center.y + std::sin(angle) * scaledRadius.y,
+            center.z
+        );
+        xyPoints.push_back(Point(pos, m_drawCol));
+    }
+
+    line.draw(xyPoints); // draw ring 2
+
+    // YZ plane
+    std::vector<Point> yzPoints;
+    yzPoints.reserve(segments + 1);
+
+    for (int i = 0; i <= segments; ++i) {
+
+        float angle = i * angleStep;
+        fm::vec3 pos(
+            center.x,
+            center.y + std::cos(angle) * scaledRadius.y,
+            center.z + std::sin(angle) * scaledRadius.z
+        );
+        yzPoints.push_back(Point(pos, m_drawCol));
+    }
+    line.draw(yzPoints); // draw ring 3
 }

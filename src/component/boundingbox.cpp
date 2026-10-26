@@ -41,56 +41,7 @@ void BoundingBox::onDestroy() {
 void BoundingBox::draw() {
     if (!entity.isEnabled() || !m_renderBounds || !DebugUI::get().m_drawDebugTools) return;
 
-    static DebugLine line;
-    fm::vec3 globalPos = entity.transform.getGlobalPosition();
-    fm::vec3 entityScale = entity.transform.getGlobalScale();
-
-    switch (this->collider->m_shape) {
-        case (ColliderShape::Box) : {
-            m_min = (this->collider->m_min * entityScale) + globalPos;
-            m_max = (this->collider->m_max * entityScale) + globalPos;
-            break;
-        }
-        case (ColliderShape::Sphere) : {
-
-            fm::vec3 globalCenter = (this->collider->center * entityScale) + globalPos;
-            
-            fm::vec3 radius = fm::vec3(this->collider->radius) * entityScale;
-
-            m_min = globalCenter - radius;
-            m_max = globalCenter + radius;
-            break;
-        }
-    }
-
-    fm::vec3 v0 = m_min;
-    fm::vec3 v1 = fm::vec3(m_max.x, m_min.y, m_min.z);
-    fm::vec3 v2 = fm::vec3(m_max.x, m_max.y, m_min.z);
-    fm::vec3 v3 = fm::vec3(m_min.x, m_max.y, m_min.z);
-
-    fm::vec3 v4 = fm::vec3(m_min.x, m_min.y, m_max.z);
-    fm::vec3 v5 = fm::vec3(m_max.x, m_min.y, m_max.z);
-    fm::vec3 v6 = m_max;
-    fm::vec3 v7 = fm::vec(m_min.x, m_max.y, m_max.z);
-    
-    line.draw({
-        Point(v0, m_boxDebugCol),
-        Point(v1, m_boxDebugCol),
-        Point(v2, m_boxDebugCol),
-        Point(v3, m_boxDebugCol),
-        Point(v0, m_boxDebugCol),
-        Point(v4, m_boxDebugCol),
-        Point(v5, m_boxDebugCol),
-        Point(v1, m_boxDebugCol),
-        Point(v5, m_boxDebugCol),
-        Point(v6, m_boxDebugCol),
-        Point(v2, m_boxDebugCol),
-        Point(v6, m_boxDebugCol),
-        Point(v7, m_boxDebugCol),
-        Point(v3, m_boxDebugCol),
-        Point(v7, m_boxDebugCol),
-        Point(v4, m_boxDebugCol),
-    });
+    this->collider->draw(entity.transform.getGlobalPosition(), entity.transform.getGlobalScale());
 }
 
 bool BoundingBox::checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit) {

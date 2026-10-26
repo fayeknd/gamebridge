@@ -260,7 +260,7 @@ DebugLine::~DebugLine() {
 }
 
 // Accepts any number of points using an initializer list: DrawLines(mvp, color, {a, b, c})
-void DebugLine::draw(std::initializer_list<Engine::Vertex> points) {
+void DebugLine::draw(std::vector<Engine::Vertex> points) {
     if (!m_program || !DebugUI::get().m_drawDebugTools) return;
     m_renderData.useRenderData();
 
@@ -285,7 +285,7 @@ void DebugLine::draw(std::initializer_list<Engine::Vertex> points) {
     // upload the points dynamically.
     // this is a debug tool, so it's not performant.
     // we can just upload the data every frame.
-    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(Vertex), points.begin(), GL_STREAM_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(Vertex), points.data(), GL_STREAM_DRAW);
     glDrawArrays(GL_LINE_STRIP, 0, static_cast<GLsizei>(points.size()));
 
     glBindVertexArray(0);
