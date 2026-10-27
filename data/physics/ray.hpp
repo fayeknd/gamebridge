@@ -8,7 +8,7 @@ namespace Engine {
     constexpr float physics_defaultRayDistance = std::numeric_limits<float>::max();
 
     // cheeky forward declaration
-    class BoundingBox;
+    class Collider;
     class Entity;
 
     namespace Physics {
@@ -28,7 +28,7 @@ namespace Engine {
         struct RaycastHit {
             RaycastHitInfo m_hitInfo = {};
             Entity* m_hitEntity      = nullptr; // c++ doesn't auto initialise variables, so we should do it
-            BoundingBox* m_hitBox    = nullptr; // so we don't have to needlessly do getComponent<BoundingBox>
+            Engine::Collider* m_hitBox    = nullptr; // so we don't have to needlessly do getComponent<BoundingBox>
 
             RaycastHit() = default;
 

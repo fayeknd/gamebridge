@@ -19,6 +19,7 @@
 #include <physics/rigidbody.hpp>
 
 using namespace Engine;
+using namespace Physics;
 using namespace Engine::Debug;
 using namespace Engine::Debug;
 
@@ -36,19 +37,14 @@ void MainComponent::init() {
     // create entity and add component
     square = Entity::create("Test Square").get(); 
     square2 = Entity::create("Test Square 2").get();
-
-    auto box = square->addComponent<BoundingBox>();
+    
+    auto box = square->addComponent<Collider>(ColliderShape::Box);
     auto renderer = square->addComponent<IRenderable>();
     
-    //box->collider->m_max += {0.1f};
-    //box->collider->m_min -= {0.1f};
-    box->collider = std::shared_ptr<Collider>(new Collider(ColliderShape::Box));
 
-    auto box2 = square2->addComponent<BoundingBox>();
+
+    auto box2 = square2->addComponent<Collider>(ColliderShape::Sphere);
     auto renderer2 = square2->addComponent<IRenderable>();
-    box2->collider = std::shared_ptr<Collider>(new Collider(ColliderShape::Sphere));
-    rb = square->addComponent<Rigidbody>();
-    rb->m_mass = 1000.f;
 
 
     square->transform.addPosition(2.1f);
