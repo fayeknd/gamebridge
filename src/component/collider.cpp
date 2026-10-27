@@ -140,59 +140,57 @@ bool Collider::CheckSphereBoxIntersection(Collider& a, Collider& b)
 void Collider::draw() {
 
     static DebugLine line;
-    fm::vec3 globalPos = entity.transform.getGlobalPosition();
-    fm::vec3 entityScale = entity.transform.getScale();
     
+    fm::mat4 model = entity.getRealMatrix();
+
     switch (m_shape) {
         case (ColliderShape::Box) : {
-            fm::vec3 min = (m_min * entityScale) + globalPos;
-            fm::vec3 max = (m_max * entityScale) + globalPos;
-            _drawBox(min, max, line);
+            _drawBox(m_min, m_max, model, line);
             break;
         }
         case (ColliderShape::Sphere) : {
-
-            fm::vec3 globalCenter = (center * entityScale) + globalPos;
-            fm::vec3 scaledRadius = fm::vec3(radius) * entityScale;
-
-            _drawSphere(globalCenter, scaledRadius, line);
+            _drawSphere(center, radius, model, line);
             break;
         }
     }
 }
 
-void Collider::_drawBox(fm::vec3 min, fm::vec3 max, Debug::DebugLine& line) {
-    fm::vec3 v0 = min;
-    fm::vec3 v1 = fm::vec3(max.x, min.y, min.z);
-    fm::vec3 v2 = fm::vec3(max.x, max.y, min.z);
-    fm::vec3 v3 = fm::vec3(min.x, max.y, min.z);
+void Collider::_drawBox(fm::vec3 min, fm::vec3 max, fm::mat4 model, Debug::DebugLine& line) {
 
-    fm::vec3 v4 = fm::vec3(min.x, min.y, max.z);
-    fm::vec3 v5 = fm::vec3(max.x, min.y, max.z);
-    fm::vec3 v6 = max;
-    fm::vec3 v7 = fm::vec(min.x, max.y, max.z);
-    
+    std::vector<Point> points;
+
+    points.push_back({min, m_drawCol});
+    points.push_back({fm::vec3(max.x, min.y, min.z), m_drawCol});
+    points.push_back({fm::vec3(max.x, max.y, min.z), m_drawCol});
+    points.push_back({fm::vec3(min.x, max.y, min.z), m_drawCol});
+
+    points.push_back({fm::vec3(min.x, min.y, max.z), m_drawCol});
+    points.push_back({fm::vec3(max.x, min.y, max.z), m_drawCol});
+    points.push_back({max, m_drawCol});
+    points.push_back({fm::vec3(min.x, max.y, max.z), m_drawCol});
+
+
     line.draw({
-        Point(v0, m_drawCol),
-        Point(v1, m_drawCol),
-        Point(v2, m_drawCol),
-        Point(v3, m_drawCol),
-        Point(v0, m_drawCol),
-        Point(v4, m_drawCol),
-        Point(v5, m_drawCol),
-        Point(v1, m_drawCol),
-        Point(v5, m_drawCol),
-        Point(v6, m_drawCol),
-        Point(v2, m_drawCol),
-        Point(v6, m_drawCol),
-        Point(v7, m_drawCol),
-        Point(v3, m_drawCol),
-        Point(v7, m_drawCol),
-        Point(v4, m_drawCol),
-    });
+        points[0],
+        points[1],
+        points[2],
+        points[3],
+        points[0],
+        points[4],
+        points[5],
+        points[1],
+        points[5],
+        points[6],
+        points[2],
+        points[6],
+        points[7],
+        points[3],
+        points[7],
+        points[4]
+    }, model);
 }
 
-void Collider::_drawSphere(fm::vec3 center, fm::vec3 scaledRadius, Debug::DebugLine &line) {
+void Collider::_drawSphere(fm::vec3 center, fm::vec3 scaledRadius, fm::mat4 model, Debug::DebugLine &line) {
     
     // how many segments each circle has
     const int segments = 48;
@@ -215,7 +213,7 @@ void Collider::_drawSphere(fm::vec3 center, fm::vec3 scaledRadius, Debug::DebugL
         xzPoints.push_back(Point(pos, m_drawCol));
     }
 
-    line.draw(xzPoints); // draw ring 1
+    line.draw(xzPoints, model); // draw ring 1
 
     // XY plane
     std::vector<Point> xyPoints;
@@ -233,7 +231,7 @@ void Collider::_drawSphere(fm::vec3 center, fm::vec3 scaledRadius, Debug::DebugL
         xyPoints.push_back(Point(pos, m_drawCol));
     }
 
-    line.draw(xyPoints); // draw ring 2
+    line.draw(xyPoints, model); // draw ring 2
 
     // YZ plane
     std::vector<Point> yzPoints;
@@ -249,7 +247,7 @@ void Collider::_drawSphere(fm::vec3 center, fm::vec3 scaledRadius, Debug::DebugL
         );
         yzPoints.push_back(Point(pos, m_drawCol));
     }
-    line.draw(yzPoints); // draw ring 3
+    line.draw(yzPoints, model); // draw ring 3
 }
 
 ColliderID Collider::getColliderID() {

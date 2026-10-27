@@ -297,6 +297,8 @@ void DebugLine::draw(std::vector<Engine::Vertex> points, fm::mat4 model) {
 
     glBindVertexArray(0);
 }
+
+
 /*
 using namespace Engine;
 
