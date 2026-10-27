@@ -41,6 +41,7 @@ void MainComponent::init() {
     auto renderer = square->addComponent<IRenderable>();
     rb = square->addComponent<Rigidbody>();
     rb->m_mass = 1000.f;
+    //square->m_interpolatePhysics = false;
     
     //box->collider->m_max += {0.1f};
     //box->collider->m_min -= {0.1f};

@@ -33,6 +33,7 @@ namespace Engine{
             void drawImGuiInterface_framebegin();
             void drawImGuiInterface_frameend();
             void drawDebugger();
+            void drawPropertyEditor();
             void _createImGuiContext(GLFWwindow* wnd);
             void _destroyImGuiContext();
 
