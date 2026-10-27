@@ -12,6 +12,8 @@ namespace Engine {
     constexpr GLuint texture_defaultFormat    = GL_RGBA;
     constexpr GLuint texture_defaultWrapping  = GL_REPEAT;
 
+    class Framebuffer;
+
     class Texture2D : public ICachable<Texture2D> {
     protected:
 
@@ -78,7 +80,7 @@ namespace Engine {
         void _initTextureWithSTBIData(bytes& data, bool mipmap = true, GLuint format = texture_defaultFormat, GLuint filtering = texture_defaultFiltering, GLuint internalFormat = texture_defaultFormat, GLuint wrapping = texture_defaultWrapping, GLuint type = GL_TEXTURE_2D);
 
         // generate a texture from all the values on this texture (+data).
-        void _genTexture(bytes& data); 
+        void _genTexture(bytes* data); 
 
         // add / remove this texture from the global texture queue
         void _queue();
@@ -95,6 +97,9 @@ namespace Engine {
         // instance. trust the programmer. maybe we want differently
         // filtered textures.
         static std::shared_ptr<Texture2D> createTextureFromPath(std::filesystem::path path, bool flipY = true, bool mipmap = true, GLuint format = texture_defaultFormat, GLuint filtering = texture_defaultFiltering, GLuint internalFormat = texture_defaultFormat, GLuint wrapping = texture_defaultWrapping, GLuint type = GL_TEXTURE_2D);
+
+        // create a render texture
+        static std::shared_ptr<Texture2D> createRenderTexture(fm::uvec2 size = fm::uvec2::zero(), GLuint filtering = texture_defaultFiltering, GLuint wrapping = texture_defaultWrapping);
 
         // idk why you would want to check this but sure have a getter
         const bool isGenerated() const { return m_txGenerated; }
@@ -133,7 +138,17 @@ namespace Engine {
         // is this texture in the texture queue?
         const bool isInQueue() const { return m_inQueue; }
 
-        const GLuint getUnitID() const { return m_unitID; }
+        const GLuint getUnitID() const { 
+            return m_unitID;
+        }
+
+        const fm::uvec2 getSize() const { return m_txSize; }
+
+        // set the wrapping mode 
+        void setWrapping(GLuint wrapping);
+
+        // set the filtering mode
+        void setFiltering(GLuint filtering);
 
     };
 }

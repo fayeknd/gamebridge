@@ -260,7 +260,7 @@ DebugLine::~DebugLine() {
 }
 
 // Accepts any number of points using an initializer list: DrawLines(mvp, color, {a, b, c})
-void DebugLine::draw(std::vector<Engine::Vertex> points) {
+void DebugLine::draw(std::vector<Engine::Vertex> points, fm::mat4 model) {
     if (!m_program || !DebugUI::get().m_drawDebugTools) return;
     m_renderData.useRenderData();
 
@@ -273,7 +273,7 @@ void DebugLine::draw(std::vector<Engine::Vertex> points) {
     // if main camera exists
     if (Camera::activeCamera()) {
         // vpMat is the main camera projection * view
-        vpMat = Camera::activeCamera()->getProjectionMat() * Camera::activeCamera()->getViewMat();
+        vpMat = Camera::activeCamera()->getProjectionMat() * Camera::activeCamera()->getViewMat() * model;
     }
     m_program->setUniform(shader_ViewProjectionMatrix, vpMat);
 

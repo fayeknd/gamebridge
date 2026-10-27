@@ -4,13 +4,11 @@
 
 using namespace Engine;
 
-std::shared_ptr<Mesh> Primitives::getPrimitive(Primitive p) {
+_MeshPtr Primitives::getPrimitive(Primitive p) {
 
     switch (p) {
-        case Primitive::Cube: {
-            return cube();
-            break;
-        }
+        case Primitive::Cube: return cube();  break;
+        default:              return plane(); break;
     }
 
     // key was not valid
@@ -18,12 +16,35 @@ std::shared_ptr<Mesh> Primitives::getPrimitive(Primitive p) {
     return nullptr;
 }
 
-std::shared_ptr<Mesh> Primitives::cube() {
-    static std::shared_ptr<Mesh> cube = _generateCubeImpl();
+_MeshPtr Primitives::plane() {
+    static _MeshPtr plane = _generatePlaneImpl();
+    return plane;
+}
+
+_MeshPtr Primitives::cube() {
+    static _MeshPtr cube = _generateCubeImpl();
     return cube;
 }
 
-std::shared_ptr<Mesh> Primitives::_generateCubeImpl() {
+_MeshPtr Primitives::_generatePlaneImpl() {
+    std::vector<Vertex> vertices;
+    std::vector<GLushort> indices;
+    vertices = {
+        // Position                Colour       UV              Normal
+        {fm::vec3(-1.0f, 1.0f, 0), fm::vec4(1), fm::vec2(0, 1), fm::vec3::zAxis()},
+        {fm::vec3( 1.0f, 1.0f, 0), fm::vec4(1), fm::vec2(1, 1), fm::vec3::zAxis()},
+        {fm::vec3( 1.0f,-1.0f, 0), fm::vec4(1), fm::vec2(1, 0), fm::vec3::zAxis()},
+        {fm::vec3(-1.0f,-1.0f, 0), fm::vec4(1), fm::vec2(0, 0), fm::vec3::zAxis()},
+    };
+
+    indices = {
+        0, 1, 3,
+        1, 2, 3 
+    };
+    return Mesh::createMeshWithData(vertices, indices);
+}
+
+_MeshPtr Primitives::_generateCubeImpl() {
 
 
     // making 6 points and creating face data with indices works,

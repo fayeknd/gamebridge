@@ -51,6 +51,12 @@ void MainComponent::init() {
     box2->collider = std::shared_ptr<Collider>(new Collider(ColliderShape::Sphere));
 
 
+        // create the camera entity
+    cam = Entity::create("Camera").get();
+    // add a camera component
+    auto camComponent = cam->addComponent<Camera>();
+
+
     square->transform.addPosition(2.1f);
     square2->transform.addPosition({-1.0f, 0.0f, 0.0f});
 
@@ -59,20 +65,17 @@ void MainComponent::init() {
     renderer->m_material->setAlbedoTx(Texture2D::createTextureFromPath("stuff=>textures/me trying to flirt.png"));
     renderer->m_material->m_data.m_albedoFac.w = 0.4f;
     renderer->m_material->m_data.m_hasTransparency = true;
-
+ 
     renderer2->m_mesh = Mesh::primitive(Primitive::Cube);
-    renderer2->m_material->setAlbedoTx(Texture2D::createTextureFromPath("stuff=>textures/me trying to flirt.png"));
+    renderer2->m_material->setAlbedoTx(Camera::activeCamera()->m_framebuffer->m_renderTexture);
     renderer2->m_material->m_data.m_albedoFac.w = 0.4f;
     renderer2->m_material->m_data.m_hasTransparency = true;
+
+    square->transform.setRotationX(45);
     //renderer2->m_material->m_data.m_albedoFac.y = 0.4f;
 
     //square->setLayer(Layer::create("TestLayer", 1));
     //square->getLayer()->m_ignoreRaycast = true;
-
-    // create the camera entity
-    cam = Entity::create("Camera").get();
-    // add a camera component
-    auto camComponent = cam->addComponent<Camera>();
 
     // push the camera back a bit in the world
     cam->transform.addPositionZ(-5);
@@ -87,7 +90,7 @@ void MainComponent::init() {
 }
 
 void MainComponent::update(double delta) {
-    //square->transform.setScaleX((sin(Time::sinceStartup()) / 10.0f) + 1.0f);
+    square2->transform.addRotation(delta * 10.0f);
 
     if (Input::getActionDown(Key::F1)) {
         DebugUI::get().m_drawDebugger = !DebugUI::get().m_drawDebugger;

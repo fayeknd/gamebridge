@@ -13,7 +13,8 @@ namespace Engine {
 
     // just one currently
     enum Primitive {
-        Cube     = 0x01
+        Cube     = 0x01,
+        Plane    = 0x02
     };
 
     using MeshID = uint16_t;
@@ -54,7 +55,6 @@ namespace Engine {
         ~Mesh();
 
         // create a primitive mesh using an identifier. 
-        // CURRENTLY DOESN'T DO ANYTHING!
         static std::shared_ptr<Mesh> primitive(Primitive p);
 
         // create a mesh with any valid mesh data.

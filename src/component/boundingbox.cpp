@@ -47,7 +47,7 @@ void BoundingBox::onDestroy() {
 
 void BoundingBox::draw() {
     if (!DebugUI::get().m_drawDebugTools) return;
-    this->collider->draw(entity.transform.getGlobalPosition(), entity.transform.getGlobalScale());
+    this->collider->draw(entity.getRealMatrix());
 }
 
 bool BoundingBox::checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit) {
