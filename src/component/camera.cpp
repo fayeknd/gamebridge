@@ -14,8 +14,6 @@ void Camera::init() {
     // add this camera to the queue after 
     // the class is fully initialised.
     s_cameraQueue.push(weak_from_this());
-    m_framebuffer = Framebuffer::create();
-    m_framebuffer->m_camera = this;
 }
 
 // destructor

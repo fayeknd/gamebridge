@@ -56,7 +56,7 @@ namespace Engine{
 
             DebugLine();
             ~DebugLine();
-            void draw(std::vector<Vertex> points, fm::mat4 model = fm::mat4::identity());
+            void draw(std::vector<Vertex> points);
 
         };
     }

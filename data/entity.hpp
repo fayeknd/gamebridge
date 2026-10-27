@@ -132,18 +132,6 @@ namespace Engine {
 
     public:
 
-        // get the real transform matrix taking physics interpolation into account
-        fm::mat4 getRealMatrix();
-
-        // did we perform a physics calculation this frame?
-        bool m_didPhysicsThisTick = true;
-
-        // the transform matrix before any physics calculations.
-        fm::mat4 m_physicsGlobalMatrixCache = fm::mat4::identity();
-
-        // should we interpolate physics?
-        bool m_interpolatePhysics = true;
-
         // get layer stuff
         const LayerID getLayerID() const { return m_layer; } 
         const Layer* getLayer() const { return LayerRegistry::get().getLayerViaID(m_layer); };

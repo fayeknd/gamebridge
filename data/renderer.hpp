@@ -89,12 +89,6 @@ namespace Engine {
         // if a bucket has no data, sorting it is a waste of resources.
         std::array<bool, renderer_maxLayers> m_bucketHasData = { false };
 
-        std::shared_ptr<Mesh> m_mainFramebufferMesh;
-        std::shared_ptr<Material> m_mainFramebufferMaterial;
-
-        // draws the main framebuffer view
-        void _drawView(Framebuffer* fb);
-        
     public:
 
     // TODO : put this somewhere better (or dont)

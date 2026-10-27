@@ -1,6 +1,5 @@
 #include <entity.hpp>
 #include <algorithm>
-#include <physics/physics.hpp>
 
 using namespace Engine;
 
@@ -280,7 +279,7 @@ void Entity::_updatePhysicsComponents(double delta) {
 
     // loop through every component and call update.
     for (const auto& component : m_componentMap) {
-        component.second->physicsUpdateImpl(delta);
+        component.second->physicsUpdate(delta);
     }
     // update this entity's enabled state.
     // does nothing if the enabled state isnt queued to change.
@@ -333,29 +332,9 @@ void Entity::_transformFlagReset() {
     }
 }
 
-// get the real global matrix, taking physics into account
-fm::mat4 Entity::getRealMatrix() {
-    
-    // the global matrix itself
-    fm::mat4 global = transform.getGlobalMatrix();
-    // if we didn't do physics this frame, return global as-is.
-    if (!m_didPhysicsThisTick || !m_interpolatePhysics) return global;
-
-    // we did physics this frame, so mix the matrices.
-    // calculate the percentage of how long we've waited
-    // for the next physics tick.
-    float percent = (PhysicsImpl::physicsTick.count() / (1.0f / static_cast<float>(PhysicsImpl::tps)));
-    // mix the pre physics update matrix with the current matrix.
-    return m_physicsGlobalMatrixCache.mixed(global, percent);
-};
-
 void Entity::_pollPhysicsBehaviours(double delta) {
     // update all the components' physics() functions. 
     for (const auto& e : Entity::s_entityList) {
-        // cache the matrix before we performed any physics calculations
-        e.second->m_physicsGlobalMatrixCache = e.second->transform.getGlobalMatrix();
-        // set this to false now, it only becomes true if we do anything.
-        e.second->m_didPhysicsThisTick = false;
         e.second->_updatePhysicsComponents(delta);
     }
 }

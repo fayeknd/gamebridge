@@ -458,10 +458,10 @@ void ShaderProgram::setUniform(const std::string& uniformLoc, const Material* un
     setUniform(uniformLoc + materialUniform_hasEmission,  uniform->m_data.m_hasEmissionTx);
     setUniform(uniformLoc + materialUniform_hasTransp,    uniform->m_data.m_hasTransparency);
 
-    setUniform(materialUniform_albedoTx,     uniform->getAlbedoTx());
-    setUniform(materialUniform_normalTx,     uniform->getNormalTx());
-    setUniform(materialUniform_metallicTx,   uniform->getMetallicTx());
-    setUniform(materialUniform_emissionTx,   uniform->getEmissionTx());
+    setUniform(uniformLoc + materialUniform_albedoTx,     uniform->getAlbedoTx());
+    setUniform(uniformLoc + materialUniform_normalTx,     uniform->getNormalTx());
+    setUniform(uniformLoc + materialUniform_metallicTx,   uniform->getMetallicTx());
+    setUniform(uniformLoc + materialUniform_emissionTx,   uniform->getEmissionTx());
 
 }
 void ShaderProgram::setUniform(const std::string& uniformLoc, const std::shared_ptr<Material> uniform) {

@@ -3,7 +3,6 @@
 #include <texture.hpp>
 #include <resources.hpp>
 #include <fstream>
-#include <renderer.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
@@ -13,25 +12,6 @@ using namespace Engine;
 std::unordered_map<GLuint, CacheID>& Texture2D::txIDToIDMap() {
     static std::unordered_map<GLuint, CacheID> map;
     return map;
-}
-
-std::shared_ptr<Texture2D> Texture2D::createRenderTexture(fm::uvec2 size, GLuint filtering, GLuint wrapping) {
-    
-    std::shared_ptr<Texture2D> texture = std::shared_ptr<Texture2D>(new Texture2D);
-    // set the texture params
-    texture->m_txType         = GL_TEXTURE_2D;
-    texture->m_wrapping       = wrapping;
-    texture->m_filtering      = filtering;
-    texture->m_format         = GL_RGBA;
-    texture->m_internalFormat = GL_RGBA8;
-    texture->m_txSize         = (size != fm::uvec2::zero()) ? size : Renderer::get().getWndSize();
-    texture->m_useMipmapping  = false;
-    texture->m_channelCount   = 4;
-
-    // gen the texture with no data (the framebuffer writes to it)
-    texture->_genTexture(nullptr); 
-
-    return texture;
 }
 
 // use stb_image to convert our raw texture bytes into 
@@ -137,13 +117,13 @@ void Texture2D::_initTextureWithSTBIData(bytes &data, bool mipmap, GLuint format
     m_useMipmapping     = mipmap;
 
     // generate the texture.
-    _genTexture(&data);
+    _genTexture(data);
 
     // register this texture with the ObjectRegistry
     _register();
 }
 
-void Texture2D::_genTexture(bytes* data) {
+void Texture2D::_genTexture(bytes &data) {
 
     // TODO : incorporate pixel buffer objects
     // for videos later. check if the image is static.
@@ -183,13 +163,12 @@ void Texture2D::_genTexture(bytes* data) {
     glTexParameteri(m_txType, GL_TEXTURE_WRAP_T, m_wrapping);
     glTexParameteri(m_txType, GL_TEXTURE_MIN_FILTER, mini_filter);
     glTexParameteri(m_txType, GL_TEXTURE_MAG_FILTER, m_filtering);
-    
-    //                                                                                         // data might not be set, account for that
-    glTexImage2D(m_txType, 0, m_internalFormat, m_txSize.x, m_txSize.y, 0, m_format, GL_UNSIGNED_BYTE, (data != nullptr) ? data->data() : NULL);
+
+    // assign the texture data
+    glTexImage2D(m_txType, 0, m_format, m_txSize.x, m_txSize.y, 0, m_format, GL_UNSIGNED_BYTE, data.data());
     if (m_useMipmapping) {
         glGenerateMipmap(m_txType);
     }
-    // assign the texture data
 
     // unbind this texture.
     glBindTexture(m_txType, 0);
@@ -248,10 +227,9 @@ void Texture2D::bindTexture() {
     if (m_inQueue) {
         // set active texture to this
         GLuint unit = GL_TEXTURE0 + m_unitID;
-        glActiveTexture(unit);
-        GLContext::get().glState.m_activeTextureUnit = unit;
-        
-        glBindTexture(m_txType, m_txID); 
+        if (GLContext::get().glState.m_activeTextureUnit != unit) {
+            glActiveTexture(unit);
+        }
         return;
     }
     auto& txQueue = GLContext::get().glState.m_txQueue; 
@@ -281,30 +259,4 @@ Texture2D::~Texture2D() {
     if (m_txGenerated) {
         glDeleteTextures(1, &m_txID);
     }
-}
-
-// set the wrapping mode 
-void Texture2D::setWrapping(GLuint wrapping) {
-    bindTexture();
-    m_wrapping = wrapping;
-    glTexParameteri(m_txType, GL_TEXTURE_WRAP_S, m_wrapping);
-    glTexParameteri(m_txType, GL_TEXTURE_WRAP_T, m_wrapping);
-}
-
-// set the filtering mode
-void Texture2D::setFiltering(GLuint filtering) {
-    bindTexture();
-
-    m_filtering = filtering;
-
-    GLuint mini_filter; 
-    if (m_useMipmapping) {
-        mini_filter = (m_filtering == GL_NEAREST) ? GL_NEAREST_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR;
-    }
-    else {
-        mini_filter = m_filtering;
-    }
-
-    glTexParameteri(m_txType, GL_TEXTURE_MIN_FILTER, mini_filter);
-    glTexParameteri(m_txType, GL_TEXTURE_MAG_FILTER, m_filtering);
 }

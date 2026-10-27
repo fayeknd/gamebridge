@@ -40,7 +40,8 @@ RaycastHit Physics::Raycast(Ray ray, LayerMask mask, float distance) {
     return returnHit;
 }
 
-void PhysicsImpl::pollPhysics() {
+void PhysicsImpl::pollPhysics()
+{
     // begin the timer if it hasn't started
     if (!physicsTick.isCounting()) physicsTick.start();
     double d = 1.0 / static_cast<double>(tps);
@@ -49,6 +50,6 @@ void PhysicsImpl::pollPhysics() {
     if (physicsTick.count() >= d) {
         // yes, push through physics poll and reset the timer
         Entity::_pollPhysicsBehaviours(d);
-        physicsTick.reset();
+        physicsTick.reset(); 
     }
 }

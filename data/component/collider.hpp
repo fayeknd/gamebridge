@@ -31,8 +31,8 @@ namespace Engine
             static bool CheckSphereIntersection(Collider& a, Collider& b);
             static bool CheckSphereBoxIntersection(Collider& a, Collider& b);
 
-            void _drawBox(fm::vec3 min, fm::vec3 max, fm::mat4 model, Debug::DebugLine& line);
-            void _drawSphere(fm::vec3 center, fm::vec3 radiusScaled, fm::mat4 model, Debug::DebugLine& line);
+            void _drawBox(fm::vec3 min, fm::vec3 max, Debug::DebugLine& line);
+            void _drawSphere(fm::vec3 center, fm::vec3 radiusScaled, Debug::DebugLine& line);
 
         public:
 
@@ -52,8 +52,6 @@ namespace Engine
             Collider(const fm::vec3& center, const float& radius);
 
             Collider(ColliderShape shape);
-
-            void draw(fm::mat4 model);
 
             bool IsCollidingWith(Collider& collider);
 

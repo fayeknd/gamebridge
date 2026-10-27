@@ -69,9 +69,6 @@ namespace fm {
         _mat4x4<T> inversed();
         _mat4x4<T>& inverse();
 
-        _mat4x4<T> mixed(_mat4x4<T> mat, float val);
-        _mat4x4<T>& mix(_mat4x4<T> mat, float val);
-
         _mat4x4decomp<T> decompose();
         _vec3<T> extractEuler();
 
@@ -531,23 +528,6 @@ namespace fm {
     template <typename T>
     inline _mat4x4<T>& _mat4x4<T>::inverse() {
         *this = this->inversed();
-        return *this;
-    }
-    template <typename T>
-    inline _mat4x4<T> _mat4x4<T>::mixed(_mat4x4<T> mat, float val) {
-        _mat4x4<T> _ = *this;
-
-        for (size_t i = 0; i < 4; i++) {
-            for (size_t j = 0; j < 4; j++) {
-                // lerp between the two components
-                _.m_data[i][j] = std::lerp(_.m_data[i][j], mat.m_data[i][j], val);
-            }
-        }
-        return _;
-    }
-    template <typename T>
-    inline _mat4x4<T>& _mat4x4<T>::mix(_mat4x4<T> mat, float val) {
-        *this = this->mixed(mat, val);
         return *this;
     }
 
