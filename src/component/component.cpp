@@ -48,3 +48,12 @@ void IComponent::drawImpl(const Layer *layer) {
     uint64_t sortKey = renderer.genSortKey(m_material->m_data.m_hasTransparency, m_material.get(), depth);
     renderer.queueRenderCommand(layer->m_layerID, sortKey, this, _distributeDraw);
 }
+
+void IComponent::physicsUpdateImpl(double delta) {
+    // do our physics update
+    physicsUpdate(delta);
+    if (entity.transform.isDirty()) {
+        // we did do physics this frame.
+        entity.m_didPhysicsThisTick = true;
+    }
+}

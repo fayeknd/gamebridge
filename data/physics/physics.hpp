@@ -13,10 +13,6 @@ namespace Engine {
     // Mhm yes physics
     namespace Physics {
 
-        // Physics tick, 20 ticks per second
-        static inline Timer physicsTick;
-        // Ticks per second
-        static inline uint16_t tps = 20;
         // Shoots a ray from the ray origin in the ray direction and returns a raycasthit
         RaycastHit Raycast(Ray ray, LayerMask layers = LayerMasks::All, float distance = physics_defaultRayDistance);
     };
@@ -28,6 +24,19 @@ namespace Engine {
         static void pollPhysics();
 
         friend class Renderer;
+
+    public:
+
+        // moved here, because static variables in a namespace
+        // will create a new instance for each thing that includes
+        // the file.
+        // fucking. stupid but. whatever. - faye
+
+        // Physics tick, 20 ticks per second
+        static inline Timer physicsTick;
+        // Ticks per second
+        static inline uint16_t tps = 20;
+
     };
 }
 

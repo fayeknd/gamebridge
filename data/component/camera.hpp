@@ -3,6 +3,7 @@
 #include <fm/fmath.hpp>
 #include <gl_context.hpp>
 #include <queue>
+#include <framebuffer.hpp>
 
 namespace Engine {
 
@@ -70,6 +71,8 @@ namespace Engine {
         // if this is the main camera, 
         // unregister it.
         ~Camera();
+
+        std::shared_ptr<Framebuffer> m_framebuffer;
 
         // gl clear colour
         fm::col m_clearCol = fm::col(0, 0, 0, 1);
