@@ -3,17 +3,9 @@
 #include <entity.hpp>
 #include <logger.hpp>
 #include <physics/physics.hpp>
-#include <component/collider.hpp>
-#include <physics/bvhcollision.hpp>
 
 using namespace Engine;
 using namespace Physics;
-
-void Rigidbody::init()
-{
-    collider = entity.getComponent<BoundingBox>()->collider.get();
-    m_bvh.insert(collider);
-}
 
 void Rigidbody::applyGravity(double delta)
 {
@@ -30,8 +22,6 @@ fm::vec3 Rigidbody::getVelocity()
 void Rigidbody::physicsUpdate(double delta)
 {
     addImplicitForce(delta);
-    m_bvh.update(collider->m_bvhNode.get());
-    updateCollisions();
     applyGravity(delta);
     lastPosition = entity.transform.getPosition();
 }
@@ -86,30 +76,4 @@ void Rigidbody::addImplicitForce(double delta)
     m_velocity += acceleration * static_cast<float>(delta);
     entity.transform.addPosition(m_velocity * static_cast<float>(delta));
     m_force = fm::vec3::zero();
-}
-
-void Rigidbody::updateCollisions()
-{
-    std::vector<Collider::CollisionPair> potentialPair;
-
-    for (const auto& pair : potentialPair)
-    {
-        Collider::IntersectionData data = pair.colliderA->IsCollidingWith(*pair.colliderB);
-        if (data.isIntersection)
-        {
-            resolveCollisions(pair.colliderA, pair.colliderB, data);
-        }
-    }
-}
-
-void Rigidbody::resolveCollisions(Collider* colA, Collider* colB, const Collider::IntersectionData& data)
-{
-    entity.transform.addPosition(data.normal * data.penetration);
-
-    float velocityAlongNormal = m_velocity.dot(data.normal);
-
-    if (velocityAlongNormal < 0.f)
-    {
-        m_velocity -= data.normal * velocityAlongNormal;
-    }
 }

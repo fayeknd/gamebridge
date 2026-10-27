@@ -27,7 +27,7 @@ Collider::Collider(ColliderShape shape)
     this->m_shape = shape;
 }
 
-Collider::IntersectionData Collider::IsCollidingWith(Collider& collider)
+bool Collider::IsCollidingWith(Collider& collider)
 {
 
     switch (this->m_shape) {
@@ -60,14 +60,10 @@ Collider::IntersectionData Collider::IsCollidingWith(Collider& collider)
             break;
         }
     }
-
-    IntersectionData nullData;
-    return nullData;
+    return false;
 }
 
-Collider::IntersectionData Collider::CheckBoxIntersection(Collider& a, Collider& b) {
-    IntersectionData data;
-
+bool Collider::CheckBoxIntersection(Collider& a, Collider& b) {
     // easy fucking peasy 
 
     // get the entity global scale
@@ -82,53 +78,12 @@ Collider::IntersectionData Collider::CheckBoxIntersection(Collider& a, Collider&
     fm::vec3 b_max = b.m_max * b_scale;
 
     // calculate intersection in any axis
-    data.isIntersection = (a_min.x <= b_max.x && a_max.x >= b_min.x) &&
-                          (a_min.y <= b_max.y && a_max.y >= b_min.y) &&
-                          (a_min.z <= b_max.z && a_max.z >= b_min.z);
-
-    if (!data.isIntersection)
-        return data;
-
-    float overlapX1 = b_max.x - a_min.x; // How much A overlaps B from the left
-    float overlapX2 = a_max.x - b_min.x; // How much A overlaps B from the right
-    float minOverlapX = std::min(overlapX1, overlapX2);
-
-    float overlapY1 = b_max.y - a_min.y;
-    float overlapY2 = a_max.y - b_min.y;
-    float minOverlapY = std::min(overlapY1, overlapY2);
-
-    float overlapZ1 = b_max.z - a_min.z;
-    float overlapZ2 = a_max.z - b_min.z;
-    float minOverlapZ = std::min(overlapZ1, overlapZ2);
-
-    // Find the absolute smallest overlap axis
-    data.penetration = minOverlapX;
-    data.normal = fm::vec3(1.0f, 0.0f, 0.0f);
-
-    if (minOverlapY < data.penetration) {
-        data.penetration = minOverlapY;
-        data.normal = fm::vec3(0.0f, 1.0f, 0.0f);
-    }
-    if (minOverlapZ < data.penetration) {
-        data.penetration = minOverlapZ;
-        data.normal = fm::vec3(0.0f, 0.0f, 1.0f);
-    }
-
-
-    fm::vec3 centerA = (a_min + a_max) * 0.5f;
-    fm::vec3 centerB = (b_min + b_max) * 0.5f;
-    fm::vec3 dir = centerA - centerB;
-
-    if (dir.dot(data.normal) < 0.0f) {
-        data.normal = data.normal * -1.0f; // Flip normal if facing the wrong fucking way
-    }
-
-    return data;
+    return (a_min.x <= b_max.x && a_max.x >= b_min.x) &&
+           (a_min.y <= b_max.y && a_max.y >= b_min.y) &&
+           (a_min.z <= b_max.z && a_max.z >= b_min.z);
 }
 
-Collider::IntersectionData Collider::CheckSphereIntersection(Collider& a, Collider& b) {
-    IntersectionData data;
-    
+bool Collider::CheckSphereIntersection(Collider& a, Collider& b) {
     // Gets center of sphere A and sphere B accounting for offset
     fm::vec3 centerA = a.center + a.offset;
     fm::vec3 centerB = b.center + b.offset;
@@ -143,18 +98,12 @@ Collider::IntersectionData Collider::CheckSphereIntersection(Collider& a, Collid
     float radiiSum = a.radius + b.radius;
     float radiiSumSq = a.radius * b.radius;
 
-    data.isIntersection = distSq <= radiiSumSq;
-    data.normal = dist / std::sqrt(distSq);
-    data.penetration = radiiSum - std::sqrt(distSq);
-
     // returns an intersection if the distance of the spheres are less than the radius of them
-    return data;
+    return distSq <= radiiSumSq;
 }
 
-Collider::IntersectionData Collider::CheckSphereBoxIntersection(Collider& a, Collider& b)
+bool Collider::CheckSphereBoxIntersection(Collider& a, Collider& b)
 {
-    IntersectionData data;
-
     // A is always = sphere and b is always = box
     if (b.m_shape == ColliderShape::Sphere && a.m_shape == ColliderShape::Box)
     {
@@ -184,24 +133,8 @@ Collider::IntersectionData Collider::CheckSphereBoxIntersection(Collider& a, Col
     // gets the square of the radius of the sphere
     float radiusSq = a.radius * a.radius;
 
-    data.isIntersection = distSq <= radiusSq;
-
-    if (!data.isIntersection) return data;
-
-
-    float distance = std::sqrt(distSq);
-
-    // Handle edge case: Sphere center is strictly inside the box
-    if (distance < 0.0001f) {
-        data.normal = fm::vec3(0.0f, 1.0f, 0.0f); // Default fallback normal
-        data.penetration = a.radius;       // Full radius penetration estimate
-    } else {
-        data.normal = dist / distance;         // Normal pointing out of the box
-        data.penetration = a.radius - distance; // Correct linear penetration
-    }
-
     // returns a intersection if the distance between the box and the sphere is less than the sphere's radius
-    return data;
+    return distSq <= radiusSq;
 }
 
 void Collider::draw() {

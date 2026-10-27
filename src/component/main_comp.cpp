@@ -40,6 +40,8 @@ void MainComponent::init() {
     
     auto box = square->addComponent<Collider>(ColliderShape::Box);
     auto renderer = square->addComponent<IRenderable>();
+    rb = square->addComponent<Rigidbody>();
+    rb->m_mass = 1000.f;
     
 
 

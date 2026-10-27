@@ -27,15 +27,15 @@ namespace Engine
             // this instance's id
             ColliderID m_ColliderID;
         private:
-            static IntersectionData CheckBoxIntersection(Collider& a, Collider& b);
-            static IntersectionData CheckSphereIntersection(Collider& a, Collider& b);
-            static IntersectionData CheckSphereBoxIntersection(Collider& a, Collider& b);
+            static bool CheckBoxIntersection(Collider& a, Collider& b);
+            static bool CheckSphereIntersection(Collider& a, Collider& b);
+            static bool CheckSphereBoxIntersection(Collider& a, Collider& b);
 
             void _drawBox(fm::vec3 min, fm::vec3 max, Debug::DebugLine& line);
             void _drawSphere(fm::vec3 center, fm::vec3 radiusScaled, Debug::DebugLine& line);
 
         public:
-            std::shared_ptr<Physics::BVHNode> m_bvhNode;
+
             fm::vec4 m_drawCol = fm::vec4(0.0f, 0.75f, 1.0f, 1.0f);
 
             ColliderShape m_shape;
