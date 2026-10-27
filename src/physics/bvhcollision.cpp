@@ -21,25 +21,25 @@ void DynamicBVH::findOverlaps(BVHNode* nodeA, BVHNode* nodeB, std::vector<Collid
     }
 
     if (nodeA->isLeaf()) {
-            findOverlaps(nodeA, nodeB->left.get(), outPairs);
-            findOverlaps(nodeA, nodeB->right.get(), outPairs);
+            findOverlaps(nodeA, nodeB->left, outPairs);
+            findOverlaps(nodeA, nodeB->right, outPairs);
         } 
         else if (nodeB->isLeaf()) {
-            findOverlaps(nodeA->left.get(), nodeB, outPairs);
-            findOverlaps(nodeA->right.get(), nodeB, outPairs);
+            findOverlaps(nodeA->left, nodeB, outPairs);
+            findOverlaps(nodeA->right, nodeB, outPairs);
         } 
         else {
-            findOverlaps(nodeA->left.get(), nodeB->left.get(), outPairs);
-            findOverlaps(nodeA->left.get(), nodeB->right.get(), outPairs);
-            findOverlaps(nodeA->right.get(), nodeB->left.get(), outPairs);
-            findOverlaps(nodeA->right.get(), nodeB->right.get(), outPairs);
+            findOverlaps(nodeA->left, nodeB->left, outPairs);
+            findOverlaps(nodeA->left, nodeB->right, outPairs);
+            findOverlaps(nodeA->right, nodeB->left, outPairs);
+            findOverlaps(nodeA->right, nodeB->right, outPairs);
         }
 }
 
 std::vector<Collider::CollisionPair> DynamicBVH::getCollisionPairs()
 {
     std::vector<Collider::CollisionPair> pairs;
-    findOverlaps(m_root.get(), m_root.get(), pairs);
+    findOverlaps(m_root, m_root, pairs);
     return pairs;
 }
 
@@ -58,17 +58,17 @@ void DynamicBVH::insert(Collider* collider)
 
     if (m_root == nullptr)
     {
-        m_root = leaf;
+        m_root = leaf.get();
         m_root->parent = nullptr;
         return;
     }
 
 
-    auto index = m_root;
+    BVHNode* index = m_root;
     while (!index->isLeaf())
     {
-        auto left = index->left;
-        auto right = index->right;
+        BVHNode* left = index->left;
+        BVHNode* right = index->right;
 
         // cost of putting the leaf under left vs right
         float combinedArea = BoundingBox::merge(index->box, leaf->box).getSurfaceArea();
@@ -94,10 +94,10 @@ void DynamicBVH::insert(Collider* collider)
             index = right;
     }
 
-    std::shared_ptr<BVHNode> oldSibling = index;
-    std::shared_ptr<BVHNode> oldParent = oldSibling->parent;
-    std::shared_ptr<BVHNode> newParent = std::shared_ptr<BVHNode>(new BVHNode());
+    BVHNode* oldSibling = index;
+    BVHNode* oldParent = oldSibling->parent;
 
+    BVHNode* newParent = new BVHNode();
     newParent->parent = oldParent;
     newParent->box = BoundingBox::merge(oldSibling->box, leaf->box);
     
@@ -114,11 +114,11 @@ void DynamicBVH::insert(Collider* collider)
     }
 
     newParent->left = oldSibling;
-    newParent->right = leaf;
+    newParent->right = leaf.get();
     oldSibling->parent = newParent;
     leaf->parent = newParent;
 
-    auto curr = newParent->parent;
+    BVHNode* curr = newParent->parent;
     while (curr != nullptr)
     {
         curr->box = BoundingBox::merge(curr->left->box, curr->right->box);
@@ -130,17 +130,17 @@ void DynamicBVH::remove(BVHNode* leaf)
 {
     if (!leaf) return;
 
-    if (leaf == m_root.get())
+    if (leaf == m_root)
     {
         m_root = nullptr;
-        leaf = nullptr;
+        delete leaf;
         return;
     }
 
 
-    auto parent = leaf->parent;
-    auto grandParent = parent->parent;
-    auto sibling = (parent->left.get() == leaf) ? parent->right : parent->left;
+    BVHNode* parent = leaf->parent;
+    BVHNode* grandParent = parent->parent;
+    BVHNode* sibling = (parent->left == leaf) ? parent->right : parent->left;
 
     if (grandParent)
     {
@@ -150,11 +150,11 @@ void DynamicBVH::remove(BVHNode* leaf)
             grandParent->right = sibling;
         
         sibling->parent = grandParent;
-        parent = nullptr;
-        leaf = nullptr;
+        delete parent;
+        delete leaf;
 
         // refit upwards
-        auto curr = grandParent;
+        BVHNode* curr = grandParent;
         while (curr != nullptr)
         {
             curr->box = BoundingBox::merge(curr->left->box, curr->right->box);
@@ -165,8 +165,8 @@ void DynamicBVH::remove(BVHNode* leaf)
     {
         m_root = sibling;
         sibling->parent = nullptr;
-        parent = nullptr;
-        leaf = nullptr;
+        delete parent;
+        delete leaf;
     }
 }
 

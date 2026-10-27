@@ -11,9 +11,9 @@ namespace Engine{
     struct BVHNode
     {
         BoundingBox box;
-        std::shared_ptr<BVHNode> parent = nullptr;
-        std::shared_ptr<BVHNode> left = nullptr;
-        std::shared_ptr<BVHNode> right = nullptr;
+        BVHNode* parent = nullptr;
+        BVHNode* left = nullptr;
+        BVHNode* right = nullptr;
         Collider* collider = nullptr; // only a leaf node will have a collider
 
         bool isLeaf() const { return collider != nullptr; }
@@ -24,7 +24,7 @@ namespace Engine{
     {
         private:
             // root node for a boundng volume
-            std::shared_ptr<BVHNode> m_root = nullptr;
+            BVHNode* m_root = nullptr;
 
             void findOverlaps(BVHNode* nodeA, BVHNode* nodeB, std::vector<Collider::CollisionPair>& outPairs);
         public:
