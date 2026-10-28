@@ -143,6 +143,8 @@ void Collider::draw() {
     fm::vec3 globalPos = entity.transform.getGlobalPosition();
     fm::vec3 entityScale = entity.transform.getScale();
     
+    fm::mat4 model = entity.getRealMatrix();
+
     switch (m_shape) {
         case (ColliderShape::Box) : {
             fm::vec3 min = (m_min * entityScale) + globalPos;
@@ -249,7 +251,7 @@ void Collider::_drawSphere(fm::vec3 center, fm::vec3 scaledRadius, Debug::DebugL
         );
         yzPoints.push_back(Point(pos, m_drawCol));
     }
-    line.draw(yzPoints); // draw ring 3
+    line.draw(yzPoints, model); // draw ring 3
 }
 
 ColliderID Collider::getColliderID() {
