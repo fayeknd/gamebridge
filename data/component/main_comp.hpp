@@ -16,7 +16,6 @@ namespace Engine {
         void lateUpdate(double delta) override;
         void physicsUpdate(double delta) override; 
         void onDestroy() override;
-        void draw() override;
 
         Entity* square;
         Entity* cam;

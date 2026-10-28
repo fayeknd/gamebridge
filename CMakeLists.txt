@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10.0)
-set(CMAKE_CXX_STANDARD 26)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20)
+
 # i fucking hate working with cmake shit but it's also so useful
 
 message(NOTICE "Fetching and building GLFW...")
@@ -25,7 +25,7 @@ if(WIN32)
     set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -lwinpthread -ldwmapi -static")
 
     # build zlib 
-    FetchContent_De11clare(
+    FetchContent_Declare(
         zlib
         GIT_REPOSITORY https://github.com/madler/zlib
         GIT_TAG        v1.3.2

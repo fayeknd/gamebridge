@@ -19,7 +19,8 @@
 #include <physics/rigidbody.hpp>
 
 using namespace Engine;
-using namespace Engine::Physics;
+using namespace Physics;
+using namespace Engine::Debug;
 using namespace Engine::Debug;
 
 Entity* square;
@@ -28,8 +29,6 @@ Entity* cam;
 Entity* teenySquare;
 Rigidbody* rb;
 float sensitivity = 0.45;
-fm::vec3 ray_start;
-fm::vec3 ray_end;
 
 void MainComponent::init() {
 
@@ -51,13 +50,6 @@ void MainComponent::init() {
 
 
     square->transform.addPosition(2.1f);
-    square->transform.addRotationX(45.0f);
-
-    // create the camera entity
-    cam = Entity::create("Camera").get();
-    // add a camera component
-    auto camComponent = cam->addComponent<Camera>();
-
 
     // add some basic data to the renderer
     renderer->m_mesh = Mesh::primitive(Primitive::Cube);
@@ -66,8 +58,9 @@ void MainComponent::init() {
     renderer->m_material->m_data.m_hasTransparency = true;
 
     renderer2->m_mesh = Mesh::primitive(Primitive::Cube);
-    renderer2->m_material->setAlbedoTx(camComponent->m_framebuffer->m_renderTexture);
-    //renderer2->m_material->m_data.m_albedoFac.w = 0.4f;
+    renderer2->m_material->setAlbedoTx(Texture2D::createTextureFromPath("stuff=>textures/me trying to flirt.png"));
+    renderer2->m_material->m_data.m_albedoFac.w = 0.4f;
+    renderer2->m_material->m_data.m_hasTransparency = true;
     //renderer2->m_material->m_data.m_albedoFac.y = 0.4f;
 
     //square->setLayer(Layer::create("TestLayer", 1));
@@ -133,6 +126,9 @@ void MainComponent::update(double delta) {
         cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getDown() * speed);
     }
 
+    static fm::vec3 ray_start;
+    static fm::vec3 ray_end;
+
     if (Input::getActionDown(Key::F)) {
         RaycastHit out = Physics::Raycast({cam->transform.getGlobalPosition(), cam->transform.getGlobalFront()}, LayerMasks::All);
 
@@ -141,9 +137,7 @@ void MainComponent::update(double delta) {
 
         DBG.logInfo("Made a Raycast. Did it hit? {}", out.m_hitInfo.m_hasHit);
     }
-}
 
-void MainComponent::draw() {
     static DebugLine line;
     line.draw({
         Point({ray_start}),
