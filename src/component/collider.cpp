@@ -1,4 +1,5 @@
 #include <component/collider.hpp>
+#include <physics/physics.hpp>
 #include <entity.hpp>
 #include <debug.hpp>
 
@@ -27,7 +28,16 @@ Collider::Collider(ColliderShape shape)
     this->m_shape = shape;
 }
 
-bool Collider::IsCollidingWith(Collider& collider)
+fm::vec3 Collider::getWorldCenter() {
+    return (center + offset).transformed(getEntity().transform.getGlobalMatrix());
+}
+
+float Collider::getWorldRadius() {
+    fm::vec3 s = getEntity().transform.getGlobalScale();
+    return radius * std::max({ std::abs(s.x), std::abs(s.y), std::abs(s.z) });
+}
+
+bool Collider::IsCollidingWith(Collider& collider, Contact& out)
 {
 
     switch (this->m_shape) {
@@ -36,10 +46,10 @@ bool Collider::IsCollidingWith(Collider& collider)
             switch (collider.m_shape) {
 
                 case (ColliderShape::Sphere) : {
-                    return CheckSphereBoxIntersection(*this, collider);
+                    return CheckSphereBoxIntersection(collider, *this, out);
                 }
                 case (ColliderShape::Box) : {
-                    return CheckBoxIntersection(*this, collider);
+                    return CheckBoxIntersection(*this, collider, out);
                 }
 
             }
@@ -50,10 +60,10 @@ bool Collider::IsCollidingWith(Collider& collider)
             switch (collider.m_shape) {
 
                 case (ColliderShape::Sphere) : {
-                    return CheckSphereBoxIntersection(*this, collider);
+                    return CheckSphereBoxIntersection(*this, collider, out);
                 }
                 case (ColliderShape::Box) : {
-                    return CheckSphereBoxIntersection(collider, *this);
+                    return CheckSphereBoxIntersection(*this, collider, out);
                 }
 
             }
@@ -63,78 +73,125 @@ bool Collider::IsCollidingWith(Collider& collider)
     return false;
 }
 
-bool Collider::CheckBoxIntersection(Collider& a, Collider& b) {
-    // easy fucking peasy 
-
-    // get the entity global scale
-    fm::vec3 a_scale = fm::vec3::one();//a.getEntity().transform.getGlobalScale();
-    fm::vec3 b_scale = fm::vec3::one();//b.getEntity().transform.getGlobalScale();
-
-    // transform the bounds by the global scale
-    fm::vec3 a_min = a.m_min * a_scale;
-    fm::vec3 a_max = a.m_max * a_scale;
-
-    fm::vec3 b_min = b.m_min * b_scale;
-    fm::vec3 b_max = b.m_max * b_scale;
-
-    // calculate intersection in any axis
-    return (a_min.x <= b_max.x && a_max.x >= b_min.x) &&
-           (a_min.y <= b_max.y && a_max.y >= b_min.y) &&
-           (a_min.z <= b_max.z && a_max.z >= b_min.z);
-}
-
-bool Collider::CheckSphereIntersection(Collider& a, Collider& b) {
-    // Gets center of sphere A and sphere B accounting for offset
-    fm::vec3 centerA = a.center + a.offset;
-    fm::vec3 centerB = b.center + b.offset;
-
-    // gets distance between the centers
-    fm::vec3 dist = centerB - centerA;
-
-    // gets the magnitude of the distances
-    float distSq = dist.dot(dist);
-
-    // adds the radii and squares them
-    float radiiSum = a.radius + b.radius;
-    float radiiSumSq = a.radius * b.radius;
-
-    // returns an intersection if the distance of the spheres are less than the radius of them
-    return distSq <= radiiSumSq;
-}
-
-bool Collider::CheckSphereBoxIntersection(Collider& a, Collider& b)
+bool Collider::IsCollidingWith(Collider& collider)
 {
-    // A is always = sphere and b is always = box
-    if (b.m_shape == ColliderShape::Sphere && a.m_shape == ColliderShape::Box)
-    {
-        Collider& c = b;
-        a = b;
-        a = c;
-    }
+    Contact discard;
+    return IsCollidingWith(collider, discard);
+}
 
-    // Get the box's min and max values adjusted for the offset and the spheres center
-    fm::vec3 boxMin = b.m_min + b.offset;
-    fm::vec3 boxMax = b.m_max + b.offset;
-    fm::vec3 sphereCenter = a.center + a.offset;
+bool Collider::CheckBoxIntersection(Collider& a, Collider& b, Contact& out) {
+    AABB A = a.getWorldAABB();
+    AABB B = b.getWorldAABB();
+
+    float ox = std::min(A.m_max.x, B.m_max.x) - std::max(A.m_min.x, B.m_min.x);
+    float oy = std::min(A.m_max.y, B.m_max.y) - std::max(A.m_min.y, B.m_min.y);
+    float oz = std::min(A.m_max.z, B.m_max.z) - std::max(A.m_min.z, B.m_min.z);
+    if (ox <= 0 || oy <= 0 || oz <= 0) return false;
+
+    fm::vec3 ca = (A.m_min + A.m_max) * 0.5f;
+    fm::vec3 cb = (B.m_min + B.m_max) * 0.5f;
+
+    if (ox <= oy && ox <= oz) {
+        out.penetration  = ox;
+        out.normal = fm::vec3(ca.x < cb.x ? 1.f : -1.f, 0.f, 0.f);
+    } else if (oy <= oz) {
+        out.penetration  = oy;
+        out.normal = fm::vec3(0.f, ca.y < cb.y ? 1.f : -1.f, 0.f);
+    } else {
+        out.penetration  = oz;
+        out.normal = fm::vec3(0.f, 0.f, ca.z < cb.z ? 1.f : -1.f);
+    }
+    return true;
+}
+
+bool Collider::CheckSphereIntersection(Collider& a, Collider& b, Contact& out) {
+    // Gets center of sphere A and sphere B accounting for offset
+    fm::vec3 ca = a.getWorldCenter();
+    fm::vec3 cb = b.getWorldCenter();
+    float ra = a.getWorldRadius();
+    float rb = b.getWorldRadius();
+
+    // gets distance between the centers and returns false if they're too far apart
+    fm::vec3 d = cb - ca;
+    float distSq = d.dot(d);
+    float sum = ra + rb;
+    if (distSq > sum * sum) return false;
+
+    // gets the square root of the distance to find how far the penetration is
+    float dist = std::sqrt(distSq);
+    out.penetration  = sum - dist;
+
+    // if the centres coincide there's no direction, so pick any
+    out.normal = dist > 1e-6f ? d * (1.f / dist) : fm::vec3(0.f, 1.f, 0.f);
+    return true;
+}
+
+bool Collider::CheckSphereBoxIntersection(Collider& a, Collider& b, Contact& out)
+{
+    fm::vec3 c = a.getWorldCenter();
+    float r    = a.getWorldRadius();
+    AABB box   = b.getWorldAABB();
+
+    fm::vec3 closest(std::clamp(c.x, box.m_min.x, box.m_max.x),
+                     std::clamp(c.y, box.m_min.y, box.m_max.y),
+                     std::clamp(c.z, box.m_min.z, box.m_max.z));
 
     fm::vec3 closestPoint;
 
-    // gets the closest point of each of the box's axis to the center of the sphere in each axis to get the distance
-    closestPoint.x = std::max(boxMin.x, std::min(sphereCenter.x, boxMax.x));
-    closestPoint.y = std::max(boxMin.y, std::min(sphereCenter.y, boxMax.y));
-    closestPoint.z = std::max(boxMin.z, std::min(sphereCenter.z, boxMax.z));
+    fm::vec3 d = c - closest;           
+    float distSq = d.dot(d);
+    if (distSq > r * r) return false;
 
-    // Calculates the distance of the sphere center from the closest point on the box
-    fm::vec3 dist = sphereCenter - closestPoint;
+    if (distSq > 1e-12f) {
+        float dist = std::sqrt(distSq);
+        out.normal = d * (-1.f / dist);
+        out.penetration  = r - dist;
+        return true;
+    }
 
-    // gets the square of the distance to get a float
-    float distSq = dist.dot(dist);
+    
+    float dx0 = c.x - box.m_min.x, dx1 = box.m_max.x - c.x;
+    float dy0 = c.y - box.m_min.y, dy1 = box.m_max.y - c.y;
+    float dz0 = c.z - box.m_min.z, dz1 = box.m_max.z - c.z;
 
-    // gets the square of the radius of the sphere
-    float radiusSq = a.radius * a.radius;
+    float best = dx0; fm::vec3 exitDir(-1.f, 0.f, 0.f);
+    if (dx1 < best) { best = dx1; exitDir = fm::vec3( 1.f, 0.f, 0.f); }
+    if (dy0 < best) { best = dy0; exitDir = fm::vec3(0.f, -1.f, 0.f); }
+    if (dy1 < best) { best = dy1; exitDir = fm::vec3(0.f,  1.f, 0.f); }
+    if (dz0 < best) { best = dz0; exitDir = fm::vec3(0.f, 0.f, -1.f); }
+    if (dz1 < best) { best = dz1; exitDir = fm::vec3(0.f, 0.f,  1.f); }
 
-    // returns a intersection if the distance between the box and the sphere is less than the sphere's radius
-    return distSq <= radiusSq;
+    out.normal = exitDir * -1.f;     
+    out.penetration = best + r;
+    return true;
+}
+
+void CollisionWorld::resolve(Collider* a, Collider* b, const Collider::Contact& c) {
+    Physics::Rigidbody* ra = a->m_rb;
+    Physics::Rigidbody* rb = b->m_rb;
+
+    float ia = ra ? ra->getInverseMass() : 0.f;
+    float ib = rb ? rb->getInverseMass() : 0.f;
+    float total = ia + ib;
+    if (total == 0.f) return;                       
+
+    // 1. push apart objects
+    if (ra) a->getEntity().transform.addPosition(c.normal * (-c.penetration * ia / total));
+    if (rb) b->getEntity().transform.addPosition(c.normal * ( c.penetration * ib / total));
+
+    // 2. bouncyyyyy i love trampolining
+    fm::vec3 va = ra ? ra->getVelocity() : fm::vec3::zero();
+    fm::vec3 vb = rb ? rb->getVelocity() : fm::vec3::zero();
+    float vn = (vb - va).dot(c.normal);             
+    if (vn > 0.f) return;                           
+
+    float e = std::min(ra ? ra->m_bounciness : 1.f, rb ? rb->m_bounciness : 1.f);
+    float restThreshold = 9.8f * (1.0f / Physics::tps) * 2.0f;
+    if (std::abs(vn) < restThreshold) e = 0.f;               // kill tiny bounces so resting objects settle
+
+    float j = -(1.f + e) * vn / total;              // impulse magnitude
+    if (ra) ra->addForce(va - c.normal * (j * ia), Rigidbody::ForceMode::VelocityChange);
+    if (rb) rb->addForce(vb + c.normal * (j * ib), Rigidbody::ForceMode::VelocityChange);
 }
 
 void Collider::draw() {
@@ -267,27 +324,28 @@ void Collider::init() {
     // get the next box id
     m_ColliderID = s_colliderIDPool.getNewID();
 
-    // register ourselves with the bounding box list
-    s_colliderList.emplace(m_ColliderID, this);
-
     // create a static material to satisfy IRenderable.
     // this does not need to exist really. it just holds 
     // colour. 
     static std::shared_ptr<Material> boundingBoxMaterial = Material::create();
     boundingBoxMaterial->m_data.m_albedoFac = {1.0f, 0.9f, 0.8f, 1.0f};
     m_material = boundingBoxMaterial;
+
+    m_rb = getEntity().getComponent<Physics::Rigidbody>();
+    m_isStatic = (m_rb == nullptr);
+    CollisionWorld::get().add(this);
 }
 
 void Collider::onDestroy() {
-
-    // remove ourselves from the bounding box list
-    s_colliderList.erase(m_ColliderID);
-
     // release our id 
     s_colliderIDPool.releaseID(m_ColliderID);
+    CollisionWorld::get().remove(this);
 }
 
 bool Collider::checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit) {
+
+    outRaycastHit.m_hitEntity = &getEntity();
+    outRaycastHit.m_hitBox = this;
 
     fm::mat4 worldMatrixInversed = outRaycastHit.m_hitEntity->transform.getGlobalMatrix().inversed();
 
@@ -438,7 +496,115 @@ bool Collider::rayAASphereIntersection(const Ray& ray, const Collider* sphere, R
     return true;
 }
 
+void Collider::setStatic(bool s)
+{
+    if (m_isStatic == s) return;
+    CollisionWorld::get().remove(this);
+    m_isStatic = s;
+    CollisionWorld::get().add(this);
+}
 
-std::unordered_map<ColliderID, Collider*> Collider::getColliderList() {
-    return s_colliderList; // readonly
+AABB Collider::getWorldAABB() {
+    Transform& t = entity.transform;
+    fm::mat4 world = t.getGlobalMatrix();
+
+    if (m_shape == ColliderShape::Sphere) {
+        fm::vec3 c = (center + offset).transformed(world);
+
+        
+        fm::vec3 s = t.getGlobalScale();
+        float r = radius * std::max({ std::abs(s.x), std::abs(s.y), std::abs(s.z) });
+
+        return { c - fm::vec3(r, r, r), c + fm::vec3(r, r, r) };
+    }
+
+   
+    fm::vec3 lo( FLT_MAX,  FLT_MAX,  FLT_MAX);
+    fm::vec3 hi(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+
+    for (int i = 0; i < 8; ++i) {
+        fm::vec3 corner((i & 1) ? m_max.x : m_min.x,
+                        (i & 2) ? m_max.y : m_min.y,
+                        (i & 4) ? m_max.z : m_min.z);
+
+        fm::vec3 w = (corner + offset).transformed(world);
+
+       
+        lo = { std::min(lo.x, w.x), std::min(lo.y, w.y), std::min(lo.z, w.z) };
+        hi = { std::max(hi.x, w.x), std::max(hi.y, w.y), std::max(hi.z, w.z) };
+    }
+    
+    return { lo, hi };
+}
+
+
+void CollisionWorld::step() {
+    if (m_staticDirty) { m_staticTree.rebuild(m_static); m_staticDirty = false; }
+    m_dynamicTree.rebuild(m_dynamic);
+
+    std::vector<Collider*> candidates;
+    for (Collider* c : m_dynamic) {
+        candidates.clear();
+        AABB box = c->getWorldAABB();
+        m_staticTree.query(box, candidates);
+        m_dynamicTree.query(box, candidates);
+
+        for (Collider* o : candidates) {
+            if (o == c) continue;
+
+            if (!o->m_isStatic && o->getColliderID() < c->getColliderID()) continue;
+
+            Collider::Contact contact;
+            if (!c->IsCollidingWith(*o, contact)) continue;
+            resolve(c, o, contact);
+        }
+    }
+}
+
+bool CollisionWorld::raycast(const Physics::Ray& ray, Physics::RaycastHit& hit, LayerMask mask, float maxDist)
+{
+    refresh();
+    DBG.logInfo("static: " + std::to_string(m_static.size()) + " dynamic: " + std::to_string(m_dynamic.size()));
+    bool a = m_staticTree.raycast(ray, hit, mask, maxDist);
+    float limit = a ? hit.m_hitInfo.m_distance : maxDist;
+    Physics::RaycastHit h;
+    bool b = m_dynamicTree.raycast(ray, h, mask, limit);
+    if (b) hit = h;
+    return a || b;
+}
+
+void CollisionWorld::refresh() {
+    if (m_staticDirty) { m_staticTree.rebuild(m_static); m_staticDirty = false; }
+    m_dynamicTree.rebuild(m_dynamic);
+}
+
+void CollisionWorld::add(Collider* c)
+{
+    if (!c) return;
+
+    auto& list = c->m_isStatic ? m_static : m_dynamic;
+
+    if (std::find(list.begin(), list.end(), c) != list.end()) return;
+
+    list.push_back(c);
+    if (c->m_isStatic) m_staticDirty = true;
+}
+
+void CollisionWorld::remove(Collider* c)
+{
+    if (!c) return;
+
+    auto s = std::find(m_static.begin(), m_static.end(), c);
+
+    if (s != m_static.end())
+    {
+        m_static.erase(s);
+        m_staticDirty = true;
+    }
+
+    auto d = std::find(m_dynamic.begin(), m_static.end(), c);
+    if (d != m_dynamic.end())
+    {
+        m_dynamic.erase(d);
+    }
 }

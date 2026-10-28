@@ -35,6 +35,8 @@ namespace Engine {
             // mass of the entity
             float m_mass = 1.f;
 
+            float m_bounciness = 1.f; // 0 = no bounce, 1 = perfectly elastic will be funny i guarentee
+
             // force modes for force application
             enum ForceMode
             {
@@ -56,6 +58,8 @@ namespace Engine {
             void physicsUpdate(double delta) override;
             // applies a force to the rigidbody
             void addForce(fm::vec3 force, ForceMode forceMode);
+
+            float getInverseMass() const;
         };
     }  
 

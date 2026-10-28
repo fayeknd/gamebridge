@@ -454,10 +454,10 @@ void Transform::setGlobalRotationX(float v) {
     _setGlobalVector(m_globalRotation, m_rotation, {v, m_globalRotation.y, m_globalRotation.z});
 }
 void Transform::setGlobalRotationY(float v) {
-    _setGlobalVector(m_globalRotation, m_rotation, {v, m_globalRotation.y, m_globalRotation.z});
+    _setGlobalVector(m_globalRotation, m_rotation, {m_globalRotation.x, v, m_globalRotation.z});
 }
 void Transform::setGlobalRotationZ(float v) {
-    _setGlobalVector(m_globalRotation, m_rotation, {v, m_globalRotation.y, m_globalRotation.z});
+    _setGlobalVector(m_globalRotation, m_rotation, {m_globalRotation.x, m_globalRotation.y, v});
 }
 
 
@@ -465,10 +465,10 @@ void Transform::setGlobalScaleX(float v) {
     _setGlobalVector(m_globalScale, m_scale, {v, m_globalScale.y, m_globalScale.z});
 }
 void Transform::setGlobalScaleY(float v) {
-    _setGlobalVector(m_globalScale, m_scale, {v, m_globalScale.y, m_globalScale.z});
+    _setGlobalVector(m_globalScale, m_scale, {m_globalScale.x, v, m_globalScale.z});
 }
 void Transform::setGlobalScaleZ(float v) {
-    _setGlobalVector(m_globalScale, m_scale, {v, m_globalScale.y, m_globalScale.z});
+    _setGlobalVector(m_globalScale, m_scale, {m_globalScale.y, m_globalScale.y, v});
 }
 
 
@@ -476,10 +476,10 @@ void Transform::setGlobalSkewX(float v) {
     _setGlobalVector(m_globalSkew, m_skew, {v, m_globalSkew.y, m_globalSkew.z});
 }
 void Transform::setGlobalSkewY(float v) {
-    _setGlobalVector(m_globalSkew, m_skew, {v, m_globalSkew.y, m_globalSkew.z});
+    _setGlobalVector(m_globalSkew, m_skew, {m_globalSkew.x, v, m_globalSkew.z});
 }
 void Transform::setGlobalSkewZ(float v) {
-    _setGlobalVector(m_globalSkew, m_skew, {v, m_globalSkew.y, m_globalSkew.z});
+    _setGlobalVector(m_globalSkew, m_skew, {m_globalSkew.x, m_globalSkew.y, v});
 }
 
 void Transform::addGlobalPosition(fm::vec3 v) {

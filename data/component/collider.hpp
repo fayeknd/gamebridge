@@ -5,10 +5,14 @@
 #include <component/renderable.hpp>
 #include <physics/ray.hpp>
 #include <component/boundingbox.hpp>
+#include <layer.hpp>
+#include <physics/rigidbody.hpp>
 
 namespace Engine
 {
     using ColliderID = uint16_t;
+    using Physics::Rigidbody;
+    using Engine::LayerMask;
 
     enum class ColliderShape
     {
@@ -17,19 +21,25 @@ namespace Engine
 
     class Collider : public IRenderable
     {
+        public:
+            struct Contact
+            {
+                fm::vec3 normal;
+                float penetration; // hehe sex
+            };
         protected:
             // ID pool for easy and efficient unordered map management
             static inline IDPool<ColliderID> s_colliderIDPool; 
-
-            // the list of bounding boxes. i realised using weak_ptr here is a bit silly (thank you for the insightful comment faye - hunter)
-            static inline std::unordered_map<ColliderID, Collider*> s_colliderList;
     
             // this instance's id
             ColliderID m_ColliderID;
         private:
-            static bool CheckBoxIntersection(Collider& a, Collider& b);
-            static bool CheckSphereIntersection(Collider& a, Collider& b);
-            static bool CheckSphereBoxIntersection(Collider& a, Collider& b);
+
+            static bool CheckBoxIntersection(Collider& a, Collider& b, Contact& out);
+            static bool CheckSphereIntersection(Collider& a, Collider& b, Contact& out);
+            static bool CheckSphereBoxIntersection(Collider& a, Collider& b, Contact& out);
+
+            
 
             void _drawBox(fm::vec3 min, fm::vec3 max, Debug::DebugLine& line);
             void _drawSphere(fm::vec3 center, fm::vec3 radiusScaled, Debug::DebugLine& line);
@@ -39,13 +49,16 @@ namespace Engine
             fm::vec4 m_drawCol = fm::vec4(0.0f, 0.75f, 1.0f, 1.0f);
 
             ColliderShape m_shape;
-            //BoundingBox m_boundingBox;
+            Rigidbody* m_rb = nullptr;
+            bool m_isStatic = true;
 
             fm::vec3 offset = fm::vec3::zero();
             fm::vec3 center = fm::vec3::zero();
             fm::vec3 m_min = -fm::vec3::one() * 0.5f;
             fm::vec3 m_max = fm::vec3::one() * 0.5f;
             float radius = 1.0f;
+            fm::vec3 getWorldCenter();
+            float getWorldRadius();
 
             Collider(const fm::vec3& min, const fm::vec3& max);
 
@@ -53,6 +66,7 @@ namespace Engine
 
             Collider(ColliderShape shape);
 
+            bool IsCollidingWith(Collider& collider, Contact& out);
             bool IsCollidingWith(Collider& collider);
 
             fm::vec4 getColour() { return m_material->m_data.m_albedoFac; }
@@ -72,8 +86,27 @@ namespace Engine
             static bool rayAABoxIntersection(const Physics::Ray& ray, const Collider* box, Physics::RaycastHit& outRaycastHit);
             // check for an intersection with an axis-aligned sphere
             static bool rayAASphereIntersection(const Physics::Ray& ray, const Collider* sphere, Physics::RaycastHit& outRaycastHit);
-        
-            // get a list of valid bounding boxes
-            static std::unordered_map<ColliderID, Collider*> getColliderList();
+
+            void setStatic(bool s);
+            AABB getWorldAABB();
+    };
+
+    class CollisionWorld {
+    private:
+        std::vector<Collider*> m_static, m_dynamic;
+        BVH m_staticTree, m_dynamicTree;
+        bool m_staticDirty = true;
+    public:
+        static CollisionWorld& get()
+        {
+            static CollisionWorld instance;
+            return instance;
+        }
+        void add(Collider* c);       // push to m_static or m_dynamic by c->m_isStatic
+        void remove(Collider* c);    // erase from the vector; set m_staticDirty if it was static
+        void step();                 // run once per physics tick
+        bool raycast(const Physics::Ray& ray, Physics::RaycastHit& hit, LayerMask mask, float maxDist = FLT_MAX);
+        void resolve(Collider* a, Collider* b, const Collider::Contact& c);
+        void refresh();
     };
 }

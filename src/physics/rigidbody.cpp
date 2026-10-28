@@ -77,3 +77,7 @@ void Rigidbody::addImplicitForce(double delta)
     entity.transform.addPosition(m_velocity * static_cast<float>(delta));
     m_force = fm::vec3::zero();
 }
+
+float Rigidbody::getInverseMass() const {
+    return m_mass > 0.1f ? 1.f / m_mass : 0.f;
+}

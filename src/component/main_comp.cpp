@@ -38,18 +38,19 @@ void MainComponent::init() {
     square = Entity::create("Test Square").get(); 
     square2 = Entity::create("Test Square 2").get();
     
+    rb = square->addComponent<Rigidbody>();
     auto box = square->addComponent<Collider>(ColliderShape::Box);
     auto renderer = square->addComponent<IRenderable>();
-    rb = square->addComponent<Rigidbody>();
     rb->m_mass = 1000.f;
+    rb->m_useGravity = true;
     
 
 
-    auto box2 = square2->addComponent<Collider>(ColliderShape::Sphere);
+    auto box2 = square2->addComponent<Collider>(ColliderShape::Box);
     auto renderer2 = square2->addComponent<IRenderable>();
 
 
-    square->transform.addPosition(2.1f);
+    square->transform.addPositionY(-2.1f);
 
     // add some basic data to the renderer
     renderer->m_mesh = Mesh::primitive(Primitive::Cube);

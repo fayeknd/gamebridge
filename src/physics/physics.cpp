@@ -10,34 +10,10 @@ using namespace Physics;
 
 RaycastHit Physics::Raycast(Ray ray, LayerMask mask, float distance) {
 
-    RaycastHit returnHit;
-    returnHit.m_hitInfo.m_mask = mask;
-    // iterate through every bounding box (expensive!!)
-    for (auto it : Collider::getColliderList()) {
-
-        // get the bounding box pointer
-        Collider* bb = it.second;
-
-        // check this entity is not blacklisted from the layer mask
-        if ((bb->getEntity().getLayerID() & mask) == 0 || bb->getEntity().getLayer()->m_ignoreRaycast) {
-            continue;
-        }
-
-        // set some hit values
-        RaycastHit hit;
-        hit.m_hitEntity = &bb->getEntity();
-        hit.m_hitBox = bb;
-
-        // flood raycasthit with hit info
-        bb->checkRayIntersection(ray, hit);
-
-        // did we hit?
-        // we hit bitches - hunter
-        if(hit.m_hitInfo.m_distance < returnHit.m_hitInfo.m_distance)
-            returnHit = hit;
-    }
-
-    return returnHit;
+    RaycastHit result;
+    result.m_hitInfo.m_mask = mask;
+    CollisionWorld::get().raycast(ray, result, mask, distance);
+    return result;
 }
 
 void PhysicsImpl::pollPhysics()
@@ -50,6 +26,7 @@ void PhysicsImpl::pollPhysics()
     if (physicsTick.count() >= d) {
         // yes, push through physics poll and reset the timer
         Entity::_pollPhysicsBehaviours(d);
+        CollisionWorld::get().step();
         physicsTick.reset(); 
     }
 }
