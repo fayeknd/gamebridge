@@ -50,7 +50,7 @@ void MainComponent::init() {
     auto renderer2 = square2->addComponent<IRenderable>();
 
 
-    square->transform.addPositionY(-2.1f);
+    square->transform.addPositionY(-10.0f);
 
     // add some basic data to the renderer
     renderer->m_mesh = Mesh::primitive(Primitive::Cube);
