@@ -27,7 +27,7 @@ void IRenderable::draw() {
     // use the material
     m_material->useMaterial();
     // set basic uniforms
-    m_material->m_program->setUniform(shader_ModelMatrix, entity.transform.getGlobalMatrix());
+    m_material->m_program->setUniform(shader_ModelMatrix, entity.getRealMatrix());
     // ViewProjection matrix
     fm::mat4 vpMat = fm::mat4::identity();
     // if main camera exists

@@ -33,6 +33,7 @@ namespace Engine{
             void drawImGuiInterface_framebegin();
             void drawImGuiInterface_frameend();
             void drawDebugger();
+            void drawPropertyEditor();
             void _createImGuiContext(GLFWwindow* wnd);
             void _destroyImGuiContext();
 
@@ -56,7 +57,7 @@ namespace Engine{
 
             DebugLine();
             ~DebugLine();
-            void draw(std::vector<Vertex> points);
+            void draw(std::vector<Vertex> points, fm::mat4 model = fm::mat4::identity());
 
         };
     }

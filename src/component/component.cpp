@@ -33,18 +33,33 @@ const ComponentTypeID IComponent::getTypeID() const {
 }
 
 void IComponent::drawImpl(const Layer *layer) {
-    if (!m_material || !m_material->m_program || !m_render || !Camera::activeCamera()) return;
+    if (!m_render || !Camera::activeCamera()) return;
+
+    DepthType dt;
+    if (!m_material) dt = DepthType::Planar;
+    else             dt = (m_material->m_data.m_hasTransparency) ? DepthType::SquaredRadial : DepthType::Planar;
 
     // get the depth from the camera
     float depth = entity.transform.getDepth(
         Camera::activeCamera()->getEntity().transform.getGlobalPosition(),
         Camera::activeCamera()->getEntity().transform.getGlobalFront(),
-        (m_material->m_data.m_hasTransparency) ? DepthType::SquaredRadial : DepthType::Planar
+        dt
     );
 
     Renderer& renderer = Renderer::get();
 
     // create the sort key
-    uint64_t sortKey = renderer.genSortKey(m_material->m_data.m_hasTransparency, m_material.get(), depth);
+    uint64_t sortKey;
+    if (!m_material) sortKey = 1000; // render it above everything else
+    else             sortKey = renderer.genSortKey(m_material->m_data.m_hasTransparency, m_material.get(), depth);
     renderer.queueRenderCommand(layer->m_layerID, sortKey, this, _distributeDraw);
+}
+
+void IComponent::physicsUpdateImpl(double delta) {
+    // do our physics update
+    physicsUpdate(delta);
+    if (entity.transform.isDirty()) {
+        // we did do physics this frame.
+        entity.m_didPhysicsThisTick = true;
+    }
 }

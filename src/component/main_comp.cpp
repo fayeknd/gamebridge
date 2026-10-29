@@ -21,7 +21,6 @@
 using namespace Engine;
 using namespace Physics;
 using namespace Engine::Debug;
-using namespace Engine::Debug;
 
 Entity* square;
 Entity* square2; 
@@ -29,6 +28,9 @@ Entity* cam;
 Entity* teenySquare;
 Rigidbody* rb;
 float sensitivity = 0.45;
+fm::vec3 ray_start;
+fm::vec3 ray_end;
+
 
 void MainComponent::init() {
 
@@ -51,6 +53,8 @@ void MainComponent::init() {
 
 
     square->transform.addPositionY(-10.0f);
+    square2->transform.setScaleX(10.0f);
+    square2->transform.setScaleZ(10.0f);
 
     // add some basic data to the renderer
     renderer->m_mesh = Mesh::primitive(Primitive::Cube);
@@ -75,7 +79,7 @@ void MainComponent::init() {
     // push the camera back a bit in the world
     cam->transform.addPositionZ(-5);
     // set the clear colour on the camera
-    camComponent->m_clearCol = {0.1f, 0.1f, 0.1f, 0.7f};
+    camComponent->m_clearCol = {0.1f, 0.1f, 0.1f, 1.0f};
 
     // set the target fps
     //Renderer::get().setVSyncMode(VSyncMode::On);
@@ -85,7 +89,7 @@ void MainComponent::init() {
 }
 
 void MainComponent::update(double delta) {
-    //square->transform.setScaleX((sin(Time::sinceStartup()) / 10.0f) + 1.0f);
+    //square2->transform.addRotation(delta * 10.0f);
 
     if (Input::getActionDown(Key::F1)) {
         DebugUI::get().m_drawDebugger = !DebugUI::get().m_drawDebugger;
@@ -127,9 +131,6 @@ void MainComponent::update(double delta) {
         cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getDown() * speed);
     }
 
-    static fm::vec3 ray_start;
-    static fm::vec3 ray_end;
-
     if (Input::getActionDown(Key::F)) {
         RaycastHit out = Physics::Raycast({cam->transform.getGlobalPosition(), cam->transform.getGlobalFront()}, LayerMasks::All);
 
@@ -139,6 +140,12 @@ void MainComponent::update(double delta) {
         DBG.logInfo("Made a Raycast. Did it hit? {}", out.m_hitInfo.m_hasHit);
     }
 
+    if (Input::getActionDown(Key::C)) {
+        square->transform.addPositionY(-10.0f);
+    }
+}
+
+void MainComponent::draw() {
     static DebugLine line;
     line.draw({
         Point({ray_start}),

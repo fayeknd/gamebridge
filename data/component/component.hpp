@@ -75,12 +75,18 @@ namespace Engine {
         // has this component's init() been run?
         bool m_hasInit;
 
+        // tell the instance to run draw(). 
         static inline void _distributeDraw(IComponent* instance) { instance->draw(); }
 
     protected:
 
         // init() is called when the component is added to an entity, once.
         virtual void init() {};
+        // final stage in the game loop. used for anything to do with drawing.
+        virtual void draw() {};
+
+        // actual physics update function
+        virtual void physicsUpdate(double delta) {};
 
     public:
 
@@ -157,13 +163,10 @@ namespace Engine {
         virtual void lateUpdate(double delta) {};
 
         // physics update calls an update every 50ms (same as minecraft yippee)
-        virtual void physicsUpdate(double delta) {};
-
-        // final stage in the game loop. used for anything to do with drawing.
-        virtual void draw() {};
+        void physicsUpdateImpl(double delta);
 
         // adds draw() to the render bucket callback in renderer.hpp
-        virtual void drawImpl(const Layer* layer);
+        void drawImpl(const Layer* layer);
 
         // called right before the object gets destroyed. (or dereferenced, 
         // the object won't be destroyed if there is a shared_ptr to it.

@@ -186,7 +186,7 @@ void CollisionWorld::resolve(Collider* a, Collider* b, const Collider::Contact& 
     if (vn > 0.f) return;                           
 
     float e = std::min(ra ? ra->m_bounciness : 1.f, rb ? rb->m_bounciness : 1.f);
-    float restThreshold = 9.8f * (1.0f / Physics::tps) * 2.0f;
+    float restThreshold = 9.8f * (1.0f / PhysicsImpl::tps) * 2.0f;
     if (std::abs(vn) < restThreshold) e = 0.f;               // kill tiny bounces so resting objects settle
 
     float j = -(1.f + e) * vn / total;              // impulse magnitude
@@ -197,59 +197,56 @@ void CollisionWorld::resolve(Collider* a, Collider* b, const Collider::Contact& 
 void Collider::draw() {
 
     static DebugLine line;
-    fm::vec3 globalPos = entity.transform.getGlobalPosition();
-    fm::vec3 entityScale = entity.transform.getScale();
-    
+
     switch (m_shape) {
         case (ColliderShape::Box) : {
-            fm::vec3 min = (m_min * entityScale) + globalPos;
-            fm::vec3 max = (m_max * entityScale) + globalPos;
-            _drawBox(min, max, line);
+            _drawBox(m_min, m_max, entity.getRealMatrix(), line);
             break;
         }
         case (ColliderShape::Sphere) : {
-
-            fm::vec3 globalCenter = (center * entityScale) + globalPos;
-            fm::vec3 scaledRadius = fm::vec3(radius) * entityScale;
-
-            _drawSphere(globalCenter, scaledRadius, line);
+            _drawSphere(center, radius, entity.getRealMatrix(), line);
             break;
         }
     }
 }
 
-void Collider::_drawBox(fm::vec3 min, fm::vec3 max, Debug::DebugLine& line) {
-    fm::vec3 v0 = min;
-    fm::vec3 v1 = fm::vec3(max.x, min.y, min.z);
-    fm::vec3 v2 = fm::vec3(max.x, max.y, min.z);
-    fm::vec3 v3 = fm::vec3(min.x, max.y, min.z);
 
-    fm::vec3 v4 = fm::vec3(min.x, min.y, max.z);
-    fm::vec3 v5 = fm::vec3(max.x, min.y, max.z);
-    fm::vec3 v6 = max;
-    fm::vec3 v7 = fm::vec(min.x, max.y, max.z);
-    
+void Collider::_drawBox(fm::vec3 min, fm::vec3 max, fm::mat4 model, Debug::DebugLine& line) {
+
+    std::vector<Point> points;
+
+    points.push_back({min, m_drawCol});
+    points.push_back({fm::vec3(max.x, min.y, min.z), m_drawCol});
+    points.push_back({fm::vec3(max.x, max.y, min.z), m_drawCol});
+    points.push_back({fm::vec3(min.x, max.y, min.z), m_drawCol});
+
+    points.push_back({fm::vec3(min.x, min.y, max.z), m_drawCol});
+    points.push_back({fm::vec3(max.x, min.y, max.z), m_drawCol});
+    points.push_back({max, m_drawCol});
+    points.push_back({fm::vec3(min.x, max.y, max.z), m_drawCol});
+
+
     line.draw({
-        Point(v0, m_drawCol),
-        Point(v1, m_drawCol),
-        Point(v2, m_drawCol),
-        Point(v3, m_drawCol),
-        Point(v0, m_drawCol),
-        Point(v4, m_drawCol),
-        Point(v5, m_drawCol),
-        Point(v1, m_drawCol),
-        Point(v5, m_drawCol),
-        Point(v6, m_drawCol),
-        Point(v2, m_drawCol),
-        Point(v6, m_drawCol),
-        Point(v7, m_drawCol),
-        Point(v3, m_drawCol),
-        Point(v7, m_drawCol),
-        Point(v4, m_drawCol),
-    });
+        points[0],
+        points[1],
+        points[2],
+        points[3],
+        points[0],
+        points[4],
+        points[5],
+        points[1],
+        points[5],
+        points[6],
+        points[2],
+        points[6],
+        points[7],
+        points[3],
+        points[7],
+        points[4]
+    }, model);
 }
 
-void Collider::_drawSphere(fm::vec3 center, fm::vec3 scaledRadius, Debug::DebugLine &line) {
+void Collider::_drawSphere(fm::vec3 center, fm::vec3 scaledRadius, fm::mat4 model, Debug::DebugLine &line) {
     
     // how many segments each circle has
     const int segments = 48;
@@ -272,7 +269,7 @@ void Collider::_drawSphere(fm::vec3 center, fm::vec3 scaledRadius, Debug::DebugL
         xzPoints.push_back(Point(pos, m_drawCol));
     }
 
-    line.draw(xzPoints); // draw ring 1
+    line.draw(xzPoints, model); // draw ring 1
 
     // XY plane
     std::vector<Point> xyPoints;
@@ -290,7 +287,7 @@ void Collider::_drawSphere(fm::vec3 center, fm::vec3 scaledRadius, Debug::DebugL
         xyPoints.push_back(Point(pos, m_drawCol));
     }
 
-    line.draw(xyPoints); // draw ring 2
+    line.draw(xyPoints, model); // draw ring 2
 
     // YZ plane
     std::vector<Point> yzPoints;
@@ -306,7 +303,7 @@ void Collider::_drawSphere(fm::vec3 center, fm::vec3 scaledRadius, Debug::DebugL
         );
         yzPoints.push_back(Point(pos, m_drawCol));
     }
-    line.draw(yzPoints); // draw ring 3
+    line.draw(yzPoints, model); // draw ring 3
 }
 
 ColliderID Collider::getColliderID() {
@@ -564,7 +561,7 @@ void CollisionWorld::step() {
 bool CollisionWorld::raycast(const Physics::Ray& ray, Physics::RaycastHit& hit, LayerMask mask, float maxDist)
 {
     refresh();
-    DBG.logInfo("static: " + std::to_string(m_static.size()) + " dynamic: " + std::to_string(m_dynamic.size()));
+    //DBG.logInfo("static: {} dynamic: {}", m_static.size(), m_dynamic.size());
     bool a = m_staticTree.raycast(ray, hit, mask, maxDist);
     float limit = a ? hit.m_hitInfo.m_distance : maxDist;
     Physics::RaycastHit h;

@@ -41,8 +41,8 @@ namespace Engine
 
             
 
-            void _drawBox(fm::vec3 min, fm::vec3 max, Debug::DebugLine& line);
-            void _drawSphere(fm::vec3 center, fm::vec3 radiusScaled, Debug::DebugLine& line);
+            void _drawBox(fm::vec3 min, fm::vec3 max, fm::mat4 mat, Debug::DebugLine& line);
+            void _drawSphere(fm::vec3 center, fm::vec3 radius, fm::mat4 mat, Debug::DebugLine& line);
 
         public:
 

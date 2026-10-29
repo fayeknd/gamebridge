@@ -96,6 +96,9 @@ namespace Engine {
             // the active unit.
             GLuint m_activeTextureUnit = -1;
 
+            // the current framebuffer.
+            GLuint m_currentFramebuffer = -1;
+
         } glState;
 
     };
