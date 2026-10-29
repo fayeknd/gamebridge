@@ -12,8 +12,11 @@ void Framebuffer::_genBuffer(fm::uvec2 size) {
     glBindFramebuffer(GL_FRAMEBUFFER, m_bufferID);
 
     if (size == fm::uvec2::zero()) { // no size was passed, assume window size.
-        m_resizeWithWnd = true; // if window size, we should probably resize it when the window size changes.
         size = Renderer::get().getWndSize();
+    }
+    // the user may have passed getWndSize directly.
+    if (size == Renderer::get().getWndSize()) {
+        m_resizeWithWnd = true; // if window size, we should probably resize it when the window size changes.
     }
     m_size = size;
 
@@ -72,6 +75,14 @@ std::shared_ptr<Framebuffer> Framebuffer::create(fm::uvec2 size, GLuint format) 
 void Framebuffer::setSize(fm::uvec2 size) {
     if (m_size == size) return;
 
+    if (size == fm::uvec2::zero()) { // no size was passed, assume window size.
+        size = Renderer::get().getWndSize();
+    }
+    // the user may have passed getWndSize directly.
+    if (size == Renderer::get().getWndSize() && !m_resizeWithWnd) {
+        m_resizeWithWnd = true; // if window size, we should probably resize it when the window size changes.
+    }
+
     // temporarily store the old id
     GLint old;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &old);
@@ -87,8 +98,8 @@ void Framebuffer::setSize(fm::uvec2 size) {
     glRenderbufferStorage(GL_RENDERBUFFER, m_format, size.x, size.y);
 
     // just in case, set the viewport. 
-    // probably doesn't need to happen, but it's
-    // a "just in case" thing.
+    // probably doesn't need to happen, 
+    // but maybe the viewport is fucked up
     glViewport(0, 0, size.x, size.y); 
     m_size = size;
 

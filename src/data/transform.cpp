@@ -66,8 +66,10 @@ fm::mat4 Transform::getGlobalMatrix() {
     return m_globalModelMat;
 }
 
+// get the object's "rough" depth from the camera
 float Transform::getDepth(fm::vec3 camPos, fm::vec3 camFront, DepthType type) {
     
+    // early return
     if (!m_depthDirty) return m_depthFromCamera;
     m_depthDirty = false;
 
@@ -76,11 +78,9 @@ float Transform::getDepth(fm::vec3 camPos, fm::vec3 camFront, DepthType type) {
     
     // get the relative distance from this to the camera
     switch (type) {
-        case (DepthType::Planar) :       relative = relative.dot(camFront); break; // opaque depth
-        case (DepthType::SquaredRadial): relative = relative.dot(relative); break; // transparent depth
+        case (DepthType::Planar) :       m_depthFromCamera = relative.dot(camFront); break; // opaque depth
+        case (DepthType::SquaredRadial): m_depthFromCamera = relative.dot(relative); break; // transparent depth
     }
-    // project the relative distance onto the camera front vector
-    m_depthFromCamera = relative.dot(camFront);
     return m_depthFromCamera; 
 }
 

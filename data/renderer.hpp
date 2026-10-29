@@ -105,6 +105,9 @@ namespace Engine {
         // for instance, an fps of 60 means the delta is 0.0166...
         // and a delta of 0.0166... means the fps is 60.
 
+        bool isWndTransparent();
+        void setWndTransparent(bool v);
+
         // get desired fps
         uint16_t getTargetFPS();
 

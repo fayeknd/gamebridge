@@ -45,8 +45,8 @@ void MainComponent::init() {
     auto renderer = square->addComponent<IRenderable>();
     rb->m_mass = 1000.f;
     rb->m_useGravity = true;
-    
 
+    Renderer::get().setWndTransparent(false);
 
     auto box2 = square2->addComponent<Collider>(ColliderShape::Box);
     auto renderer2 = square2->addComponent<IRenderable>();

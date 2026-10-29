@@ -23,7 +23,11 @@ namespace Engine {
             return instance;
         }
 
-        // the pointer to the camera this framebuffer MAY be on
+        // the pointer to the camera this framebuffer MAY be on.
+        // doesn't need to be a smart pointer, if this isn't null,
+        // then the camera could only exist as long as the framebuffer
+        // does.
+        // unless you're doing something VERY silly.
         Camera* m_camera = nullptr;
 
         // our framebuffer id
@@ -95,7 +99,7 @@ namespace Engine {
         // get our framebuffer id 
         const FramebufferID getFramebufferID() const { return m_bufferID; }
 
-
+        // return a raw ptr to the camera.
         Camera* getCamera() { return m_camera; }
         
     };

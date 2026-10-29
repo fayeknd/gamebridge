@@ -122,6 +122,9 @@ namespace Engine {
     public:
 
         // return how far this transform is from the camera.
+        // this is not very accurate for transparency,
+        // because we only really have access to the center
+        // of an object. 
         float getDepth(fm::vec3 camPos, fm::vec3 camFront, DepthType type); 
 
         // return the matrix. if dirty, also calculates the matrix.

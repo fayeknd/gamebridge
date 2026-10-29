@@ -280,6 +280,7 @@ int Renderer::createWnd(fm::uvec2 size, std::string title, FullscreenMode fsMode
     // create the material for rendering the framebuffer
     m_mainFramebufferMaterial = Material::create();
     m_mainFramebufferMaterial->m_program = ShaderProgram::createProgramFromPath("stuff=>shaders/postprocess.glsl");
+    // costs no extra to make this material transparent
     m_mainFramebufferMaterial->m_data.m_hasTransparency = true;
 
     // create the imgui context 
@@ -600,4 +601,12 @@ void Renderer::_drawView(Framebuffer *fb) {
     // draw the stuff!
     glDrawElements(m_mainFramebufferMesh->getTopology(), m_mainFramebufferMesh->getIndexCount(), GL_UNSIGNED_SHORT, 0);
 
+}
+
+// needs to be a setter because the fb material is private
+bool Renderer::isWndTransparent() {
+    return m_mainFramebufferMaterial->m_data.m_hasTransparency;
+}
+void Renderer::setWndTransparent(bool v) {
+    m_mainFramebufferMaterial->m_data.m_hasTransparency = v;
 }
