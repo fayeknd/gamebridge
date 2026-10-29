@@ -17,8 +17,18 @@ void Framebuffer::_genBuffer(fm::uvec2 size) {
     }
     m_size = size;
 
-    // create the render texture we will read from
-    m_renderTexture = Texture2D::createRenderTexture(size);
+    // to make it clear - this should not be used to resize the framebuffer.
+    // it CAN be used, but it's slow. if you want to resize the framebuffer
+    // properly, just use fb->setSize(fm::uvec2).
+    if (!m_renderTexture) {
+        // create the render texture we will read from
+        m_renderTexture = Texture2D::createRenderTexture(size);
+    }
+    else {
+        // texture already exists, we are likely
+        m_renderTexture->m_txSize = m_size;
+        m_renderTexture->genTexture(nullptr);
+    }
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderTexture->getTextureType(), m_renderTexture->getTextureID(), 0);
 
@@ -26,7 +36,7 @@ void Framebuffer::_genBuffer(fm::uvec2 size) {
     // make the render buffer
     glGenRenderbuffers(1, &m_renderBufferID);
     glBindRenderbuffer(GL_RENDERBUFFER, m_renderBufferID);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_renderTexture->getSize().x, m_renderTexture->getSize().y);
+    glRenderbufferStorage(GL_RENDERBUFFER, m_format, m_renderTexture->getSize().x, m_renderTexture->getSize().y);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_renderBufferID);
 
@@ -39,7 +49,7 @@ void Framebuffer::_genBuffer(fm::uvec2 size) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-std::shared_ptr<Framebuffer> Framebuffer::create(fm::uvec2 size) {
+std::shared_ptr<Framebuffer> Framebuffer::create(fm::uvec2 size, GLuint format) {
     
     // make our framebuffer
     auto fb = std::shared_ptr<Framebuffer>(new Framebuffer());
@@ -49,6 +59,8 @@ std::shared_ptr<Framebuffer> Framebuffer::create(fm::uvec2 size) {
     fb->_register();
     // get a new framebuffer id
     fb->m_framebufferID = framebufferIDPool().getNewID();
+    // set the format
+    fb->m_format = format;
     // add the framebuffer id to the map
     framebufferMap().emplace(fb->m_framebufferID, fb);
 
@@ -59,10 +71,29 @@ std::shared_ptr<Framebuffer> Framebuffer::create(fm::uvec2 size) {
 
 void Framebuffer::setSize(fm::uvec2 size) {
     if (m_size == size) return;
-    // delete the buffer first
-    _deleteBuffer();
-    // generate a new buffer with the new size
-    _genBuffer(size);
+
+    // temporarily store the old id
+    GLint old;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &old);
+    // bind the render texture
+    glBindTexture(GL_TEXTURE_2D, m_renderTexture->getTextureID());
+    // re-set the texture data.
+    // pass null here because we aren't actually initialising
+    // it with any data, we are writing to this texture.
+    glTexImage2D(GL_TEXTURE_2D, 0, m_renderTexture->m_internalFormat, size.x, size.y, 0, m_renderTexture->m_format, GL_UNSIGNED_BYTE, NULL);
+
+    // update the renderbuffer
+    glBindRenderbuffer(GL_RENDERBUFFER, m_renderBufferID);
+    glRenderbufferStorage(GL_RENDERBUFFER, m_format, size.x, size.y);
+
+    // just in case, set the viewport. 
+    // probably doesn't need to happen, but it's
+    // a "just in case" thing.
+    glViewport(0, 0, size.x, size.y); 
+    m_size = size;
+
+    // reset the bound texture to whatever it was before
+    glBindTexture(GL_TEXTURE_2D, old);
 }
 
 void Framebuffer::setResizeWithWnd(bool v) {
@@ -74,12 +105,14 @@ void Framebuffer::setResizeWithWnd(bool v) {
 
 void Framebuffer::_deleteBuffer() {
 
-    // set the texture to a nullptr
-    m_renderTexture = nullptr;
     // delete the gl buffers
     glDeleteBuffers(1, &m_bufferID);
     glDeleteBuffers(1, &m_renderBufferID);
+    // make sure the IDs are 0.
+    // we do this because the framebuffer
+    // might be being remade or something.
     m_bufferID = 0;
+    m_renderBufferID = 0;
 }
 
 Framebuffer::~Framebuffer() {

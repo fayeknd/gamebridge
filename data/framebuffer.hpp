@@ -55,18 +55,20 @@ namespace Engine {
         // the same as the render texture size.
         fm::uvec2 m_size;
 
+        GLuint m_format = GL_DEPTH24_STENCIL8;
+
         friend class Camera;
 
     public:
 
         // the framebuffer map. a weak_ptr so it does not contribute to the ref count.
-        static inline std::unordered_map<FramebufferID, std::weak_ptr<Framebuffer>> framebufferMap() {
+        static std::unordered_map<FramebufferID, std::weak_ptr<Framebuffer>>& framebufferMap() {
             static std::unordered_map<FramebufferID, std::weak_ptr<Framebuffer>> instance;
             return instance;
         }
 
         // create a new framebuffer instance
-        static std::shared_ptr<Framebuffer> create(fm::uvec2 size = fm::uvec2::zero());
+        static std::shared_ptr<Framebuffer> create(fm::uvec2 size = fm::uvec2::zero(), GLuint format = GL_DEPTH24_STENCIL8);
 
         ~Framebuffer();
 

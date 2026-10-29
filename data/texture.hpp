@@ -79,14 +79,17 @@ namespace Engine {
         // values as it does it, so we need to account for that.
         void _initTextureWithSTBIData(bytes& data, bool mipmap = true, GLuint format = texture_defaultFormat, GLuint filtering = texture_defaultFiltering, GLuint internalFormat = texture_defaultFormat, GLuint wrapping = texture_defaultWrapping, GLuint type = GL_TEXTURE_2D);
 
-        // generate a texture from all the values on this texture (+data).
-        void _genTexture(bytes* data); 
-
         // add / remove this texture from the global texture queue
         void _queue();
         void _unqueue();
 
+        friend class Framebuffer;
+
     public:
+
+        // generate a texture from all the values on this texture (+data).
+        void genTexture(bytes* data); 
+
 
         ~Texture2D();
 

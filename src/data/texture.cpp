@@ -29,7 +29,7 @@ std::shared_ptr<Texture2D> Texture2D::createRenderTexture(fm::uvec2 size, GLuint
     texture->m_channelCount   = 4;
 
     // gen the texture with no data (the framebuffer writes to it)
-    texture->_genTexture(nullptr); 
+    texture->genTexture(nullptr); 
 
     return texture;
 }
@@ -137,13 +137,13 @@ void Texture2D::_initTextureWithSTBIData(bytes &data, bool mipmap, GLuint format
     m_useMipmapping     = mipmap;
 
     // generate the texture.
-    _genTexture(&data);
+    genTexture(&data);
 
     // register this texture with the ObjectRegistry
     _register();
 }
 
-void Texture2D::_genTexture(bytes* data) {
+void Texture2D::genTexture(bytes* data) {
 
     // TODO : incorporate pixel buffer objects
     // for videos later. check if the image is static.
@@ -162,10 +162,7 @@ void Texture2D::_genTexture(bytes* data) {
     // if this texture has been generated already,
     // then we are regenerating it. so delete the
     // old one first.
-    if (m_txGenerated) {
-        txIDToIDMap().erase(m_txID);
-        glDeleteTextures(1, &m_txID);
-    }
+    if (m_txGenerated) glDeleteTextures(1, &m_txID);
 
     // packs differently if the texture is single channel idfk why this works
     // https://github.com/fayeknd/peachmilk_editor/blob/main/src/render/texture.cpp
@@ -174,8 +171,8 @@ void Texture2D::_genTexture(bytes* data) {
 
     // actually generate the texture
     glGenTextures(1, &m_txID);
-    // register this to the txIDtoID map
-    txIDToIDMap().emplace(m_txID, this->getCacheID());
+
+    if (!m_txGenerated) txIDToIDMap().emplace(m_txID, this->getCacheID()); // register this to the txIDtoID map
     glBindTexture(m_txType, m_txID);
 
     // set the texture parameters

@@ -55,6 +55,8 @@ void MainComponent::init() {
     square->transform.addPositionY(-10.0f);
     square2->transform.setScaleX(10.0f);
     square2->transform.setScaleZ(10.0f);
+    square2->transform.addPositionY(20.0f);
+    square2->transform.addScale(5.0f);
 
     // add some basic data to the renderer
     renderer->m_mesh = Mesh::primitive(Primitive::Cube);

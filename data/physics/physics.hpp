@@ -35,7 +35,7 @@ namespace Engine {
         // Physics tick, 20 ticks per second
         static inline Timer physicsTick;
         // Ticks per second
-        static inline uint16_t tps = 20;
+        static inline uint16_t tps = 60;
 
     };
 }

@@ -342,6 +342,7 @@ void Renderer::_framebuffer_resize_callback(GLFWwindow* wnd, int w, int h) {
     Renderer::get().m_wndSize = fm::vec<unsigned int>(w,h);
 
     for (const auto& fb : Framebuffer::framebufferMap()) {
+        
         // skip if the framebuffer is null
         if (!fb.second.lock()) continue;
         // skip if the framebuffer does not resize with the windowd
