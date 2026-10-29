@@ -26,6 +26,14 @@ Collider::Collider(const fm::vec3& center, const float& radius)
     this->radius = radius;
 }
 
+// Constructs a new capsule or cylinder collider
+Collider::Collider(ColliderShape shape, const float& radius, const float& height)
+{
+    m_shape = shape;
+    this->height = height;
+    this->radius = radius;
+}
+
 // Constructs a new collider from a shape
 Collider::Collider(ColliderShape shape)
 {
@@ -43,6 +51,74 @@ float Collider::getWorldRadius() {
     return radius * std::max({ std::abs(s.x), std::abs(s.y), std::abs(s.z) });
 }
 
+// gets the height of the collider in world space
+float Collider::getWorldHeight() {
+    fm::vec3 s = getEntity().transform.getGlobalScale();
+    return height * std::max({ std::abs(s.x), std::abs(s.y), std::abs(s.z) });
+}
+
+void Collider::getSegmentEnds(Collider& col, fm::vec3& outA, fm::vec3& outB)
+{
+    // gets the world matrix of the collider
+    fm::mat4 world = col.getEntity().transform.getGlobalMatrix();
+    // gets half the heigh for capsule hemispherical ends
+    float halfH = std::max(0.0f, (col.height * 0.5f) - col.radius);
+
+    // sets the collider height for half for a cylinder
+    if (col.m_shape == ColliderShape::Cylinder) halfH = col.height * 0.5f;
+
+    // returns the local half heights
+    fm::vec3 localA(0.0f, -halfH, 0.0f);
+    fm::vec3 localB(0.0f,  halfH, 0.0f);
+
+    // transforms the local ends to world ends
+    outA = (localA + col.offset).transformed(world);
+    outB = (localB + col.offset).transformed(world);
+}
+
+void Collider::closestPointBetweenSegments(fm::vec3 p1, fm::vec3 q1, fm::vec3 p2, fm::vec3 q2, fm::vec3& c1, fm::vec3& c2)
+{
+    fm::vec3 d1 = q1 - p1;
+    fm::vec3 d2 = q2 - p2;
+    fm::vec3 r = p1 - p2;
+    float a = d1.dot(d1);
+    float e = d2.dot(d2);
+    float f = d2.dot(r);
+
+    float s, t;
+    if (a <= 1e-6f && e <= 1e-6f) {
+        c1 = p1; c2 = p2; return;
+    }
+    if (a <= 1e-6f) {
+        s = 0.0f;
+        t = std::clamp(f / e, 0.0f, 1.0f);
+    } else {
+        float c = d1.dot(r);
+        if (e <= 1e-6f) {
+            t = 0.0f;
+            s = std::clamp(-c / a, 0.0f, 1.0f);
+        } else {
+            float b = d1.dot(d2);
+            float denom = a * e - b * b;
+            if (denom != 0.0f) {
+                s = std::clamp((b * f - c * e) / denom, 0.0f, 1.0f);
+            } else {
+                s = 0.0f;
+            }
+            t = (b * s + f) / e;
+            if (t < 0.0f) {
+                t = 0.0f;
+                s = std::clamp(-c / a, 0.0f, 1.0f);
+            } else if (t > 1.0f) {
+                t = 1.0f;
+                s = std::clamp((b - c) / a, 0.0f, 1.0f);
+            }
+        }
+    }
+    c1 = p1 + d1 * s;
+    c2 = p2 + d2 * t;
+}
+
 // checks if a collider is colliding with another collider and outputs a contact point
 bool Collider::IsCollidingWith(Collider& collider, Contact& out)
 {
@@ -53,12 +129,17 @@ bool Collider::IsCollidingWith(Collider& collider, Contact& out)
             switch (collider.m_shape) {
 
                 case (ColliderShape::Sphere) : {
-                    return CheckSphereBoxIntersection(collider, *this, out);
+                    return CheckSphereBoxIntersection(*this, collider, out);
                 }
                 case (ColliderShape::Box) : {
                     return CheckBoxIntersection(*this, collider, out);
                 }
-
+                case ColliderShape::Capsule : {
+                    return CheckBoxCapsuleIntersection(*this, collider, out);
+                }
+                case ColliderShape::Cylinder : {
+                    return CheckBoxCylinderIntersection(*this, collider, out);
+                }
             }
             break;
         }
@@ -67,10 +148,56 @@ bool Collider::IsCollidingWith(Collider& collider, Contact& out)
             switch (collider.m_shape) {
 
                 case (ColliderShape::Sphere) : {
-                    return CheckSphereBoxIntersection(*this, collider, out);
+                    return CheckSphereBoxIntersection(collider, *this, out);
                 }
                 case (ColliderShape::Box) : {
                     return CheckSphereBoxIntersection(*this, collider, out);
+                }
+                case ColliderShape::Capsule : {
+                    return CheckSphereCapsuleIntersection(collider, *this, out);
+                }
+                case ColliderShape::Cylinder : {
+                    return CheckSphereCylinderIntersection(*this, collider, out);
+                }
+
+            }
+            break;
+        }
+        case (ColliderShape::Capsule) : {
+
+            switch (collider.m_shape) {
+
+                case (ColliderShape::Sphere) : {
+                    return CheckSphereCapsuleIntersection(*this, collider, out);
+                }
+                case (ColliderShape::Box) : {
+                    return CheckBoxCapsuleIntersection(collider, *this, out);
+                }
+                case ColliderShape::Capsule : {
+                    return CheckCapsuleIntersection(*this, collider, out);
+                }
+                case ColliderShape::Cylinder : {
+                    return CheckCylinderCapsuleIntersection(collider, *this, out);
+                }
+
+            }
+            break;
+        }
+        case (ColliderShape::Cylinder) : {
+
+            switch (collider.m_shape) {
+
+                case (ColliderShape::Sphere) : {
+                    return CheckSphereCylinderIntersection(*this, collider, out);
+                }
+                case (ColliderShape::Box) : {
+                    return CheckBoxCylinderIntersection(collider, *this, out);
+                }
+                case ColliderShape::Capsule : {
+                    return CheckCylinderIntersection(*this, collider, out);
+                }
+                case ColliderShape::Cylinder : {
+                    return CheckCylinderCapsuleIntersection(*this, collider, out);
                 }
 
             }
@@ -142,13 +269,9 @@ bool Collider::CheckSphereIntersection(Collider& a, Collider& b, Contact& out) {
     return true;
 }
 
-
 // checks if a sphere is colliding with a box
-bool Collider::CheckSphereBoxIntersection(Collider& a, Collider& b, Contact& out)
-{
-    // gets the world data of the colliders
-    fm::vec3 c = a.getWorldCenter();
-    float r    = a.getWorldRadius();
+bool Collider::CheckSphereBoxIntersection(fm::vec3 c, float r, Collider& b, Contact& out)
+{    // gets the world data of the colliders
     AABB box   = b.getWorldAABB();
 
     // finds the closest between the box and spheres
@@ -190,6 +313,189 @@ bool Collider::CheckSphereBoxIntersection(Collider& a, Collider& b, Contact& out
     return true;
 }
 
+bool Collider::CheckSphereBoxIntersection(Collider& a, Collider& b, Contact& out) {
+    return CheckSphereBoxIntersection(a.getWorldCenter(), a.getWorldRadius(), b, out);
+}
+
+bool Collider::CheckSphereCapsuleIntersection(Collider& capsule, Collider& sphere, Contact& out)
+{
+    fm::vec3 pointA, pointB;
+    getSegmentEnds(capsule, pointA, pointB);
+
+    fm::vec3 sphereCenter = sphere.getWorldCenter();
+    fm::vec3 closest = fm::vec3::closestPoint(pointA, pointB, sphereCenter);
+
+    float rc = capsule.getWorldRadius();
+    float rs = sphere.getWorldRadius();
+    float sumRad = rc + rs;
+
+    fm::vec3 d = sphereCenter - closest;
+    float distSq = d.dot(d);
+
+    if (distSq > sumRad * sumRad) return false;
+
+    float dist = std::sqrt(distSq);
+    out.penetration = sumRad - dist;
+    out.normal = dist > 1e-6f ? d * (1.0f / dist) : fm::vec3(0.f, 1.f, 0.f);
+    return true;
+}
+
+bool Collider::CheckBoxCapsuleIntersection(Collider& box, Collider& capsule, Contact& out) {
+    fm::vec3 a, b;
+    getSegmentEnds(capsule, a, b);
+
+    // Find closest point on capsule segment to box center (or use box bounds)
+    AABB bBox = box.getWorldAABB();
+
+    fm::vec3 segMid = (a + b) + fm::vec3(0.5f);
+    fm::vec3 boxClosestToMid(std::clamp(segMid.x, bBox.m_min.x, bBox.m_max.x),
+                             std::clamp(segMid.y, bBox.m_min.y, bBox.m_max.y),
+                             std::clamp(segMid.z, bBox.m_min.z, bBox.m_max.z));
+
+    fm::vec3 closestOnSeg = fm::vec3::closestPoint(a, b, boxClosestToMid);
+
+    // Temporarily treat the closest segment point as a sphere center
+    return CheckSphereBoxIntersection(closestOnSeg, capsule.getWorldRadius(), box, out);
+}
+
+bool Collider::CheckCapsuleIntersection(Collider& capA, Collider& capB, Contact& out) {
+    fm::vec3 a1, b1, a2, b2;
+    getSegmentEnds(capA, a1, b1);
+    getSegmentEnds(capB, a2, b2);
+
+    fm::vec3 c1, c2;
+    closestPointBetweenSegments(a1, b1, a2, b2, c1, c2);
+
+    fm::vec3 d = c2 - c1;
+    float distSq = d.dot(d);
+    float rSum = capA.getWorldRadius() + capB.getWorldRadius();
+
+    if (distSq > rSum * rSum) return false;
+
+    float dist = std::sqrt(std::max(0.0f, distSq));
+    out.penetration = rSum - dist;
+    out.normal = dist > 1e-6f ? d * (1.0f / dist) : fm::vec3(0.f, 1.f, 0.f);
+    return true;
+}
+
+bool Collider::CheckCylinderCapsuleIntersection(Collider& cyl, Collider& cap, Contact& out) {
+    // Treat cylinder core as a segment with radial bounds + flat cap checks
+    fm::vec3 a, b;
+    getSegmentEnds(cyl, a, b);
+    fm::vec3 ca, cb;
+    getSegmentEnds(cap, ca, cb);
+
+    fm::vec3 c1, c2;
+    closestPointBetweenSegments(a, b, ca, cb, c1, c2);
+
+    fm::vec3 d = c2 - c1;
+    float distSq = d.dot(d);
+    float rSum = cyl.getWorldRadius() + cap.getWorldRadius();
+
+    if (distSq > rSum * rSum) return false;
+
+    float dist = std::sqrt(std::max(0.0f, distSq));
+    out.penetration = rSum - dist;
+    out.normal = dist > 1e-6f ? d * (-1.0f / dist) : fm::vec3(0.f, 1.f, 0.f);
+    return true;
+}
+
+bool Collider::CheckBoxCylinderIntersection(Collider& box, Collider& cyl, Contact& out) {
+    fm::vec3 a, b;
+    getSegmentEnds(cyl, a, b);
+    float r = cyl.getWorldRadius();
+
+    // 1. Get exact world-space height from segment endpoints (accounts for transform scale!)
+    fm::vec3 ab = b - a;
+    float worldHeightSq = ab.dot(ab);
+    if (worldHeightSq < 1e-6f) return false;
+    
+    float worldHeight = std::sqrt(worldHeightSq);
+    fm::vec3 axisDir = ab * (1.0f / worldHeight);
+
+    AABB bBox = box.getWorldAABB();
+    fm::vec3 boxCenter = (bBox.m_min + bBox.m_max) * 0.5f;
+
+    // 2. Find the closest point on the cylinder's central axis segment to the box center
+    fm::vec3 closestOnAxis = fm::vec3::closestPoint(a, b, boxCenter);
+
+    // 3. Find the closest point on the box to that axis point
+    fm::vec3 boxClosest(std::clamp(closestOnAxis.x, bBox.m_min.x, bBox.m_max.x),
+                        std::clamp(closestOnAxis.y, bBox.m_min.y, bBox.m_max.y),
+                        std::clamp(closestOnAxis.z, bBox.m_min.z, bBox.m_max.z));
+
+    // Vector from bottom endpoint 'a' to boxClosest
+    fm::vec3 ac = boxClosest - a;
+    float projection = ac.dot(axisDir);
+
+    // 4. Test collision based on whether it hits the side wall or the flat end caps
+    if (projection >= 0.0f && projection <= worldHeight) {
+        // --- SIDE WALL COLLISION ---
+        fm::vec3 axisPoint = a + axisDir * projection;
+        fm::vec3 d = boxClosest - axisPoint;
+        float distSq = d.dot(d);
+
+        if (distSq > r * r) return false;
+
+        float dist = std::sqrt(std::max(0.0f, distSq));
+        out.penetration = r - dist;
+        out.normal = dist > 1e-6f ? d * (-1.0f / dist) : fm::vec3(0.f, 1.f, 0.f);
+        return true;
+    } 
+    else {
+        // --- FLAT END CAP COLLISION ---
+        fm::vec3 capCenter = (projection < 0.0f) ? a : b;
+        fm::vec3 d = boxClosest - capCenter;
+        float distSq = d.dot(d);
+
+        if (distSq > r * r) return false;
+
+        float axialDist = (projection < 0.0f) ? -projection : (projection - worldHeight);
+        out.penetration = r - std::abs(axialDist);
+        out.normal = (projection < 0.0f) ? axisDir * -1.0f : axisDir;
+
+        if (out.penetration <= 0.0f) return false;
+        return true;
+    }
+}
+
+bool Collider::CheckSphereCylinderIntersection(Collider& sphere, Collider& cyl, Contact& out) {
+    fm::vec3 a, b;
+    getSegmentEnds(cyl, a, b);
+    fm::vec3 sCenter = sphere.getWorldCenter();
+
+    fm::vec3 closestOnAxis = fm::vec3::closestPoint(a, b, sCenter);
+    fm::vec3 d = sCenter - closestOnAxis;
+    float distSq = d.dot(d);
+    float rSum = sphere.getWorldRadius() + cyl.getWorldRadius();
+
+    if (distSq > rSum * rSum) return false;
+
+    float dist = std::sqrt(std::max(0.0f, distSq));
+    out.penetration = rSum - dist;
+    out.normal = dist > 1e-6f ? d * (-1.0f / dist) : fm::vec3(0.f, 1.f, 0.f);
+    return true;
+}
+
+bool Collider::CheckCylinderIntersection(Collider& cylA, Collider& cylB, Contact& out) {
+    fm::vec3 a1, b1, a2, b2;
+    getSegmentEnds(cylA, a1, b1);
+    getSegmentEnds(cylB, a2, b2);
+
+    fm::vec3 c1, c2;
+    closestPointBetweenSegments(a1, b1, a2, b2, c1, c2);
+
+    fm::vec3 d = c2 - c1;
+    float distSq = d.dot(d);
+    float rSum = cylA.getWorldRadius() + cylB.getWorldRadius();
+
+    if (distSq > rSum * rSum) return false;
+
+    float dist = std::sqrt(std::max(0.0f, distSq));
+    out.penetration = rSum - dist;
+    out.normal = dist > 1e-6f ? d * (1.0f / dist) : fm::vec3(0.f, 1.f, 0.f);
+    return true;
+}
 
 // resolves two collisions
 void CollisionWorld::resolve(Collider* a, Collider* b, const Collider::Contact& c) {
@@ -204,11 +510,11 @@ void CollisionWorld::resolve(Collider* a, Collider* b, const Collider::Contact& 
     float total = ia + ib;
 
     // both colliders are static
-    if (total == 0.f) return;                       
-
+    if (total == 0.f) return;   
+    
     // 1. push apart objects
     if (ra) a->getEntity().transform.addPosition(c.normal * (-c.penetration * ia / total));
-    if (rb) b->getEntity().transform.addPosition(c.normal * ( c.penetration * ib / total));
+    if (rb) b->getEntity().transform.addPosition(c.normal * (c.penetration * ib / total));
 
     // 2. bouncyyyyy i love trampolining https://klipy.com/gifs/gmail-dog-3
     fm::vec3 va = ra ? ra->getVelocity() : fm::vec3::zero();
@@ -238,6 +544,14 @@ void Collider::draw() {
         }
         case (ColliderShape::Sphere) : {
             _drawSphere(center, radius, entity.getRealMatrix(), line);
+            break;
+        }
+        case (ColliderShape::Cylinder) : {
+            _drawCylinder(radius, height, entity.getRealMatrix(), line);
+            break;
+        }
+        case (ColliderShape::Capsule) : {
+            _drawCapsule(radius, height, entity.getRealMatrix(), line);
             break;
         }
     }
@@ -339,6 +653,83 @@ void Collider::_drawSphere(fm::vec3 center, fm::vec3 scaledRadius, fm::mat4 mode
     line.draw(yzPoints, model); // draw ring 3
 }
 
+void Collider::_drawCylinder(float r, float h, fm::mat4 model, Debug::DebugLine& line) {
+    const int segments = 24;
+    const float angleStep = 2.0f * fm::PI / static_cast<float>(segments);
+    float halfH = h * 0.5f;
+
+    std::vector<Point> topRing;
+    std::vector<Point> bottomRing;
+    std::vector<Point> pillars;
+
+    topRing.reserve(segments + 1);
+    bottomRing.reserve(segments + 1);
+
+    for (int i = 0; i <= segments; ++i) {
+        float angle = i * angleStep;
+        float x = std::cos(angle) * r;
+        float z = std::sin(angle) * r;
+
+        fm::vec3 topPos(x, halfH, z);
+        fm::vec3 botPos(x, -halfH, z);
+
+        topRing.push_back(Point(topPos, m_drawCol));
+        bottomRing.push_back(Point(botPos, m_drawCol));
+
+        // Draw 4 vertical pillar lines at quarter marks
+        if (i % (segments / 4) == 0) {
+            pillars.push_back(Point(topPos, m_drawCol));
+            pillars.push_back(Point(botPos, m_drawCol));
+        }
+    }
+
+    line.draw(topRing, model);
+    line.draw(bottomRing, model);
+    line.draw(pillars, model);
+}
+
+void Collider::_drawCapsule(float r, float h, fm::mat4 model, Debug::DebugLine& line) {
+    const int segments = 24;
+    const float angleStep = 2.0f * fm::PI / static_cast<float>(segments);
+    float halfCylH = std::max(0.0f, (h * 0.5f) - r);
+
+    // 1. Draw central cylinder body rings
+    std::vector<Point> topRing, bottomRing, pillars;
+    for (int i = 0; i <= segments; ++i) {
+        float angle = i * angleStep;
+        float x = std::cos(angle) * r;
+        float z = std::sin(angle) * r;
+
+        fm::vec3 topPos(x, halfCylH, z);
+        fm::vec3 botPos(x, -halfCylH, z);
+
+        topRing.push_back(Point(topPos, m_drawCol));
+        bottomRing.push_back(Point(botPos, m_drawCol));
+
+        if (i % (segments / 4) == 0) {
+            pillars.push_back(Point(topPos, m_drawCol));
+            pillars.push_back(Point(botPos, m_drawCol));
+        }
+    }
+
+    line.draw(topRing, model);
+    line.draw(bottomRing, model);
+    line.draw(pillars, model);
+
+    // 2. Draw hemispherical caps (top and bottom semi-circles)
+    std::vector<Point> topCapXZ, bottomCapXZ;
+    for (int i = 0; i <= segments; ++i) {
+        float angle = i * angleStep;
+        // Using sphere drawing logic offset by halfCylH
+        fm::vec3 topArc(std::cos(angle) * r, halfCylH, std::sin(angle) * r);
+        fm::vec3 botArc(std::cos(angle) * r, -halfCylH, std::sin(angle) * r);
+        topCapXZ.push_back(Point(topArc, m_drawCol));
+        bottomCapXZ.push_back(Point(botArc, m_drawCol));
+    }
+    line.draw(topCapXZ, model);
+    line.draw(bottomCapXZ, model);
+}
+
 
 // returns the colliders ID
 ColliderID Collider::getColliderID() {
@@ -406,6 +797,10 @@ bool Collider::checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit) {
             return rayAABoxIntersection(localRay, this, outRaycastHit);
         case ColliderShape::Sphere:
             return rayAASphereIntersection(localRay, this, outRaycastHit);
+        case ColliderShape::Cylinder:
+            return rayAACylinderIntersection(localRay, this, outRaycastHit);
+        case ColliderShape::Capsule:
+            return rayAACapsuleIntersection(localRay, this, outRaycastHit);
         default: 
             return false;
     }
@@ -542,6 +937,145 @@ bool Collider::rayAASphereIntersection(const Ray& ray, const Collider* sphere, R
     return true;
 }
 
+bool Collider::rayAACylinderIntersection(const Ray& ray, const Collider* cyl, RaycastHit& outRaycastHit) {
+    float r = cyl->radius;
+    float halfH = cyl->height * 0.5f;
+
+    float tMin = std::numeric_limits<float>::max();
+    bool hitFound = false;
+
+    // 1. Test infinite cylinder body (XZ plane quadratic)
+    float ox = ray.m_origin.x;
+    float oz = ray.m_origin.z;
+    float dx = ray.m_direction.x;
+    float dz = ray.m_direction.z;
+
+    float a = dx * dx + dz * dz;
+    float b = 2.0f * (ox * dx + oz * dz);
+    float c = ox * ox + oz * oz - r * r;
+
+    if (std::abs(a) > 1e-8f) {
+        float discriminant = b * b - 4.0f * a * c;
+        if (discriminant >= 0.0f) {
+            float discSqrt = std::sqrt(discriminant);
+            float t0 = (-b - discSqrt) / (2.0f * a);
+            float t1 = (-b + discSqrt) / (2.0f * a);
+
+            if (t0 > t1) std::swap(t0, t1);
+
+            // Check t0
+            if (t0 > 0.0f) {
+                float yHit = ray.m_origin.y + t0 * ray.m_direction.y;
+                if (yHit >= -halfH && yHit <= halfH) {
+                    tMin = std::min(tMin, t0);
+                    hitFound = true;
+                }
+            }
+            // Check t1 if t0 was missed or out of bounds
+            if (t1 > 0.0f && !hitFound) {
+                float yHit = ray.m_origin.y + t1 * ray.m_direction.y;
+                if (yHit >= -halfH && yHit <= halfH) {
+                    tMin = std::min(tMin, t1);
+                    hitFound = true;
+                }
+            }
+        }
+    }
+
+    // 2. Test flat end caps (y = -halfH and y = +halfH)
+    float capYs[2] = { -halfH, halfH };
+    for (float capY : capYs) {
+        if (std::abs(ray.m_direction.y) > 1e-8f) {
+            float tCap = (capY - ray.m_origin.y) / ray.m_direction.y;
+            if (tCap > 0.0f && tCap < tMin) {
+                fm::vec3 hitPoint = ray.m_origin + ray.m_direction * tCap;
+                if (hitPoint.x * hitPoint.x + hitPoint.z * hitPoint.z <= r * r) {
+                    tMin = tCap;
+                    hitFound = true;
+                }
+            }
+        }
+    }
+
+    if (!hitFound) return false;
+
+    RaycastHitInfo& outHitInfo = outRaycastHit.m_hitInfo;
+    fm::mat4 worldMatrix = outRaycastHit.m_hitEntity->transform.getGlobalMatrix();
+
+    outHitInfo.m_hitPoint = (ray.m_origin + ray.m_direction * tMin).transformed(worldMatrix);
+    outHitInfo.m_distance = tMin;
+    outHitInfo.m_hasHit = true;
+    return true;
+}
+
+bool Collider::rayAACapsuleIntersection(const Ray& ray, const Collider* cap, RaycastHit& outRaycastHit) {
+    float r = cap->radius;
+    float totalH = cap->height;
+    float halfCylH = std::max(0.0f, (totalH * 0.5f) - r);
+
+    float tMin = std::numeric_limits<float>::max();
+    bool hitFound = false;
+
+    // 1. Test central cylinder body
+    {
+        float ox = ray.m_origin.x;
+        float oz = ray.m_origin.z;
+        float dx = ray.m_direction.x;
+        float dz = ray.m_direction.z;
+
+        float a = dx * dx + dz * dz;
+        float b = 2.0f * (ox * dx + oz * dz);
+        float c = ox * ox + oz * oz - r * r;
+
+        if (std::abs(a) > 1e-8f) {
+            float disc = b * b - 4.0f * a * c;
+            if (disc >= 0.0f) {
+                float discSqrt = std::sqrt(disc);
+                float t0 = (-b - discSqrt) / (2.0f * a);
+                float t1 = (-b + discSqrt) / (2.0f * a);
+                if (t0 > t1) std::swap(t0, t1);
+
+                if (t0 > 0.0f) {
+                    float y = ray.m_origin.y + t0 * ray.m_direction.y;
+                    if (y >= -halfCylH && y <= halfCylH) { tMin = std::min(tMin, t0); hitFound = true; }
+                }
+                if (t1 > 0.0f && !hitFound) {
+                    float y = ray.m_origin.y + t1 * ray.m_direction.y;
+                    if (y >= -halfCylH && y <= halfCylH) { tMin = std::min(tMin, t1); hitFound = true; }
+                }
+            }
+        }
+    }
+
+    // 2. Test top and bottom spherical caps
+    fm::vec3 capCenters[2] = { fm::vec3(0.f, -halfCylH, 0.f), fm::vec3(0.f, halfCylH, 0.f) };
+    for (const auto& center : capCenters) {
+        fm::vec3 length = ray.m_origin - center;
+        float rdr = ray.m_direction.dot(ray.m_direction);
+        float ldr = 2.0f * length.dot(ray.m_direction);
+        float ldl = length.dot(length) - (r * r);
+
+        float disc = (ldr * ldr) - (4.0f * rdr * ldl);
+        if (disc >= 0.0f) {
+            float discSqrt = std::sqrt(disc);
+            float near = (-ldr - discSqrt) / (2.0f * rdr);
+            if (near > 0.0f && near < tMin) {
+                tMin = near;
+                hitFound = true;
+            }
+        }
+    }
+
+    if (!hitFound) return false;
+
+    RaycastHitInfo& outHitInfo = outRaycastHit.m_hitInfo;
+    fm::mat4 worldMatrix = outRaycastHit.m_hitEntity->transform.getGlobalMatrix();
+
+    outHitInfo.m_hitPoint = (ray.m_origin + ray.m_direction * tMin).transformed(worldMatrix);
+    outHitInfo.m_distance = tMin;
+    outHitInfo.m_hasHit = true;
+    return true;
+}
 
 // sets the colliders static boolean
 void Collider::setStatic(bool s)
@@ -558,6 +1092,16 @@ AABB Collider::getWorldAABB() {
     // gets the transform and global matrix
     Transform& t = entity.transform;
     fm::mat4 world = t.getGlobalMatrix();
+
+    if (m_shape == ColliderShape::Capsule || m_shape == ColliderShape::Cylinder) {
+        fm::vec3 a, b;
+        getSegmentEnds(*this, a, b);
+        float r = getWorldRadius();
+
+        fm::vec3 lo = { std::min(a.x, b.x) - r, std::min(a.y, b.y) - r, std::min(a.z, b.z) - r };
+        fm::vec3 hi = { std::max(a.x, b.x) + r, std::max(a.y, b.y) + r, std::max(a.z, b.z) + r };
+        return { lo, hi };
+    }
 
     // transform the spheres bounds based on the world space
     if (m_shape == ColliderShape::Sphere) {

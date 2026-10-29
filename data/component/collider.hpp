@@ -17,7 +17,7 @@ namespace Engine
     // The shape of the collider
     enum class ColliderShape
     {
-        Box, Sphere
+        Box, Sphere, Cylinder, Capsule
     };
 
     class Collider : public IRenderable
@@ -41,13 +41,27 @@ namespace Engine
             // ---------------------------------------------------------------------------
             static bool CheckBoxIntersection(Collider& a, Collider& b, Contact& out);
             static bool CheckSphereIntersection(Collider& a, Collider& b, Contact& out);
+            static bool CheckSphereBoxIntersection(fm::vec3 c, float r, Collider& b, Contact& out);
             static bool CheckSphereBoxIntersection(Collider& a, Collider& b, Contact& out);
+            static bool CheckBoxCylinderIntersection(Collider& a, Collider& b, Contact& out);
+            static bool CheckSphereCylinderIntersection(Collider& a, Collider& b, Contact& out);
+            static bool CheckCylinderIntersection(Collider& a, Collider& b, Contact& out);
+            static bool CheckBoxCapsuleIntersection(Collider& a, Collider& b, Contact& out);
+            static bool CheckSphereCapsuleIntersection(Collider& a, Collider& b, Contact& out);
+            static bool CheckCylinderCapsuleIntersection(Collider& a, Collider& b, Contact& out);
+            static bool CheckCapsuleIntersection(Collider& a, Collider& b, Contact& out);
             // ---------------------------------------------------------------------------
+
+            // gets the world end points of a cylinder/capsule
+            static void getSegmentEnds(Collider& col, fm::vec3& outA, fm::vec3& outB);
+            static void closestPointBetweenSegments(fm::vec3 p1, fm::vec3 q1, fm::vec3 p2, fm::vec3 q2, fm::vec3& c1, fm::vec3& c2);
 
             // draws a collider for debug purposes
             // -------------------------------------------------------------------------------------
             void _drawBox(fm::vec3 min, fm::vec3 max, fm::mat4 mat, Debug::DebugLine& line);
             void _drawSphere(fm::vec3 center, fm::vec3 radius, fm::mat4 mat, Debug::DebugLine& line);
+            void _drawCylinder(float r, float h, fm::mat4 model, Debug::DebugLine& line);
+            void _drawCapsule(float r, float h, fm::mat4 model, Debug::DebugLine& line);
             // -------------------------------------------------------------------------------------
 
             // Whether the collider is static (doesn't move during runtime)
@@ -67,6 +81,9 @@ namespace Engine
             fm::vec3 center = fm::vec3::zero();
             float radius = 1.0f;
 
+            // height for a capsule and cylinder
+            float height = 2.f;
+
             // the min and max bounds of a box
             fm::vec3 m_min = -fm::vec3::one() * 0.5f;
             fm::vec3 m_max = fm::vec3::one() * 0.5f;
@@ -74,10 +91,12 @@ namespace Engine
             // convert local bounds to world
             fm::vec3 getWorldCenter();
             float getWorldRadius();
+            float getWorldHeight();
 
             // Collider constructors
             Collider(const fm::vec3& min, const fm::vec3& max);
             Collider(const fm::vec3& center, const float& radius);
+            Collider(ColliderShape shape, const float& radius, const float& height);
             Collider(ColliderShape shape);
 
             // Collider collision checks
@@ -103,6 +122,8 @@ namespace Engine
             static bool rayAABoxIntersection(const Physics::Ray& ray, const Collider* box, Physics::RaycastHit& outRaycastHit);
             // check for an intersection with an axis-aligned sphere
             static bool rayAASphereIntersection(const Physics::Ray& ray, const Collider* sphere, Physics::RaycastHit& outRaycastHit);
+            static bool rayAACylinderIntersection(const Physics::Ray& ray, const Collider* cyl, Physics::RaycastHit& outRaycastHit);
+            static bool rayAACapsuleIntersection(const Physics::Ray& ray, const Collider* cap, Physics::RaycastHit& outRaycastHit);
 
             // Setter and getter for static
             void setStatic(bool s);

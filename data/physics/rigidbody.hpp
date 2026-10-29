@@ -35,7 +35,7 @@ namespace Engine {
             // mass of the entity
             float m_mass = 1.f;
 
-            float m_bounciness = 1.f; // 0 = no bounce, 1 = perfectly elastic will be funny i guarentee
+            float m_bounciness = 0.f; // 0 = no bounce, 1 = perfectly elastic will be funny i guarentee
 
             // force modes for force application
             enum ForceMode

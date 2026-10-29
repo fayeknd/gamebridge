@@ -34,6 +34,7 @@ namespace fm {
         _vec3<T> transform(const _mat4x4<T>& mat, bool isDirection = false); 
         static _vec3<T> min(const _vec3<T>&, const _vec3<T>&);
         static _vec3<T> max(const _vec3<T>&, const _vec3<T>&);
+        static _vec3<T> closestPoint(const _vec3<T>&, const _vec3<T>&, const _vec3<T>&);
         _vec3<T> abs();
 
         _vec3<T>& operator+=(const _vec3<T>& v);
@@ -145,6 +146,20 @@ namespace fm {
     template <typename T>
     inline _vec3<T> _vec3<T>::max(const _vec3<T>& v, const _vec3<T>& y) {
         return v.length() <= y.length() ? y.length() : v.length();
+    }
+    template <typename T>
+    inline _vec3<T> _vec3<T>::closestPoint(const _vec3<T>& a, const _vec3<T>& b, const _vec3<T>& p) {
+        _vec3<T> ab = b - a;
+        T denom = ab.dot(ab);
+
+        if (denom == static_cast<T>(0))
+        {
+            return a;
+        }
+
+        T t = (p - a).dot(ab) / ab.dot(ab);
+        t = std::clamp(t, static_cast<T>(0), static_cast<T>(1));
+        return a + ab * t;
     }
 
     template <typename T>

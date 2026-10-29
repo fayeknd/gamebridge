@@ -41,18 +41,20 @@ void MainComponent::init() {
     square2 = Entity::create("Test Square 2").get();
     
     rb = square->addComponent<Rigidbody>();
-    auto box = square->addComponent<Collider>(ColliderShape::Box);
+    auto box = square->addComponent<Collider>(ColliderShape::Capsule);
     auto renderer = square->addComponent<IRenderable>();
     rb->m_mass = 1000.f;
     rb->m_useGravity = true;
 
+
     Renderer::get().setWndTransparent(false);
 
-    auto box2 = square2->addComponent<Collider>(ColliderShape::Box);
+    auto box2 = square2->addComponent<Collider>(ColliderShape::Cylinder);
     auto renderer2 = square2->addComponent<IRenderable>();
 
 
     square->transform.addPositionY(-10.0f);
+
     square2->transform.setScaleX(10.0f);
     square2->transform.setScaleZ(10.0f);
     square2->transform.addPositionY(20.0f);
@@ -143,7 +145,7 @@ void MainComponent::update(double delta) {
     }
 
     if (Input::getActionDown(Key::C)) {
-        square->transform.addPositionY(-10.0f);
+        square->transform.setPositionY(-10.0f);
     }
 }
 
