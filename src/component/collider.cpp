@@ -454,6 +454,10 @@ bool Collider::CheckBoxCylinderIntersection(Collider& box, Collider& cyl, Contac
         out.penetration = r - std::abs(axialDist);
         out.normal = (projection < 0.0f) ? axisDir * -1.0f : axisDir;
 
+        if (out.normal.dot(out.normal) < 0.5f) {
+            out.normal = fm::vec3(0.f, 1.f, 0.f); // fallback
+        }
+
         if (out.penetration <= 0.0f) return false;
         return true;
     }
@@ -511,10 +515,16 @@ void CollisionWorld::resolve(Collider* a, Collider* b, const Collider::Contact& 
 
     // both colliders are static
     if (total == 0.f) return;   
+
+    // create a correction magnitude which corrects a percentage of the penetration
+    float safePenetration = std::min(c.penetration, 0.2f);
+    const float slop = 0.01f;
+    const float percent = 0.4f; 
+    float correctionMag = std::max(0.0f, c.penetration - slop) / total * percent;
     
     // 1. push apart objects
-    if (ra) a->getEntity().transform.addPosition(c.normal * (-c.penetration * ia / total));
-    if (rb) b->getEntity().transform.addPosition(c.normal * (c.penetration * ib / total));
+    if (ra) a->getEntity().transform.addPosition(c.normal * (-correctionMag * ia));
+    if (rb) b->getEntity().transform.addPosition(c.normal * ( correctionMag * ib));
 
     // 2. bouncyyyyy i love trampolining https://klipy.com/gifs/gmail-dog-3
     fm::vec3 va = ra ? ra->getVelocity() : fm::vec3::zero();
@@ -523,14 +533,14 @@ void CollisionWorld::resolve(Collider* a, Collider* b, const Collider::Contact& 
     if (vn > 0.f) return; // no bouncy :c               
 
     // makes the bounce resist over time
-    float e = std::min(ra ? ra->m_bounciness : 1.f, rb ? rb->m_bounciness : 1.f);
+    float e = std::min(ra ? ra->m_bounciness : 0.0f, rb ? rb->m_bounciness : 0.0f); // Default to 0 for stability
     float restThreshold = 9.8f * (1.0f / PhysicsImpl::tps) * 2.0f;
     if (std::abs(vn) < restThreshold) e = 0.f;               // kill tiny bounces so resting objects settle
 
     // adds a velocity change to the rigidbody
     float j = -(1.f + e) * vn / total;
-    if (ra) ra->addForce(va - c.normal * (j * ia), Rigidbody::ForceMode::VelocityChange);
-    if (rb) rb->addForce(vb + c.normal * (j * ib), Rigidbody::ForceMode::VelocityChange);
+    if (ra) ra->addForce(-c.normal * (j * ia), Rigidbody::ForceMode::VelocityChange);
+    if (rb) rb->addForce( c.normal * (j * ib), Rigidbody::ForceMode::VelocityChange);
 }
 
 void Collider::draw() {

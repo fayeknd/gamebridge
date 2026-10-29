@@ -41,7 +41,7 @@ void MainComponent::init() {
     square2 = Entity::create("Test Square 2").get();
     
     rb = square->addComponent<Rigidbody>();
-    auto box = square->addComponent<Collider>(ColliderShape::Capsule);
+    auto box = square->addComponent<Collider>(ColliderShape::Box);
     auto renderer = square->addComponent<IRenderable>();
     rb->m_mass = 1000.f;
     rb->m_useGravity = true;
@@ -49,7 +49,7 @@ void MainComponent::init() {
 
     Renderer::get().setWndTransparent(false);
 
-    auto box2 = square2->addComponent<Collider>(ColliderShape::Cylinder);
+    auto box2 = square2->addComponent<Collider>(ColliderShape::Box);
     auto renderer2 = square2->addComponent<IRenderable>();
 
 
