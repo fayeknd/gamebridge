@@ -8,7 +8,9 @@ using namespace Physics;
 using namespace Engine::Debug;
 
 // :face_with_raised_eyebrow:       -faye
+// :sob:                            - hunter
 
+// Constructs a new box collider
 Collider::Collider(const fm::vec3& min, const fm::vec3& max)
 {
     m_shape = ColliderShape::Box;
@@ -16,27 +18,32 @@ Collider::Collider(const fm::vec3& min, const fm::vec3& max)
     this->m_max = max;
 }
 
+// Constructs a new sphere collider
 Collider::Collider(const fm::vec3& center, const float& radius)
 {
-    m_shape = ColliderShape::Box;
+    m_shape = ColliderShape::Sphere;
     this->center = center;
     this->radius = radius;
 }
 
+// Constructs a new collider from a shape
 Collider::Collider(ColliderShape shape)
 {
     this->m_shape = shape;
 }
 
+// gets the world center of the collider
 fm::vec3 Collider::getWorldCenter() {
     return (center + offset).transformed(getEntity().transform.getGlobalMatrix());
 }
 
+// gets the radius of the collider in world space
 float Collider::getWorldRadius() {
     fm::vec3 s = getEntity().transform.getGlobalScale();
     return radius * std::max({ std::abs(s.x), std::abs(s.y), std::abs(s.z) });
 }
 
+// checks if a collider is colliding with another collider and outputs a contact point
 bool Collider::IsCollidingWith(Collider& collider, Contact& out)
 {
 
@@ -73,24 +80,31 @@ bool Collider::IsCollidingWith(Collider& collider, Contact& out)
     return false;
 }
 
+// checks if a collider is colliding with another collider
 bool Collider::IsCollidingWith(Collider& collider)
 {
     Contact discard;
     return IsCollidingWith(collider, discard);
 }
 
+// checks if two box colliders are intersecting
 bool Collider::CheckBoxIntersection(Collider& a, Collider& b, Contact& out) {
+    
+    // gets the world bounding boxes
     AABB A = a.getWorldAABB();
     AABB B = b.getWorldAABB();
 
+    // gets the bound of the a and b colliders and gets the difference in their distances
     float ox = std::min(A.m_max.x, B.m_max.x) - std::max(A.m_min.x, B.m_min.x);
     float oy = std::min(A.m_max.y, B.m_max.y) - std::max(A.m_min.y, B.m_min.y);
     float oz = std::min(A.m_max.z, B.m_max.z) - std::max(A.m_min.z, B.m_min.z);
-    if (ox <= 0 || oy <= 0 || oz <= 0) return false;
+    if (ox <= 0 || oy <= 0 || oz <= 0) return false; // returns false if they dont intersect
 
+    // gets the center of a and b
     fm::vec3 ca = (A.m_min + A.m_max) * 0.5f;
     fm::vec3 cb = (B.m_min + B.m_max) * 0.5f;
 
+    // sets the data for the contact point
     if (ox <= oy && ox <= oz) {
         out.penetration  = ox;
         out.normal = fm::vec3(ca.x < cb.x ? 1.f : -1.f, 0.f, 0.f);
@@ -101,9 +115,11 @@ bool Collider::CheckBoxIntersection(Collider& a, Collider& b, Contact& out) {
         out.penetration  = oz;
         out.normal = fm::vec3(0.f, 0.f, ca.z < cb.z ? 1.f : -1.f);
     }
+    // returns a collission
     return true;
 }
 
+// checks if two spheres intersect
 bool Collider::CheckSphereIntersection(Collider& a, Collider& b, Contact& out) {
     // Gets center of sphere A and sphere B accounting for offset
     fm::vec3 ca = a.getWorldCenter();
@@ -126,22 +142,29 @@ bool Collider::CheckSphereIntersection(Collider& a, Collider& b, Contact& out) {
     return true;
 }
 
+
+// checks if a sphere is colliding with a box
 bool Collider::CheckSphereBoxIntersection(Collider& a, Collider& b, Contact& out)
 {
+    // gets the world data of the colliders
     fm::vec3 c = a.getWorldCenter();
     float r    = a.getWorldRadius();
     AABB box   = b.getWorldAABB();
 
+    // finds the closest between the box and spheres
     fm::vec3 closest(std::clamp(c.x, box.m_min.x, box.m_max.x),
                      std::clamp(c.y, box.m_min.y, box.m_max.y),
                      std::clamp(c.z, box.m_min.z, box.m_max.z));
 
+    // gets the closest point on the two colliders
     fm::vec3 closestPoint;
-
-    fm::vec3 d = c - closest;           
+    fm::vec3 d = c - closest;     
+    
+    //gets the square of the distance and if they're not intersecting return false
     float distSq = d.dot(d);
     if (distSq > r * r) return false;
 
+    // returns a hit and sets the details
     if (distSq > 1e-12f) {
         float dist = std::sqrt(distSq);
         out.normal = d * (-1.f / dist);
@@ -150,6 +173,7 @@ bool Collider::CheckSphereBoxIntersection(Collider& a, Collider& b, Contact& out
     }
 
     
+    // calculates a just in case for really small distances
     float dx0 = c.x - box.m_min.x, dx1 = box.m_max.x - c.x;
     float dy0 = c.y - box.m_min.y, dy1 = box.m_max.y - c.y;
     float dz0 = c.z - box.m_min.z, dz1 = box.m_max.z - c.z;
@@ -166,30 +190,39 @@ bool Collider::CheckSphereBoxIntersection(Collider& a, Collider& b, Contact& out
     return true;
 }
 
+
+// resolves two collisions
 void CollisionWorld::resolve(Collider* a, Collider* b, const Collider::Contact& c) {
+    
+    // gets the rigidbody of both the colliders
     Physics::Rigidbody* ra = a->m_rb;
     Physics::Rigidbody* rb = b->m_rb;
 
+    // gets an infinite mass if it doesnt have a rigid body
     float ia = ra ? ra->getInverseMass() : 0.f;
     float ib = rb ? rb->getInverseMass() : 0.f;
     float total = ia + ib;
+
+    // both colliders are static
     if (total == 0.f) return;                       
 
     // 1. push apart objects
     if (ra) a->getEntity().transform.addPosition(c.normal * (-c.penetration * ia / total));
     if (rb) b->getEntity().transform.addPosition(c.normal * ( c.penetration * ib / total));
 
-    // 2. bouncyyyyy i love trampolining
+    // 2. bouncyyyyy i love trampolining https://klipy.com/gifs/gmail-dog-3
     fm::vec3 va = ra ? ra->getVelocity() : fm::vec3::zero();
     fm::vec3 vb = rb ? rb->getVelocity() : fm::vec3::zero();
     float vn = (vb - va).dot(c.normal);             
-    if (vn > 0.f) return;                           
+    if (vn > 0.f) return; // no bouncy :c               
 
+    // makes the bounce resist over time
     float e = std::min(ra ? ra->m_bounciness : 1.f, rb ? rb->m_bounciness : 1.f);
     float restThreshold = 9.8f * (1.0f / PhysicsImpl::tps) * 2.0f;
     if (std::abs(vn) < restThreshold) e = 0.f;               // kill tiny bounces so resting objects settle
 
-    float j = -(1.f + e) * vn / total;              // impulse magnitude
+    // adds a velocity change to the rigidbody
+    float j = -(1.f + e) * vn / total;
     if (ra) ra->addForce(va - c.normal * (j * ia), Rigidbody::ForceMode::VelocityChange);
     if (rb) rb->addForce(vb + c.normal * (j * ib), Rigidbody::ForceMode::VelocityChange);
 }
@@ -306,6 +339,8 @@ void Collider::_drawSphere(fm::vec3 center, fm::vec3 scaledRadius, fm::mat4 mode
     line.draw(yzPoints, model); // draw ring 3
 }
 
+
+// returns the colliders ID
 ColliderID Collider::getColliderID() {
     return m_ColliderID;
 }
@@ -316,6 +351,8 @@ void Collider::setColour(fm::vec4 col) {
     //m_program->setUniform("boxCol", col);
 }
 
+
+// initializes a collider
 void Collider::init() {
 
     // get the next box id
@@ -328,22 +365,29 @@ void Collider::init() {
     boundingBoxMaterial->m_data.m_albedoFac = {1.0f, 0.9f, 0.8f, 1.0f};
     m_material = boundingBoxMaterial;
 
+    // gets the rigidbody from the entity and sets the static variable based on that then creates the world collider
     m_rb = getEntity().getComponent<Physics::Rigidbody>();
     m_isStatic = (m_rb == nullptr);
     CollisionWorld::get().add(this);
 }
 
+// DESTROYS EVERYTHING MWHAHAHA and destroys the collider
 void Collider::onDestroy() {
     // release our id 
     s_colliderIDPool.releaseID(m_ColliderID);
+
+    // removes the world collider
     CollisionWorld::get().remove(this);
 }
 
+// checks for a ray intersection
 bool Collider::checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit) {
 
+    // gets the entity and the hit box
     outRaycastHit.m_hitEntity = &getEntity();
     outRaycastHit.m_hitBox = this;
 
+    // some nerdy maths shit
     fm::mat4 worldMatrixInversed = outRaycastHit.m_hitEntity->transform.getGlobalMatrix().inversed();
 
     // construct our local ray 
@@ -355,6 +399,7 @@ bool Collider::checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit) {
     // get bounding box from entity. 
     Collider& boundingBox = *outRaycastHit.m_hitBox;
 
+    // does a ray check depending on the shape
     switch(m_shape)
     {
         case ColliderShape::Box:
@@ -366,6 +411,8 @@ bool Collider::checkRayIntersection(const Ray& ray, RaycastHit& outRaycastHit) {
     }
 }
 
+
+// returns if a ray intersects a box
 bool Collider::rayAABoxIntersection(const Ray& ray, const Collider* box, RaycastHit& outRaycastHit) {
 
     float tNearMax = -std::numeric_limits<float>::max();
@@ -446,6 +493,8 @@ bool Collider::rayAABoxIntersection(const Ray& ray, const Collider* box, Raycast
     return false;
 }
 
+
+// returns whether a ray intersected a sphere
 bool Collider::rayAASphereIntersection(const Ray& ray, const Collider* sphere, RaycastHit& outRaycastHit) {
 
     // get sphere center and length of origin to sphere center (negative)
@@ -493,6 +542,8 @@ bool Collider::rayAASphereIntersection(const Ray& ray, const Collider* sphere, R
     return true;
 }
 
+
+// sets the colliders static boolean
 void Collider::setStatic(bool s)
 {
     if (m_isStatic == s) return;
@@ -501,24 +552,31 @@ void Collider::setStatic(bool s)
     CollisionWorld::get().add(this);
 }
 
+
+// gets the bounding volumes bounds in world space
 AABB Collider::getWorldAABB() {
+    // gets the transform and global matrix
     Transform& t = entity.transform;
     fm::mat4 world = t.getGlobalMatrix();
 
+    // transform the spheres bounds based on the world space
     if (m_shape == ColliderShape::Sphere) {
         fm::vec3 c = (center + offset).transformed(world);
 
-        
+        // sets the space
         fm::vec3 s = t.getGlobalScale();
         float r = radius * std::max({ std::abs(s.x), std::abs(s.y), std::abs(s.z) });
 
+        // new bounding volume
         return { c - fm::vec3(r, r, r), c + fm::vec3(r, r, r) };
     }
 
    
+    // beeg box
     fm::vec3 lo( FLT_MAX,  FLT_MAX,  FLT_MAX);
     fm::vec3 hi(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 
+    // checks the corner of the box and converts it to world space
     for (int i = 0; i < 8; ++i) {
         fm::vec3 corner((i & 1) ? m_max.x : m_min.x,
                         (i & 2) ? m_max.y : m_min.y,
@@ -531,26 +589,45 @@ AABB Collider::getWorldAABB() {
         hi = { std::max(hi.x, w.x), std::max(hi.y, w.y), std::max(hi.z, w.z) };
     }
     
+    // returns bounding volume
     return { lo, hi };
 }
 
 
+// gets a colliders static variable
+bool Collider::getStatic()
+{
+    return m_isStatic;
+}
+
+
+// rebuilds a bounding volume tree every step if it has changed
 void CollisionWorld::step() {
+    // rebuilds the static tree if a colliders static status has changed
     if (m_staticDirty) { m_staticTree.rebuild(m_static); m_staticDirty = false; }
+
+    // rebuilds a dynamic bounding volume
     m_dynamicTree.rebuild(m_dynamic);
 
+    // gets new colliders and adds them to the dynamic tree
     std::vector<Collider*> candidates;
     for (Collider* c : m_dynamic) {
+        // clears vector and gets the collider in world space
         candidates.clear();
         AABB box = c->getWorldAABB();
+
+        // check if the collider is already in a tree
         m_staticTree.query(box, candidates);
         m_dynamicTree.query(box, candidates);
 
+        // iterates through new colliders
         for (Collider* o : candidates) {
             if (o == c) continue;
 
-            if (!o->m_isStatic && o->getColliderID() < c->getColliderID()) continue;
+            // returns if theyre static
+            if (!o->getStatic() && o->getColliderID() < c->getColliderID()) continue;
 
+            // resolves collisions
             Collider::Contact contact;
             if (!c->IsCollidingWith(*o, contact)) continue;
             resolve(c, o, contact);
@@ -558,50 +635,56 @@ void CollisionWorld::step() {
     }
 }
 
+// casts a raycast in the world
 bool CollisionWorld::raycast(const Physics::Ray& ray, Physics::RaycastHit& hit, LayerMask mask, float maxDist)
 {
     refresh();
-    //DBG.logInfo("static: {} dynamic: {}", m_static.size(), m_dynamic.size());
+    // casts a raycast across the static tree
     bool a = m_staticTree.raycast(ray, hit, mask, maxDist);
+    // creates a limit for the distance and a raycasthit variable
     float limit = a ? hit.m_hitInfo.m_distance : maxDist;
     Physics::RaycastHit h;
+    // passes through the dynamic tree
     bool b = m_dynamicTree.raycast(ray, h, mask, limit);
     if (b) hit = h;
     return a || b;
 }
 
+// refresh a bounding volume tree
 void CollisionWorld::refresh() {
     if (m_staticDirty) { m_staticTree.rebuild(m_static); m_staticDirty = false; }
     m_dynamicTree.rebuild(m_dynamic);
 }
 
+// adds a collider to the world and pushes it into a bounding volume tree
 void CollisionWorld::add(Collider* c)
 {
-    if (!c) return;
+    if (!c) return; // returns to prevent nullptrs from going into the tree
 
-    auto& list = c->m_isStatic ? m_static : m_dynamic;
+    auto& list = c->getStatic() ? m_static : m_dynamic; // gets a list based on if the collider is static
 
-    if (std::find(list.begin(), list.end(), c) != list.end()) return;
+    if (std::find(list.begin(), list.end(), c) != list.end()) return; // returns if the list is of size 1
 
-    list.push_back(c);
-    if (c->m_isStatic) m_staticDirty = true;
+    list.push_back(c); // adds the new collider
+    if (c->getStatic()) m_staticDirty = true; // sets the colliders to newly static
 }
 
+// remove a collider from the world and bounding volume
 void CollisionWorld::remove(Collider* c)
 {
-    if (!c) return;
+    if (!c) return; // prevents nullptr removals
 
-    auto s = std::find(m_static.begin(), m_static.end(), c);
+    auto s = std::find(m_static.begin(), m_static.end(), c); // gets the collider from the static tree
 
-    if (s != m_static.end())
+    if (s != m_static.end()) // erase the collider from the tree
     {
         m_static.erase(s);
         m_staticDirty = true;
     }
 
-    auto d = std::find(m_dynamic.begin(), m_static.end(), c);
+    auto d = std::find(m_dynamic.begin(), m_static.end(), c); // gets the collider from the dynamic tree
     if (d != m_dynamic.end())
     {
-        m_dynamic.erase(d);
+        m_dynamic.erase(d); // removes the collider from the dynamic tree
     }
 }

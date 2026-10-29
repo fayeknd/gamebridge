@@ -9,6 +9,7 @@ namespace Engine
 {
     class Collider;
 
+    // Axis aligned bounding box, encapsulates a collider and extends from there to create a BVH
     struct AABB {
         fm::vec3 m_min, m_max;
 
@@ -22,9 +23,12 @@ namespace Engine
 
         // binds two bounding boxes together to create a larger box
         static AABB merge(const AABB& a, const AABB& b);
+        // returns if a ray hit the bounding box
         bool rayHit(const fm::vec3& o, const fm::vec3& invDir, float tMax, float& tEnter) const;
     };
 
+    // A bounding volume, stores its bounds and the volumes to the left and right of it and the collider it contains
+    // if it is a leaf node
     struct BVNode
     {
         AABB bounds;

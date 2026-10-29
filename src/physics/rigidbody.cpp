@@ -7,6 +7,8 @@
 using namespace Engine;
 using namespace Physics;
 
+
+// applies a gravity force
 void Rigidbody::applyGravity(double delta)
 {
     if (!m_useGravity) return;
@@ -14,11 +16,14 @@ void Rigidbody::applyGravity(double delta)
     addAcceleratingForce(fm::vec3(0, 9.8, 0));
 }
 
+
+// gets the velocity
 fm::vec3 Rigidbody::getVelocity()
 {
    return m_velocity;
 }
 
+// updates the rigidbodies internal physics
 void Rigidbody::physicsUpdate(double delta)
 {
     addImplicitForce(delta);
@@ -26,6 +31,7 @@ void Rigidbody::physicsUpdate(double delta)
     lastPosition = entity.transform.getPosition();
 }
 
+// applies a force on the rigidbody based on the forcemode
 void Rigidbody::addForce(fm::vec3 force, Rigidbody::ForceMode forceMode)
 {
     // Triggers a different force application function based on the force mode
@@ -48,21 +54,25 @@ void Rigidbody::addForce(fm::vec3 force, Rigidbody::ForceMode forceMode)
     }
 }
 
+// adds a force based on the mass
 void Rigidbody::addDefaultForce(fm::vec3 force)
 {
     m_force += force / fm::vec3(m_mass); 
 }
 
+// adds a force regardless of mass
 void Rigidbody::addAcceleratingForce(fm::vec3 force)
 {
     m_force += force; 
 }
 
+// changes the velocity based on the mass
 void Rigidbody::addImpulseForce(fm::vec3 force)
 {
     m_velocity += force / fm::vec3(m_mass); 
 }
 
+// changes the velocity directly
 void Rigidbody::addVelocityChangeForce(fm::vec3 force)
 {  
     m_velocity += force;
@@ -78,6 +88,7 @@ void Rigidbody::addImplicitForce(double delta)
     m_force = fm::vec3::zero();
 }
 
+// gets the inverse mass of the rigidbody
 float Rigidbody::getInverseMass() const {
     return m_mass > 0.1f ? 1.f / m_mass : 0.f;
 }

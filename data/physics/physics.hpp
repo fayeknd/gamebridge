@@ -31,6 +31,7 @@ namespace Engine {
         // will create a new instance for each thing that includes
         // the file.
         // fucking. stupid but. whatever. - faye
+        // very insightful faye           - hunter
 
         // Physics tick, 20 ticks per second
         static inline Timer physicsTick;
