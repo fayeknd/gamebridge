@@ -54,7 +54,7 @@ float Collider::getWorldRadius() {
 // gets the height of the collider in world space
 float Collider::getWorldHeight() {
     fm::vec3 s = getEntity().transform.getGlobalScale();
-    return height * std::max({ std::abs(s.x), std::abs(s.y), std::abs(s.z) });
+    return m_height * std::max({ std::abs(s.x), std::abs(s.y), std::abs(s.z) });
 }
 
 void Collider::getSegmentEnds(Collider& col, fm::vec3& outA, fm::vec3& outB)
@@ -62,18 +62,18 @@ void Collider::getSegmentEnds(Collider& col, fm::vec3& outA, fm::vec3& outB)
     // gets the world matrix of the collider
     fm::mat4 world = col.getEntity().transform.getGlobalMatrix();
     // gets half the heigh for capsule hemispherical ends
-    float halfH = std::max(0.0f, (col.height * 0.5f) - col.radius);
+    float halfH = std::max(0.0f, (col.m_height * 0.5f) - col.m_radius);
 
     // sets the collider height for half for a cylinder
-    if (col.m_shape == ColliderShape::Cylinder) halfH = col.height * 0.5f;
+    if (col.m_shape == ColliderShape::Cylinder) halfH = col.m_height * 0.5f;
 
     // returns the local half heights
     fm::vec3 localA(0.0f, -halfH, 0.0f);
     fm::vec3 localB(0.0f,  halfH, 0.0f);
 
     // transforms the local ends to world ends
-    outA = (localA + col.offset).transformed(world);
-    outB = (localB + col.offset).transformed(world);
+    outA = (localA + col.m_offset).transformed(world);
+    outB = (localB + col.m_offset).transformed(world);
 }
 
 void Collider::closestPointBetweenSegments(fm::vec3 p1, fm::vec3 q1, fm::vec3 p2, fm::vec3 q2, fm::vec3& c1, fm::vec3& c2)
@@ -557,11 +557,11 @@ void Collider::draw() {
             break;
         }
         case (ColliderShape::Cylinder) : {
-            _drawCylinder(radius, height, entity.getRealMatrix(), line);
+            _drawCylinder(m_radius, m_height, entity.getRealMatrix(), line);
             break;
         }
         case (ColliderShape::Capsule) : {
-            _drawCapsule(radius, height, entity.getRealMatrix(), line);
+            _drawCapsule(m_radius, m_height, entity.getRealMatrix(), line);
             break;
         }
     }
@@ -948,8 +948,8 @@ bool Collider::rayAASphereIntersection(const Ray& ray, const Collider* sphere, R
 }
 
 bool Collider::rayAACylinderIntersection(const Ray& ray, const Collider* cyl, RaycastHit& outRaycastHit) {
-    float r = cyl->radius;
-    float halfH = cyl->height * 0.5f;
+    float r = cyl->m_radius;
+    float halfH = cyl->m_height * 0.5f;
 
     float tMin = std::numeric_limits<float>::max();
     bool hitFound = false;
@@ -1019,8 +1019,8 @@ bool Collider::rayAACylinderIntersection(const Ray& ray, const Collider* cyl, Ra
 }
 
 bool Collider::rayAACapsuleIntersection(const Ray& ray, const Collider* cap, RaycastHit& outRaycastHit) {
-    float r = cap->radius;
-    float totalH = cap->height;
+    float r = cap->m_radius;
+    float totalH = cap->m_height;
     float halfCylH = std::max(0.0f, (totalH * 0.5f) - r);
 
     float tMin = std::numeric_limits<float>::max();

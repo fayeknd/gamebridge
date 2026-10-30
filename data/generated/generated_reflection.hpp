@@ -42,7 +42,12 @@ void Engine::initializeReflectionData() {
             std::vector<ReflectableField> localFields = {
                 { "m_drawCol", offsetof(Collider, m_drawCol), "fm::vec4" },
                 { "m_shape", offsetof(Collider, m_shape), "ColliderShape" },
-                { "m_isStatic", offsetof(Collider, m_isStatic), "bool" },
+                { "m_offset", offsetof(Collider, m_offset), "fm::vec3" },
+                { "m_center", offsetof(Collider, m_center), "fm::vec3" },
+                { "m_radius", offsetof(Collider, m_radius), "float" },
+                { "m_height", offsetof(Collider, m_height), "float" },
+                { "m_min", offsetof(Collider, m_min), "fm::vec3" },
+                { "m_max", offsetof(Collider, m_max), "fm::vec3" },
             };
             
             // Check if the parent class has fields bound to its reflection slot

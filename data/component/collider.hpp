@@ -71,19 +71,18 @@ namespace Engine
             PUBLIC fm::vec4 m_drawCol = fm::vec4(0.0f, 0.75f, 1.0f, 1.0f);
 
             PUBLIC ColliderShape m_shape;
-            Rigidbody* m_rb = nullptr
+            Rigidbody* m_rb = nullptr;
 
             PUBLIC fm::vec3 m_offset = fm::vec3::zero();
             PUBLIC fm::vec3 m_center = fm::vec3::zero();
-            PUBLIC float radius = 1.0f;
+            PUBLIC float m_radius = 1.0f;
 
             // height for a capsule and cylinder
-            PUBLIC float height = 2.f;
+            PUBLIC float m_height = 2.f;
 
             // the min and max bounds of a box
             PUBLIC fm::vec3 m_min = -fm::vec3::one() * 0.5f;
             PUBLIC fm::vec3 m_max = fm::vec3::one() * 0.5f;
-            float m_radius = 1.0f;
             // convert local bounds to world
             fm::vec3 getWorldCenter();
             float getWorldRadius();
