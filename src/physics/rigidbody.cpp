@@ -23,7 +23,7 @@ void Rigidbody::physicsUpdate(double delta)
 {
     addImplicitForce(delta);
     applyGravity(delta);
-    lastPosition = entity.transform.getPosition();
+    m_lastPosition = entity.transform.getPosition();
 }
 
 void Rigidbody::addForce(fm::vec3 force, Rigidbody::ForceMode forceMode)

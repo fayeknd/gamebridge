@@ -1,5 +1,5 @@
 #include "gl_context.hpp"
-#include <component/boundingbox.hpp>
+#include <physics/boundingbox.hpp>
 #include <entity.hpp>
 #include <component/collider.hpp>
 

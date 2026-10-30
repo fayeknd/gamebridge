@@ -7,8 +7,12 @@
 #include <logger.hpp>
 #include <layer.hpp>
 #include <material.hpp>
+#include <field_reflect.hpp>
 
 namespace Engine {
+
+    // forward declaration
+    static inline void initializeReflectionData();
 
     // forward declaration to prevent
     // circular dependency issues.
@@ -28,6 +32,8 @@ namespace Engine {
     // More on that below
 
     class IComponent {
+    public:
+        friend void Engine::initializeReflectionData();
     private:
 
         static Logging::Logger& log() {
@@ -49,6 +55,33 @@ namespace Engine {
         // not get discarded at runtime.
         static ComponentTypeID _nextID();
 
+        // has this component's init() been run?
+        bool m_hasInit;
+
+        // tell the instance to run draw(). 
+        static inline void _distributeDraw(IComponent* instance) { instance->draw(); }
+
+    protected:
+
+        static inline std::string_view _reflectionName = "IComponent";
+        static inline const std::vector<ReflectableField>& (*_reflectionFieldQuery)() = nullptr;
+
+
+        // init() is called when the component is added to an entity, once.
+        virtual void init() {};
+        // final stage in the game loop. used for anything to do with drawing.
+        virtual void draw() {};
+
+        // actual physics update function
+        virtual void physicsUpdate(double delta) {};
+
+    public:
+
+        virtual std::vector<std::pair<ReflectableField, void*>> getFields() = 0;
+        virtual std::string_view getTypename() const = 0;
+
+        using ReflectionQueryFunc = const std::vector<ReflectableField>& (*)();
+        
         // get the typeid. this is unique for each component type.
         // the way this works: if this is called on a component
         // with the type of "PlayerComponent", it will create and
@@ -66,29 +99,11 @@ namespace Engine {
 
         // make sure this is a template 
         template <typename T>
-        static ComponentTypeID _getID() {
+        static ComponentTypeID getComponentID() {
             // create the static typeid. never gets created again.
             static const ComponentTypeID id = _nextID();
             return id;
         }
-
-        // has this component's init() been run?
-        bool m_hasInit;
-
-        // tell the instance to run draw(). 
-        static inline void _distributeDraw(IComponent* instance) { instance->draw(); }
-
-    protected:
-
-        // init() is called when the component is added to an entity, once.
-        virtual void init() {};
-        // final stage in the game loop. used for anything to do with drawing.
-        virtual void draw() {};
-
-        // actual physics update function
-        virtual void physicsUpdate(double delta) {};
-
-    public:
 
         // material to use
         // this was moved here so we don't have to dyanmic
@@ -100,7 +115,7 @@ namespace Engine {
 
         // marks if this instance should render or not 
         // (given it can even be rendered)
-        bool m_render = true;
+        PUBLIC bool m_render = true;
 
         // returns if the init function has been run yet.
         bool hasInitRun(); 
@@ -135,7 +150,7 @@ namespace Engine {
                 return -1;
             }
             // return the unique ID for this class
-            return _getID<T>();
+            return getComponentID<T>();
 
         }
 
@@ -181,3 +196,31 @@ namespace Engine {
 
     };
 }
+
+#define component_public \
+    public: \
+        friend void Engine::initializeReflectionData(); \
+\
+    protected: \
+        static inline std::string_view _reflectionName = ""; \
+        static inline const std::vector<Engine::ReflectableField>& (*_reflectionFieldQuery)() = nullptr; \
+\
+    public: \
+        std::string_view getTypename() const override { \
+            if (!_reflectionName.empty()) return _reflectionName; \
+\
+            return "UninitializedComponent"; \
+        } \
+        std::vector<std::pair<ReflectableField, void*>> getFields() override { \
+            using ComponentType = std::decay_t<std::remove_pointer_t<decltype(this)>>; \
+            std::vector<std::pair<ReflectableField, void*>> _; \
+            if (!_reflectionFieldQuery) return _; \
+            auto& fields = _reflectionFieldQuery(); \
+            for (Engine::ReflectableField field : fields) { \
+                auto typedPtr = Reflection::getFieldPtr<ComponentType>(this, field); \
+                void* genericVoidPtr = const_cast<void*>(static_cast<const void*>(typedPtr)); \
+                _.push_back(std::make_pair(field, genericVoidPtr)); \
+            } \
+            return _; \
+        } public
+        

@@ -4,7 +4,7 @@
 #include <component/component.hpp>
 #include <component/renderable.hpp>
 #include <physics/ray.hpp>
-#include <component/boundingbox.hpp>
+#include <physics/boundingbox.hpp>
 #include <layer.hpp>
 #include <physics/rigidbody.hpp>
 
@@ -21,7 +21,7 @@ namespace Engine
 
     class Collider : public IRenderable
     {
-        public:
+        component_public:
             struct Contact
             {
                 fm::vec3 normal;
@@ -46,17 +46,17 @@ namespace Engine
 
         public:
 
-            fm::vec4 m_drawCol = fm::vec4(0.0f, 0.75f, 1.0f, 1.0f);
+            PUBLIC fm::vec4 m_drawCol = fm::vec4(0.0f, 0.75f, 1.0f, 1.0f);
 
-            ColliderShape m_shape;
+            PUBLIC ColliderShape m_shape;
             Rigidbody* m_rb = nullptr;
-            bool m_isStatic = true;
+            PUBLIC bool m_isStatic = true;
 
-            fm::vec3 offset = fm::vec3::zero();
-            fm::vec3 center = fm::vec3::zero();
+            fm::vec3 m_offset = fm::vec3::zero();
+            fm::vec3 m_center = fm::vec3::zero();
             fm::vec3 m_min = -fm::vec3::one() * 0.5f;
             fm::vec3 m_max = fm::vec3::one() * 0.5f;
-            float radius = 1.0f;
+            float m_radius = 1.0f;
             fm::vec3 getWorldCenter();
             float getWorldRadius();
 

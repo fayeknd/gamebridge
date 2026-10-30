@@ -54,13 +54,14 @@ namespace Engine {
         // the active rendering camera
         static inline Camera* s_activeCamera = nullptr;
 
+        // the orthographic size
         float m_orthoSize = 1.0f;
 
         // to ensure if the active camera is destroyed, 
         // we can set a new one.
         static inline std::queue<std::weak_ptr<Camera>> s_cameraQueue;
 
-    public:
+    component_public:
         static void setActiveCamera(Camera* c);
         static Camera* activeCamera();
 
@@ -75,10 +76,10 @@ namespace Engine {
         std::shared_ptr<Framebuffer> m_framebuffer;
 
         // gl clear colour
-        fm::col m_clearCol = fm::col(0, 0, 0, 1);
+        PUBLIC fm::col m_clearCol = fm::col(0, 0, 0, 1);
         // flags to clear at the end of a frame
-        bitfield m_clearFlags  = (GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-        std::vector<GLuint> m_glFunctions = {GL_DEPTH_TEST, GL_CULL_FACE, GL_BLEND}; 
+        PUBLIC bitfield m_clearFlags  = (GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        PUBLIC std::vector<GLuint> m_glFunctions = {GL_DEPTH_TEST, GL_CULL_FACE, GL_BLEND}; 
 
         // set the projection mode and mark projectionDirty as true        
         void setProjectionMode(ProjectionMode pm);

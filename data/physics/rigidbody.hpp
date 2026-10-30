@@ -13,7 +13,7 @@ namespace Engine {
             // current entity velocity
             fm::vec3 m_velocity = fm::vec3::zero();
             // last entity position
-            fm::vec3 lastPosition = fm::vec3::zero();
+            fm::vec3 m_lastPosition = fm::vec3::zero();
 
             // all the force types with velocity change and impulse setting velocity and default and accelerating adding
             // force over time
@@ -27,15 +27,15 @@ namespace Engine {
 
             // force to apply on next physics tick
             fm::vec3 m_force = fm::vec3::zero();
-        public:
+        component_public:
             // whether the component should use gravity
-            bool m_useGravity = false;
+            PUBLIC bool m_useGravity = false;
             // not implemented yet
-            float m_drag = 0.f;
+            PUBLIC float m_drag = 0.f;
             // mass of the entity
-            float m_mass = 1.f;
+            PUBLIC float m_mass = 1.f;
 
-            float m_bounciness = 1.f; // 0 = no bounce, 1 = perfectly elastic will be funny i guarentee
+            PUBLIC float m_bounciness = 1.f; // 0 = no bounce, 1 = perfectly elastic will be funny i guarentee
 
             // force modes for force application
             enum ForceMode

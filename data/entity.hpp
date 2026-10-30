@@ -4,20 +4,23 @@
 #include <queue>
 #include <logger.hpp>
 #include <layer.hpp>
+#include <field_reflect.hpp>
 
 namespace Engine {
     
     // an alias so we don't have to keep typing "uint32_t"
     // a uint is definitely large enough btw.
     using EntityID = uint32_t;
+    const EntityID NULLID = -1;
 
     constexpr const char* entityDefaultName = "Unnamed Entity";
+
 
     // Entities will just exist in memory in a tree of children and parents.
     // any components can be added and removed to any of them to do whatever 
     // we want.
 
-    // weak_ptr gets used a lot here,
+    // weak_ptr gets usjed a lot here,
     // so just a note because you'll see it a lot:
     // someWeakPtr.lock() returns a shared_ptr 
     // to the object. it doesn't really make sense
@@ -25,7 +28,7 @@ namespace Engine {
     // and imo it is a bit confusing. just know that
     // it is getting a valid pointer and not locking
     // anything. 
-    
+
     class Entity : public std::enable_shared_from_this<Entity> {
     private:
 
@@ -130,7 +133,31 @@ namespace Engine {
         // what layer is this on?
         LayerID m_layer;
 
+        bool m_isTreeLeaf;
+
+        // update loop happens in Renderer, allow private function calling from
+        // the Renderer class.
+        friend class Renderer; 
+        // let the transform call _invalidateChildTransforms();
+        friend class Transform;
+
+        friend class PhysicsImpl;
+
+        friend class DebugUI;
+        
     public:
+
+        std::unordered_map<ComponentTypeID, std::shared_ptr<IComponent>>& getComponentMap() {
+            return m_componentMap;
+        }
+
+        static inline std::unordered_map<EntityID, std::shared_ptr<Entity>>& getEntityMap() {
+            return s_entityList;
+        }
+
+        std::vector<std::weak_ptr<Entity>>& getChildren() {
+            return m_children;
+        }
 
         // get the real transform matrix taking physics interpolation into account
         fm::mat4 getRealMatrix();
@@ -221,17 +248,17 @@ namespace Engine {
             // create the component instance itself.
             // std::forward will just forward the arguments to any
             // constructor present in the given component class.
-            auto component = std::make_unique<T>(std::forward<Args>(targs)...);
+            auto c = std::make_unique<T>(std::forward<Args>(targs)...);
             // assign the component's entity pointer to this.
-            component->m_entity = this;
+            c->m_entity = this;
 
             // get the component type id
             ComponentTypeID id = IComponent::getComponentTypeID<T>();
             // assign the component it's type id for easy internal lookup
-            component->m_typeID = id;
+            c->m_typeID = id;
 
             // move the component to the component map
-            m_componentMap[id] = std::move(component);
+            m_componentMap[id] = std::move(c);
             // if this entity is enabled, run the init function.
             if (m_enabled) {
                 m_componentMap[id]->initImpl();
@@ -240,6 +267,14 @@ namespace Engine {
                 // not enabled, queue the init function for later.
                 m_componentInitQueue.push(m_componentMap[id]);
             }
+ 
+            /*
+            DBG.logInfo("Added component '{}'. Component fields:", Reflection::getComponentTypename<T>());
+            for (const auto& field : Reflection::getComponentFields<T>()) {
+                DBG.logInfo("Field name: {}, Field offset: {}, Field type: {}", field.m_fieldName, field.m_fieldOffset, field.m_fieldType);
+            }
+            */
+
             // return a pointer to the component we just made.
             // allows for instant assignment.
             // (auto c = e->addComponent<Component>(), c is the component) 
@@ -273,13 +308,13 @@ namespace Engine {
             if (it != m_componentMap.end()) {
 
                 // component found. get a pointer to it
-                auto component = m_componentMap[it];
+                auto c = m_componentMap[it];
 
                 // call the destroy function
-                component->onDestroy();
+                c->onDestroy();
                 // just in case the entity isn't destroyed, unhook it
                 // from the entity.
-                component->m_entity = nullptr;
+                c->m_entity = nullptr;
 
                 // erase the component from the map.
                 // if there are no shared_ptrs to this component,
@@ -300,13 +335,6 @@ namespace Engine {
         // force the entity to change it's enabled state immediately.
         void forceSetEnabled(bool enabled);
 
-        // update loop happens in Renderer, allow private function calling from
-        // the Renderer class.
-        friend class Renderer; 
-        // let the transform call _invalidateChildTransforms();
-        friend class Transform;
-
-        friend class PhysicsImpl;
     };
 
 }
