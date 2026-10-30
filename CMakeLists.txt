@@ -1,20 +1,38 @@
-cmake_minimum_required(VERSION 3.10.0)
+cmake_minimum_required(VERSION 3.24) 
 set(CMAKE_CXX_STANDARD 20)
 
 # i fucking hate working with cmake shit but it's also so useful
 
+set(FETCHCONTENT_QUIET OFF)
+include(FetchContent)
+
 message(NOTICE "Fetching and building GLFW...")
 
-include(FetchContent)
 FetchContent_Declare(
     glfw
     GIT_REPOSITORY https://github.com/glfw/glfw
     GIT_TAG        3.5.1
+    GIT_PROGRESS   TRUE
 )
 set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL "")
 set(GLFW_BUILD_TESTS OFF CACHE INTERNAL "")
 set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "")
 FetchContent_MakeAvailable(glfw)
+
+#message(NOTICE "Fetching and building Boost PFR Reflection module...")
+#
+#FetchContent_Declare(
+#    boost_pfr
+#    GIT_REPOSITORY https://github.com/boostorg/pfr
+#    GIT_TAG        boost-1.92.0 
+#    GIT_SHALLOW    TRUE # only pull the single commit
+#    GIT_PROGRESS   TRUE
+#)
+#set(BUILD_TESTING OFF CACHE INTERNAL "disable testing for sub-dependencies")
+#FetchContent_MakeAvailable(boost_pfr)
+#set(BOOST_INCLUDE ${boost_pfr_SOURCE_DIR}/include)
+set(BOOST_INCLUDE "")
+
 
 # libzip is tricky on windows so fuck you build it from source
 if(WIN32)
@@ -29,6 +47,7 @@ if(WIN32)
         zlib
         GIT_REPOSITORY https://github.com/madler/zlib
         GIT_TAG        v1.3.2
+        GIT_PROGRESS   TRUE
     )
     set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "") 
     FetchContent_MakeAvailable(zlib)
@@ -50,7 +69,8 @@ if(WIN32)
     FetchContent_Declare(
         libzip
         GIT_REPOSITORY https://github.com/nih-at/libzip
-        GIT_TAG        v1.12.1 
+        GIT_TAG        v1.12.1
+        GIT_PROGRESS   TRUE
     )
     set(LIBZIP_DO_INSTALL OFF CACHE INTERNAL "")
     set(BUILD_DOC OFF CACHE INTERNAL "")
@@ -81,6 +101,24 @@ add_custom_target(resources
     VERBATIM
 ) 
 
+# just the headers
+file(GLOB_RECURSE REFLECTABLE_HEADERS CONFIGURE_DEPENDS 
+    "${CMAKE_CURRENT_SOURCE_DIR}/data/component/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/data/*.hpp"
+)
+
+set(GENERATED_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/data/generated/generated_reflection.hpp")
+
+add_custom_command(
+    OUTPUT ${GENERATED_HEADER}
+    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen.py ${GENERATED_HEADER} ${REFLECTABLE_HEADERS}
+    DEPENDS ${COMPONENT_HEADERS} ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen.py
+    COMMENT "Generating reflection header map..."
+    VERBATIM
+)
+
+add_custom_target(reflect_codegen DEPENDS ${GENERATED_HEADER})
+
 project(gamebridge VERSION 0.1.0 LANGUAGES C CXX)
 add_library(glad STATIC 
     "${CMAKE_CURRENT_SOURCE_DIR}/src/glad.c"
@@ -100,10 +138,17 @@ file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/include/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp"
+
+    "${CMAKE_CURRENT_SOURCE_DIR}/data/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/data/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/data/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/data/*.hpp"
 )
+
+
 add_executable(gamebridge ${PROJECT_SOURCES})
-add_compile_options(gamebridge -O0)
-add_dependencies(gamebridge resources)
+add_compile_options(gamebridge -O0 -freflection-latest)
+add_dependencies(gamebridge resources reflect_codegen)
 
 #debug stuff
 #target_compile_options(gamebridge PRIVATE -fsanitize=address,undefined -g)
@@ -121,7 +166,14 @@ endif()
 include(CTest)
 enable_testing()
 
-target_include_directories(gamebridge PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/data ${CMAKE_CURRENT_SOURCE_DIR}/data/utils)
+#include dirs
+target_include_directories(gamebridge PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/data
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/utils
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/generated
+    BOOST_INCLUDE
+)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

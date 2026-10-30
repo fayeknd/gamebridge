@@ -28,7 +28,7 @@ void Rigidbody::physicsUpdate(double delta)
 {
     addImplicitForce(delta);
     applyGravity(delta);
-    lastPosition = entity.transform.getPosition();
+    m_lastPosition = entity.transform.getPosition();
 }
 
 // applies a force on the rigidbody based on the forcemode

@@ -3,7 +3,7 @@
 #include <physics/ray.hpp>
 #include <shader.hpp>
 #include <component/collider.hpp>
-#include <component/boundingbox.hpp>
+#include <physics/boundingbox.hpp>
 #include <component/main_comp.hpp>
 #include <entity.hpp>
 #include <physics/physics.hpp>
@@ -90,6 +90,7 @@ void MainComponent::init() {
     Renderer::get().setTargetFPS(240);
     // free any archives.
     ResourceManager::freeArchives();
+
 }
 
 void MainComponent::update(double delta) {

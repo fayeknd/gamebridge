@@ -4,7 +4,7 @@
 #include <component/component.hpp>
 #include <component/renderable.hpp>
 #include <physics/ray.hpp>
-#include <component/boundingbox.hpp>
+#include <physics/boundingbox.hpp>
 #include <layer.hpp>
 #include <physics/rigidbody.hpp>
 
@@ -22,7 +22,7 @@ namespace Engine
 
     class Collider : public IRenderable
     {
-        public:
+        component_public:
             // contact point, stores the normal to where it was penetrated and how deep it penetrated
             struct Contact
             {
@@ -68,26 +68,22 @@ namespace Engine
             bool m_isStatic = true;
         public:
 
-            fm::vec4 m_drawCol = fm::vec4(0.0f, 0.75f, 1.0f, 1.0f);
+            PUBLIC fm::vec4 m_drawCol = fm::vec4(0.0f, 0.75f, 1.0f, 1.0f);
 
-            // The colliders shape, its attributes rigidbody if it has one
-            ColliderShape m_shape;
-            Rigidbody* m_rb = nullptr;
+            PUBLIC ColliderShape m_shape;
+            Rigidbody* m_rb = nullptr
 
-            // offset from the center of the entity
-            fm::vec3 offset = fm::vec3::zero();
-
-            // the center point of a sphere and its radius
-            fm::vec3 center = fm::vec3::zero();
-            float radius = 1.0f;
+            PUBLIC fm::vec3 m_offset = fm::vec3::zero();
+            PUBLIC fm::vec3 m_center = fm::vec3::zero();
+            PUBLIC float radius = 1.0f;
 
             // height for a capsule and cylinder
-            float height = 2.f;
+            PUBLIC float height = 2.f;
 
             // the min and max bounds of a box
-            fm::vec3 m_min = -fm::vec3::one() * 0.5f;
-            fm::vec3 m_max = fm::vec3::one() * 0.5f;
-
+            PUBLIC fm::vec3 m_min = -fm::vec3::one() * 0.5f;
+            PUBLIC fm::vec3 m_max = fm::vec3::one() * 0.5f;
+            float m_radius = 1.0f;
             // convert local bounds to world
             fm::vec3 getWorldCenter();
             float getWorldRadius();

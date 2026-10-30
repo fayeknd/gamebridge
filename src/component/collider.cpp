@@ -22,16 +22,16 @@ Collider::Collider(const fm::vec3& min, const fm::vec3& max)
 Collider::Collider(const fm::vec3& center, const float& radius)
 {
     m_shape = ColliderShape::Sphere;
-    this->center = center;
-    this->radius = radius;
+    this->m_center = center;
+    this->m_radius = radius;
 }
 
 // Constructs a new capsule or cylinder collider
 Collider::Collider(ColliderShape shape, const float& radius, const float& height)
 {
     m_shape = shape;
-    this->height = height;
-    this->radius = radius;
+    this->m_height = height;
+    this->m_radius = radius;
 }
 
 // Constructs a new collider from a shape
@@ -42,13 +42,13 @@ Collider::Collider(ColliderShape shape)
 
 // gets the world center of the collider
 fm::vec3 Collider::getWorldCenter() {
-    return (center + offset).transformed(getEntity().transform.getGlobalMatrix());
+    return (m_center + m_offset).transformed(getEntity().transform.getGlobalMatrix());
 }
 
 // gets the radius of the collider in world space
 float Collider::getWorldRadius() {
     fm::vec3 s = getEntity().transform.getGlobalScale();
-    return radius * std::max({ std::abs(s.x), std::abs(s.y), std::abs(s.z) });
+    return m_radius * std::max({ std::abs(s.x), std::abs(s.y), std::abs(s.z) });
 }
 
 // gets the height of the collider in world space
@@ -553,7 +553,7 @@ void Collider::draw() {
             break;
         }
         case (ColliderShape::Sphere) : {
-            _drawSphere(center, radius, entity.getRealMatrix(), line);
+            _drawSphere(m_center, m_radius, entity.getRealMatrix(), line);
             break;
         }
         case (ColliderShape::Cylinder) : {
@@ -903,13 +903,13 @@ bool Collider::rayAABoxIntersection(const Ray& ray, const Collider* box, Raycast
 bool Collider::rayAASphereIntersection(const Ray& ray, const Collider* sphere, RaycastHit& outRaycastHit) {
 
     // get sphere center and length of origin to sphere center (negative)
-    fm::vec3 sphereCenter = sphere->center + sphere->offset;
+    fm::vec3 sphereCenter = sphere->m_center + sphere->m_offset;
     fm::vec3 length = ray.m_origin - sphereCenter;
 
     // discriminants
     float rdr = ray.m_direction.dot(ray.m_direction); // red dead redemption (raydir dot raydir)
     float ldr = 2.0 * length.dot(ray.m_direction); // left dead redemption (length dot raydir)
-    float ldl = length.dot(length) - (sphere->radius * sphere->radius); // left dead ledemption (length dot length)
+    float ldl = length.dot(length) - (sphere->m_radius * sphere->m_radius); // left dead ledemption (length dot length)
 
     // if the discriminant is less than zero, the ray missed 
     float discriminant = (ldr * ldr) - (4.0f * rdr * ldl);
@@ -1115,11 +1115,11 @@ AABB Collider::getWorldAABB() {
 
     // transform the spheres bounds based on the world space
     if (m_shape == ColliderShape::Sphere) {
-        fm::vec3 c = (center + offset).transformed(world);
+        fm::vec3 c = (m_center + m_offset).transformed(world);
 
         // sets the space
         fm::vec3 s = t.getGlobalScale();
-        float r = radius * std::max({ std::abs(s.x), std::abs(s.y), std::abs(s.z) });
+        float r = m_radius * std::max({ std::abs(s.x), std::abs(s.y), std::abs(s.z) });
 
         // new bounding volume
         return { c - fm::vec3(r, r, r), c + fm::vec3(r, r, r) };
@@ -1136,7 +1136,7 @@ AABB Collider::getWorldAABB() {
                         (i & 2) ? m_max.y : m_min.y,
                         (i & 4) ? m_max.z : m_min.z);
 
-        fm::vec3 w = (corner + offset).transformed(world);
+        fm::vec3 w = (corner + m_offset).transformed(world);
 
        
         lo = { std::min(lo.x, w.x), std::min(lo.y, w.y), std::min(lo.z, w.z) };

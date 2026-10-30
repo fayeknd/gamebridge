@@ -13,13 +13,13 @@ namespace Engine {
     class IRenderable : public IComponent {
     protected:
 
-    public:
+    component_public:
 
         // instance's render data
-        RenderData m_renderData = RenderData();
+        PUBLIC RenderData m_renderData = RenderData();
 
         // mesh to draw
-        std::shared_ptr<Mesh> m_mesh = nullptr;
+        PUBLIC std::shared_ptr<Mesh> m_mesh = nullptr;
         
         // material to use
         //std::shared_ptr<Material> m_material = nullptr; moved to component.hpp (explanation there)

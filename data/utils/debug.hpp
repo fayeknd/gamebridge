@@ -8,8 +8,12 @@
 
 namespace Engine{
 
+    class Entity;
+    using EntityID = uint32_t;
+
     namespace Debug {
         
+
         class DebugUI {
         private:
 
@@ -18,6 +22,11 @@ namespace Engine{
             ImGuiIO* m_io;
             ImFont* m_font;
             ImFontConfig m_font_cfg;
+
+            void _drawTreeRow(std::weak_ptr<Entity> e);
+            void _drawProperties(std::weak_ptr<Entity> e);
+            
+            std::weak_ptr<Entity> m_selectedEntity;
 
         public:
 
