@@ -1,6 +1,6 @@
 #pragma once
 #include <component/component.hpp>
-#include <mesh.hpp>
+#include <model.hpp>
 #include <shader.hpp>
 #include <gl_context.hpp>
 #include <material.hpp>
@@ -18,8 +18,8 @@ namespace Engine {
         // instance's render data
         PUBLIC RenderData m_renderData = RenderData();
 
-        // mesh to draw
-        PUBLIC std::shared_ptr<Mesh> m_mesh = nullptr;
+        // model to draw
+        PUBLIC std::shared_ptr<Model> m_model = nullptr;
         
         // material to use
         //std::shared_ptr<Material> m_material = nullptr; moved to component.hpp (explanation there)

@@ -1,6 +1,5 @@
 #pragma once
 #include <gl_context.hpp>
-#include <mesh.hpp>
 #include <material.hpp>
 #include <component/component.hpp>
 

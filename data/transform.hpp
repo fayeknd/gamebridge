@@ -94,7 +94,7 @@ namespace Engine {
         // get the value to change, m_position.x for example, and the new value to change it to. 
         void _setValue(T& value, T newValue) {
             // if the value is already the same, no point setting it or marking the transform dirty.
-            if (value == newValue) return;
+            if (value == newValue || m_lockTransform) return;
 
             // set the new value
             value = newValue;
@@ -120,6 +120,9 @@ namespace Engine {
         fm::mat4 _getParentInv();
 
     public:
+
+        // mark this transform locked
+        bool m_lockTransform = false;
 
         // return how far this transform is from the camera.
         // this is not very accurate for transparency,

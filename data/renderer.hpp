@@ -4,13 +4,13 @@
 #include <fm/fmath.hpp>
 #include <string>
 #include <command.hpp>
+#include <model.hpp>
 
 namespace Engine {
 
     constexpr size_t renderer_maxLayers = 64;
 
-    // forward declarations
-    class Mesh;
+    // forward declaration(s)
     class Material;
 
     // FullscreenMode is just an enumerator to store different Renderer states.
@@ -89,7 +89,7 @@ namespace Engine {
         // if a bucket has no data, sorting it is a waste of resources.
         std::array<bool, renderer_maxLayers> m_bucketHasData = { false };
 
-        std::shared_ptr<Mesh> m_mainFramebufferMesh;
+        std::shared_ptr<Model> m_mainFramebufferModel;
         std::shared_ptr<Material> m_mainFramebufferMaterial;
 
         // draws the main framebuffer view

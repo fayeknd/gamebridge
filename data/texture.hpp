@@ -6,6 +6,10 @@
 #include <resources.hpp>
 #include <unordered_map>
 
+// has to not be in the namespace
+struct aiMaterial;
+struct aiScene;
+
 namespace Engine {
 
     constexpr GLuint texture_defaultFiltering = GL_NEAREST;
@@ -13,6 +17,22 @@ namespace Engine {
     constexpr GLuint texture_defaultWrapping  = GL_REPEAT;
 
     class Framebuffer;
+
+    enum TextureType {
+        Albedo          = 0x00,
+        Normal          = 0x01,
+        Metallic        = 0x02,
+        Emission        = 0x03,
+        RenderTexture   = 0x04,
+    };
+
+    // information we might need on assimp embedded textures
+    struct EmbeddedTextureData {
+        bytes m_data;
+        std::string m_formatHint = "";
+        bool m_isCompressed = false;
+        fm::uvec2 m_size;
+    };
 
     class Texture2D : public ICachable<Texture2D> {
     protected:
@@ -24,6 +44,7 @@ namespace Engine {
 
         // a map of this texture id to the cache id
         static std::unordered_map<GLuint, CacheID>& txIDToIDMap();
+        static std::unordered_map<std::string, CacheID>& txPathToIDMap();
 
         // the id pool for the bound texture units.
         // when a texture is queued, it has to get
@@ -70,14 +91,14 @@ namespace Engine {
         // just cheeky little path storage
         std::string m_path;
 
-        static bool _processRawBytes(bytes& outBytes, std::shared_ptr<Texture2D> tx);
-        
+        static unsigned char* _processRawBytes(bytes& in, std::shared_ptr<Texture2D> tx);
+
         // does not follow the same structure as shader.hpp does. 
         // this is because this function does not create a texture,
         // it just modifies an existing one.
         // this is because stbi_load_from_memory sets some texture
         // values as it does it, so we need to account for that.
-        void _initTextureWithSTBIData(bytes& data, bool mipmap = true, GLuint format = texture_defaultFormat, GLuint filtering = texture_defaultFiltering, GLuint internalFormat = texture_defaultFormat, GLuint wrapping = texture_defaultWrapping, GLuint type = GL_TEXTURE_2D);
+        void _initTextureWithData(const unsigned char* data, bool dontfree = false, bool mipmap = true, GLuint format = texture_defaultFormat, GLuint filtering = texture_defaultFiltering, GLuint internalFormat = texture_defaultFormat, GLuint wrapping = texture_defaultWrapping, GLuint type = GL_TEXTURE_2D);
 
         // add / remove this texture from the global texture queue
         void _queue();
@@ -88,7 +109,7 @@ namespace Engine {
     public:
 
         // generate a texture from all the values on this texture (+data).
-        void genTexture(bytes* data); 
+        void genTexture(const unsigned char* data); 
 
 
         ~Texture2D();
@@ -103,6 +124,12 @@ namespace Engine {
 
         // create a render texture
         static std::shared_ptr<Texture2D> createRenderTexture(fm::uvec2 size = fm::uvec2::zero(), GLuint filtering = texture_defaultFiltering, GLuint wrapping = texture_defaultWrapping);
+
+        // (attempt to) create a texture from an aiMaterial pointer
+        static std::shared_ptr<Texture2D> createTextureFromAi(aiMaterial* mat, const aiScene* scene, TextureType type);
+
+        // get embedded texture data
+        static EmbeddedTextureData getEmbeddedTexture(const aiScene* scene, int index);
 
         // idk why you would want to check this but sure have a getter
         const bool isGenerated() const { return m_txGenerated; }
@@ -130,7 +157,8 @@ namespace Engine {
         // get the type of texture this is. for instance: GL_TEXTURE, GL_RENDER_TEXTURE, etc
         const GLuint getTextureType() const { return m_txType; }
 
-        std::shared_ptr<Texture2D> getTextureViaID(GLuint tid);
+        static std::shared_ptr<Texture2D> getTextureViaID(GLuint tid);
+        static std::shared_ptr<Texture2D> getTextureViaPath(std::string tpath);
 
         // is this texture using mipmapping?
         const bool isMipmapped() const { return m_useMipmapping; }

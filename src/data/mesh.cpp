@@ -1,12 +1,12 @@
 #include <mesh.hpp>
 #include <shader.hpp>
-#include <primitives.hpp>
+#include <texture.hpp>
 
 using namespace Engine;
 
 // create a mesh with any valid mesh data.
 // vertices and indices. and also topology.
-std::shared_ptr<Mesh> Mesh::createMeshWithData(std::vector<Vertex>& vertices, std::vector<GLushort>& indices, GLuint topology) {
+std::shared_ptr<Mesh> Mesh::createMeshWithData(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, GLuint topology) {
 
     // make sure the gl context exists first.
     if (!GLContext::get().isGLReady()) return nullptr;
@@ -38,7 +38,7 @@ std::shared_ptr<Mesh> Mesh::createMeshWithData(std::vector<Vertex>& vertices, st
     // same thing, copy the indices here.
     // after this, the vertices and indices vectors
     // are done and we don't need them anymore. 
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLushort), indices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 
     // set the vertex attributes (layout (location = x))
 
@@ -63,9 +63,6 @@ std::shared_ptr<Mesh> Mesh::createMeshWithData(std::vector<Vertex>& vertices, st
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    // register the mesh in the cache
-    mesh->_register();
-
     // mesh set up!
     return mesh;
 }
@@ -78,8 +75,89 @@ void Mesh::bindMesh() {
     glBindVertexArray(m_vao);
 }
 
-std::shared_ptr<Mesh> Mesh::primitive(Primitive p) {
-    return Primitives::getPrimitive(p);
+std::shared_ptr<Mesh> Mesh::createAiMesh(aiMesh* mesh, const aiScene* scene, std::vector<std::shared_ptr<Material>>* materialList) {
+    // make sure the gl context exists first.
+    if (!GLContext::get().isGLReady()) return nullptr;
+    // create the new mesh
+    auto _mesh = std::shared_ptr<Mesh>(new Mesh());
+
+    std::vector<Vertex> vertices;
+    std::vector<GLuint> indices;
+
+    // check if this mesh has UVs / Vertex colours
+    bool hasUVs = (mesh->mTextureCoords[0] != nullptr);
+    bool hasColours = (mesh->mColors[0] != nullptr);
+    // get the vertices
+    for (size_t i = 0; i < mesh->mNumVertices; i++) {
+        Vertex v;
+        // set the pos, colour, normal
+        v.position = {
+            mesh->mVertices[i].x,
+            mesh->mVertices[i].y,
+            mesh->mVertices[i].z
+        };
+        v.normal = {
+            mesh->mNormals[i].x,
+            mesh->mNormals[i].y,
+            mesh->mNormals[i].z
+        };
+        if (hasColours) {
+            v.colour = {
+                mesh->mColors[0][i].r,
+                mesh->mColors[0][i].g,
+                mesh->mColors[0][i].b,
+                mesh->mColors[0][i].a,
+            };
+        }
+        // does this mesh have UVs?
+        if (hasUVs) {
+            // yes, set them
+            v.uv = {
+                mesh->mTextureCoords[0][i].x,
+                mesh->mTextureCoords[0][i].y
+            };
+        }
+        // push back this vertex
+        vertices.push_back(v);
+    } 
+    // get the indices
+    for (size_t i = 0; i < mesh->mNumFaces; i++) {
+        // get this face
+        aiFace face = mesh->mFaces[i];
+        // push back all three face incides
+        for (size_t j = 0; j < face.mNumIndices; j++) {
+            indices.push_back(face.mIndices[j]);
+        }
+    }
+    // does the mesh have materials? (and do we have a material list passed in?)
+    if(mesh->mMaterialIndex >= 0 && materialList != nullptr) {
+        if (materialList->size() > 0) materialList->clear();
+        // yes, try load them.
+        aiMaterial* aiMaterial = scene->mMaterials[mesh->mMaterialIndex];
+
+        // try get the textures
+        auto albedo   = Texture2D::createTextureFromAi(aiMaterial, scene, TextureType::Albedo);
+        auto normal   = Texture2D::createTextureFromAi(aiMaterial, scene, TextureType::Normal);
+        auto metallic = Texture2D::createTextureFromAi(aiMaterial, scene, TextureType::Metallic);
+        auto emission = Texture2D::createTextureFromAi(aiMaterial, scene, TextureType::Emission);
+
+        // if any of these textures are valid
+        if (albedo || normal || metallic || emission) {
+
+            // create the material
+            auto material = Material::create();
+            material->setAlbedoTx(albedo);
+            material->setNormalTx(normal);
+            material->setMetallicTx(metallic);
+            material->setEmissionTx(emission);
+
+            material->m_data.m_hasTransparency = true;
+            // push back our material
+            materialList->push_back(material);
+        }
+    }  
+    // create the mesh
+    return Mesh::createMeshWithData(vertices, indices, GL_TRIANGLES);
 }
 
 // deconstructor

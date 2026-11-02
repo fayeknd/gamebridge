@@ -19,7 +19,8 @@ float depth() {
 }
 
 void main() {
-    fragCol = albedo(v_uv) * vec4(0.5 + (v_normal * 0.5) , 1);
+    //fragCol = albedo(v_uv) * vec4(0.5 + (v_normal * 0.5) , 1);
     //fragCol = vec4(0.5 + (v_normal * 0.5) , 1);
     //fragCol = vec4(vec3(depth()), 1);
+    fragCol = albedo(v_uv) * v_colour;
 }

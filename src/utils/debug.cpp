@@ -276,11 +276,8 @@ void DebugLine::draw(std::vector<Engine::Vertex> points, fm::mat4 model) {
 
     // ViewProjection matrix
     fm::mat4 vpMat = fm::mat4::identity();
-    // if main camera exists
-    if (Camera::activeCamera()) {
-        // vpMat is the main camera projection * view
-        vpMat = Camera::activeCamera()->getProjectionMat() * Camera::activeCamera()->getViewMat() * model;
-    }
+    // if main camera exists, set the ViewProjection matrix
+    if (Camera::activeCamera()) vpMat = Camera::activeCamera()->getVPMatrix() * model;
     m_program->setUniform(shader_ViewProjectionMatrix, vpMat);
 
     // bind the vertex array

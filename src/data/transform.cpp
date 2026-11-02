@@ -94,8 +94,7 @@ bool Transform::_hasParent() {
 }
 
 void Transform::_setGlobalVector(fm::vec3& globalv, fm::vec3& localv, fm::vec3 v) {
-    if (!_hasParent()) return;
-    if (globalv == v) return;
+    if (!_hasParent() || m_lockTransform || globalv == v) return;
 
     // set the local value to the new value transformed 
     // by the parent inverse 

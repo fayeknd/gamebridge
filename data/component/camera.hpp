@@ -29,6 +29,9 @@ namespace Engine {
         // projection matrix
         fm::mat4 m_projectionMatrix;
 
+        // the result of the v * p matrix.
+        fm::mat4 m_vpMatrixCache;
+
         // the camera fov (wouldve been a uint8 but you
         // MIGHT want a fractional value on this maybe?)
         float m_fov = 75;
@@ -88,6 +91,7 @@ namespace Engine {
 
         fm::mat4 getProjectionMat();
         fm::mat4 getViewMat();
+        fm::mat4 getVPMatrix();
         
         // self-explanitory
         float getFOV();

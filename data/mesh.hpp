@@ -5,24 +5,20 @@
 #include <iostream>
 #include <memory>
 #include <vector>
-#include "vertex.hpp"
+#include <vertex.hpp>
 #include <idpool.hpp>
 #include <cachable.hpp>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <material.hpp>
 
 namespace Engine {
-
-    // just one currently
-    enum Primitive {
-        Cube     = 0x01,
-        Plane    = 0x02
-    };
-
-    using MeshID = uint16_t;
 
     // the mesh class is responsible for holding all of the
     // annjoying verbose opengl boilerplate.
 
-    class Mesh : public ICachable<Mesh>{
+    class Mesh {
     private:
 
         // vertex buffer id
@@ -54,12 +50,13 @@ namespace Engine {
         // deconstructor, just destroys the various buffers.
         ~Mesh();
 
-        // create a primitive mesh using an identifier. 
-        static std::shared_ptr<Mesh> primitive(Primitive p);
-
         // create a mesh with any valid mesh data.
         // vertices and indices. and also topology.
-        static std::shared_ptr<Mesh> createMeshWithData(std::vector<Vertex>& vertices, std::vector<GLushort>& indices, GLuint topology = GL_TRIANGLES);
+        static std::shared_ptr<Mesh> createMeshWithData(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, GLuint topology = GL_TRIANGLES);
+
+        // NOT artificial intelligence, assimp.
+        // convert a mesh from the assimp mesh/scene pair to our mesh type
+        static std::shared_ptr<Mesh> createAiMesh(aiMesh* mesh, const aiScene* scene, std::vector<std::shared_ptr<Material>>* materialList = nullptr);
 
         // bind this as the active mesh to be drawn.
         void bindMesh();

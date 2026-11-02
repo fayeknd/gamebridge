@@ -40,6 +40,13 @@ namespace Engine {
             normal = {0};
         }
 
+        Vertex() {
+            position = {0};
+            colour = {1};
+            uv = {0};
+            normal = {0};
+        };
+
     };
 
     using Point = Vertex;

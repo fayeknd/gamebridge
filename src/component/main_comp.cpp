@@ -25,7 +25,7 @@ using namespace Engine::Debug;
 Entity* square;
 Entity* square2; 
 Entity* cam;
-Entity* teenySquare;
+Entity* square3;
 Rigidbody* rb;
 float sensitivity = 0.45;
 fm::vec3 ray_start;
@@ -39,37 +39,47 @@ void MainComponent::init() {
     // create entity and add component
     square = Entity::create("Test Square").get(); 
     square2 = Entity::create("Test Square 2").get();
-    
+    square3 = Entity::create("Test Square 3").get();
+
     rb = square->addComponent<Rigidbody>();
-    auto box = square->addComponent<Collider>(ColliderShape::Box);
+    auto box = square->addComponent<Collider>(ColliderShape::Cylinder);
     auto renderer = square->addComponent<IRenderable>();
     rb->m_mass = 1000.f;
     rb->m_useGravity = true;
-
-
-    Renderer::get().setWndTransparent(false);
-
-    auto box2 = square2->addComponent<Collider>(ColliderShape::Box);
-    auto renderer2 = square2->addComponent<IRenderable>();
-
-
-    square->transform.addPositionY(-10.0f);
 
     square2->transform.setScaleX(10.0f);
     square2->transform.setScaleZ(10.0f);
     square2->transform.addPositionY(20.0f);
     square2->transform.addScale(5.0f);
 
+    Renderer::get().setWndTransparent(false);
+
+    auto box2 = square2->addComponent<Collider>(ColliderShape::Box);
+    auto renderer2 = square2->addComponent<IRenderable>();
+
+    auto rb2 = square3->addComponent<Rigidbody>();
+    auto box3 = square3->addComponent<Collider>(ColliderShape::Box);
+    auto renderer3 = square3->addComponent<IRenderable>();
+    rb2->m_mass = 1000.f;
+    rb2->m_useGravity = true;
+
+
+    square->transform.addPositionY(-10.0f);
+    square3->transform.addPositionY(-20.0f);
+
+
     // add some basic data to the renderer
-    renderer->m_mesh = Mesh::primitive(Primitive::Cube);
+    renderer->m_model = Model::primitive(Primitive::Cube);
     renderer->m_material->setAlbedoTx(Texture2D::createTextureFromPath("stuff=>textures/me trying to flirt.png"));
     renderer->m_material->m_data.m_albedoFac.w = 0.4f;
     renderer->m_material->m_data.m_hasTransparency = true;
 
-    renderer2->m_mesh = Mesh::primitive(Primitive::Cube);
+    renderer2->m_model = Model::primitive(Primitive::Cube);
     renderer2->m_material->setAlbedoTx(Texture2D::createTextureFromPath("stuff=>textures/me trying to flirt.png"));
     renderer2->m_material->m_data.m_albedoFac.w = 0.4f;
     renderer2->m_material->m_data.m_hasTransparency = true;
+
+    renderer3->m_model = Model::createModelFromPath("stuff=>models/bottle.fbx", &renderer3->m_materials);
     //renderer2->m_material->m_data.m_albedoFac.y = 0.4f;
 
     //square->setLayer(Layer::create("TestLayer", 1));

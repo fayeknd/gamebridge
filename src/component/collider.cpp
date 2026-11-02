@@ -747,7 +747,7 @@ ColliderID Collider::getColliderID() {
 }
 
 void Collider::setColour(fm::vec4 col) {
-    m_material->m_data.m_albedoFac = col;
+    m_materials[0]->m_data.m_albedoFac = col;
     //m_program->useProgram();
     //m_program->setUniform("boxCol", col);
 }
@@ -762,14 +762,14 @@ void Collider::init() {
     // create a static material to satisfy IRenderable.
     // this does not need to exist really. it just holds 
     // colour. 
-    static std::shared_ptr<Material> boundingBoxMaterial = Material::create();
-    boundingBoxMaterial->m_data.m_albedoFac = {1.0f, 0.9f, 0.8f, 1.0f};
-    m_material = boundingBoxMaterial;
+    m_materials.push_back(Material::create());
+    m_material->m_data.m_albedoFac = {1.0f, 0.9f, 0.8f, 1.0f};
 
     // gets the rigidbody from the entity and sets the static variable based on that then creates the world collider
     m_rb = getEntity().getComponent<Physics::Rigidbody>();
     m_isStatic = (m_rb == nullptr);
     CollisionWorld::get().add(this);
+    entity.transform.m_lockTransform = m_isStatic;
 }
 
 // DESTROYS EVERYTHING MWHAHAHA and destroys the collider
@@ -1094,6 +1094,10 @@ void Collider::setStatic(bool s)
     CollisionWorld::get().remove(this);
     m_isStatic = s;
     CollisionWorld::get().add(this);
+    // if the collider is static, lock the transform
+    // (transform can be manually unlocked, but this is
+    // kind of just a warning against doing that
+    entity.transform.m_lockTransform = m_isStatic;
 }
 
 

@@ -105,13 +105,15 @@ namespace Engine {
             return id;
         }
 
-        // material to use
+        // material(s) to use
         // this was moved here so we don't have to dyanmic
         // cast to an IRenderable when sending render data.
         // if the material is null, no render data.
         // else, we can determine if the material is transparent,
         // and use the appropriate depth function.
-        std::shared_ptr<Material> m_material = nullptr;
+        std::vector<std::shared_ptr<Material>> m_materials;
+        #define m_material m_materials[0]
+
 
         // marks if this instance should render or not 
         // (given it can even be rendered)

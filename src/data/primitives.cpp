@@ -4,7 +4,7 @@
 
 using namespace Engine;
 
-_MeshPtr Primitives::getPrimitive(Primitive p) {
+_ModelPtr Primitives::getPrimitive(Primitive p) {
 
     switch (p) {
         case Primitive::Cube: return cube();  break;
@@ -16,19 +16,19 @@ _MeshPtr Primitives::getPrimitive(Primitive p) {
     return nullptr;
 }
 
-_MeshPtr Primitives::plane() {
-    static _MeshPtr plane = _generatePlaneImpl();
+_ModelPtr Primitives::plane() {
+    static _ModelPtr plane = _generatePlaneImpl();
     return plane;
 }
 
-_MeshPtr Primitives::cube() {
-    static _MeshPtr cube = _generateCubeImpl();
+_ModelPtr Primitives::cube() {
+    static _ModelPtr cube = _generateCubeImpl();
     return cube;
 }
 
-_MeshPtr Primitives::_generatePlaneImpl() {
+_ModelPtr Primitives::_generatePlaneImpl() {
     std::vector<Vertex> vertices;
-    std::vector<GLushort> indices;
+    std::vector<GLuint> indices;
     vertices = {
         // Position                Colour       UV              Normal
         {fm::vec3(-1.0f, 1.0f, 0), fm::vec4(1), fm::vec2(0, 1), fm::vec3::zAxis()},
@@ -41,18 +41,17 @@ _MeshPtr Primitives::_generatePlaneImpl() {
         0, 1, 3,
         1, 2, 3 
     };
-    return Mesh::createMeshWithData(vertices, indices);
+    return Model::createModelWithData(vertices, indices);
 }
 
-_MeshPtr Primitives::_generateCubeImpl() {
-
+_ModelPtr Primitives::_generateCubeImpl() {
 
     // making 6 points and creating face data with indices works,
     // but it will not work for UV coordinates.
     // to allow UV coordinates to work, we need to make each 
     // face manually.
     std::vector<Vertex> vertices;
-    std::vector<GLushort> indices;
+    std::vector<GLuint> indices;
     vertices = {
         // Position                   Colour       UV              Normal
         {fm::vec3(-0.5f, 0.5f, 0.5f), fm::vec4(1), fm::vec2(1, 0),-fm::vec3::zAxis()},
@@ -106,6 +105,6 @@ _MeshPtr Primitives::_generateCubeImpl() {
         20, 22, 23 
     };
 
-    return Mesh::createMeshWithData(vertices, indices, GL_TRIANGLES);
+    return Model::createModelWithData(vertices, indices, GL_TRIANGLES);
 
 }

@@ -275,7 +275,7 @@ int Renderer::createWnd(fm::uvec2 size, std::string title, FullscreenMode fsMode
     setVSyncMode(VSyncMode::On);
 
     // create the plane to render the main framebuffer to
-    m_mainFramebufferMesh = Mesh::primitive(Plane);
+    m_mainFramebufferModel = Model::primitive(Plane);
 
     // create the material for rendering the framebuffer
     m_mainFramebufferMaterial = Material::create();
@@ -592,14 +592,8 @@ void Renderer::_drawView(Framebuffer *fb) {
     // set the material texture to the rendertexture
     m_mainFramebufferMaterial->setAlbedoTx(fb->m_renderTexture);
 
-    // bind our stuff
-    m_mainFramebufferMesh->bindMesh();
-    
-    // use this material for drawing
-    m_mainFramebufferMaterial->useMaterial();
-
     // draw the stuff!
-    glDrawElements(m_mainFramebufferMesh->getTopology(), m_mainFramebufferMesh->getIndexCount(), GL_UNSIGNED_SHORT, 0);
+    m_mainFramebufferModel->draw(m_mainFramebufferMaterial, fm::mat4::identity(), fm::mat4::identity());
 
 }
 

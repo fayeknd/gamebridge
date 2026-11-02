@@ -4,7 +4,10 @@
 #include <resources.hpp>
 #include <fstream>
 #include <renderer.hpp>
+#include <mesh.hpp>
 
+#define STBI_SUPPORT_ZLIB
+#define STBI_SSE2
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
@@ -12,6 +15,10 @@ using namespace Engine;
 
 std::unordered_map<GLuint, CacheID>& Texture2D::txIDToIDMap() {
     static std::unordered_map<GLuint, CacheID> map;
+    return map;
+}
+std::unordered_map<std::string, CacheID>& Texture2D::txPathToIDMap() {
+    static std::unordered_map<std::string, CacheID> map;
     return map;
 }
 
@@ -36,42 +43,160 @@ std::shared_ptr<Texture2D> Texture2D::createRenderTexture(fm::uvec2 size, GLuint
 
 // use stb_image to convert our raw texture bytes into 
 // a usable data buffer for opengl to draw with
-bool Texture2D::_processRawBytes(bytes &outBytes, std::shared_ptr<Texture2D> tx) {
+unsigned char* Texture2D::_processRawBytes(bytes& bytes, std::shared_ptr<Texture2D> tx) {
     // annoying asf cause stbi_load_from_memory takes ints and not uints.
     // its whatever i guess.
     int x, y, c;
     
     // get the image data
-    auto imgData = stbi_load_from_memory(outBytes.data(), static_cast<int>(outBytes.size()), &x, &y, &c, 4);
+    auto out = stbi_load_from_memory(bytes.data(), static_cast<int>(bytes.size()), &x, &y, &c, 4);
     
     // perform a cheeky null check on the image data
-    if (!imgData) {
+    if (!out) {
         log().logError("Texture read error! -> {}", stbi_failure_reason());
-        return false;
+        return NULL;
     }
-    // convert back to a vector 
-    size_t imgTotalBytes = static_cast<size_t>(x) * y * 4;
-    bytes pixels(imgData, imgData + imgTotalBytes);
-    outBytes = pixels;
-
     // set some texture instance variables while we're here
     tx->m_channelCount = c;
     tx->m_txSize = {static_cast<unsigned int>(x), static_cast<unsigned int>(y)};
     
-    // free the data, we are done with it.
-    stbi_image_free(imgData);
+    return out;
+}
 
-    return true;
+std::shared_ptr<Texture2D> Texture2D::createTextureFromAi(aiMaterial* mat, const aiScene* scene, TextureType type) {
+    
+    // to store the out path
+    aiString aiPath;
+    std::string path;
+
+    // convert our TextureType enum to assimp's
+    aiTextureType t;
+    switch (type) {
+        case TextureType::Albedo:   t = aiTextureType_BASE_COLOR; break;
+        case TextureType::Normal:   t = aiTextureType_NORMALS;    break;
+        case TextureType::Metallic: t = aiTextureType_METALNESS;  break;
+        case TextureType::Emission: t = aiTextureType_EMISSIVE;   break;
+        default:                    return nullptr;
+    }
+    // try get the path
+    if (mat->GetTexture(t, 0, &aiPath) == AI_SUCCESS) {
+        path = aiPath.C_Str();
+    }
+    else {
+        // attempt fallback texture types
+        if (type == TextureType::Albedo && mat->GetTexture(aiTextureType_DIFFUSE, 0, &aiPath) == AI_SUCCESS) {
+            path = aiPath.C_Str();
+        }
+        else if (type == TextureType::Metallic && mat->GetTexture(aiTextureType_UNKNOWN, 0, &aiPath) == AI_SUCCESS) {
+            path = aiPath.C_Str();
+        } 
+        else {
+            // doesn't exist.
+            return nullptr; 
+        }
+    }
+
+    // if this texture was loaded already, just load that.
+    if (auto tx = getTextureViaPath(path); tx != nullptr) {
+        return tx;
+    }
+
+    // old way failed, attempt modern way. 
+    auto embeddedTx = scene->GetEmbeddedTexture(path.c_str());
+    if (embeddedTx != nullptr) {
+        // yes! create the texture
+        auto tx = std::shared_ptr<Texture2D>(new Texture2D());
+        tx->m_path = path;
+
+        // check if this image is compressed or not
+        bool isCompressed = (embeddedTx->mHeight == 0);
+
+        
+        // get the total byte size of the texture
+        size_t byteSize = isCompressed ? 
+            static_cast<size_t>(embeddedTx->mWidth) : 
+            static_cast<size_t>(embeddedTx->mWidth * embeddedTx->mHeight * sizeof(aiTexel));
+        
+        unsigned char* bytes;
+
+        if (isCompressed) {
+            int x, y, c;
+            bytes = stbi_load_from_memory(reinterpret_cast<const unsigned char*>(embeddedTx->pcData), byteSize, &x, &y, &c, 4);
+            tx->m_txSize = {static_cast<unsigned int>(x), static_cast<unsigned int>(y)};
+            tx->m_channelCount = c;
+        } 
+        else {
+
+            // not compressed, we can just make the texture as normal
+            tx->m_txSize = {embeddedTx->mWidth, embeddedTx->mHeight};
+            tx->m_channelCount = 4;
+        }
+
+        tx->_initTextureWithData(bytes, true);
+        txPathToIDMap().emplace(tx->m_path, tx->getCacheID());
+        return tx;
+    }
+
+
+    // definitely not embedded, load it normally.
+    return createTextureFromPath(path);
+    
+}
+
+// unused
+EmbeddedTextureData Texture2D::getEmbeddedTexture(const aiScene* scene, int index) {
+
+    EmbeddedTextureData out;
+
+    // check if index is valid
+    if (index < 0 || index >= static_cast<int>(scene->mNumTextures)) {
+        log().logError("Embedded texture index '{}' out of bounds.", index);
+        return out;
+    }
+
+    // get the texture pointer
+    const aiTexture* texture = scene->mTextures[index];
+
+    // check if texture is compressed
+    if (texture->mHeight == 0) {
+        // it is compressed
+
+        // get the start of the texture byte data in memory
+        const unsigned char* start = reinterpret_cast<const unsigned char*>(texture->pcData);
+        // copy the byte data to a vector (bytes is a uchar vector)
+        out.m_data = bytes(start, start + texture->mWidth);
+        // format hint/extension
+        out.m_formatHint = texture->achFormatHint;
+        // texture is compressed.
+        out.m_isCompressed = true;
+    } else {
+
+        // get the total byte size of the texture
+        size_t byteSize = texture->mWidth * texture->mHeight * sizeof(aiTexel);
+        // get the start of the texture byte data in memory
+        const unsigned char* start = reinterpret_cast<const unsigned char*>(texture->pcData);
+        // copy the byte data to a vector (bytes is a uchar vector)
+        out.m_data = bytes(start, start + byteSize);
+        out.m_size = {texture->mWidth, texture->mHeight};
+    }
+
+    return out;
 }
 
 // create a texture from a path.
 std::shared_ptr<Texture2D> Texture2D::createTextureFromPath(std::filesystem::path path, bool flipY, bool mipmap, GLuint format, GLuint filtering, GLuint internalFormat, GLuint wrapping, GLuint type) {
 
+    // check if this texture is loaded already
+    if (auto tx = getTextureViaPath(path.string()); tx != nullptr) {
+        return tx;
+    }
+    // no existing texture.
+
     stbi_set_flip_vertically_on_load(flipY);
     std::shared_ptr<Texture2D> texture = std::shared_ptr<Texture2D>(new Texture2D);
     texture->m_path = path.string();
     // TODO : In case of error, return a default "error" texture instead.
-
+    
     // check if the file is in an archive first
     bytes rcFile = ResourceManager::loadRaw(path.string()); 
     if (rcFile.size() > 0) {
@@ -85,12 +210,14 @@ std::shared_ptr<Texture2D> Texture2D::createTextureFromPath(std::filesystem::pat
         // stb_image.h is a small header library
         // that handles image data like this, 
         // and converts it to raw R-G-B-A-R-G-B-A data.
-        if (!_processRawBytes(rcFile, texture)) {
+        auto bytes = _processRawBytes(rcFile, texture);
+        if (!bytes) {
             return nullptr;
         }
 
         // initialise texture with stbi data
-        texture->_initTextureWithSTBIData(rcFile, mipmap, format, filtering, internalFormat, wrapping, type);
+        texture->_initTextureWithData(bytes, false, mipmap, format, filtering, internalFormat, wrapping, type);
+        txPathToIDMap().emplace(texture->m_path, texture->getCacheID());
         return texture;
     }
     // file not in an archive.
@@ -99,34 +226,23 @@ std::shared_ptr<Texture2D> Texture2D::createTextureFromPath(std::filesystem::pat
     std::error_code ec;    
     if (!std::filesystem::exists(path, ec)) {
         // file read failed, print error message.
-        log().logError("Texture file read error! -> {}", ec.message());
+        log().logError("Texture '{}' file read error! -> {}", path.string(), ec.message());
         return nullptr;
     }
     // file read success!
 
-    // open the file
-    std::ifstream file(path);
-
-    // read file contents into a buffer
-    std::stringstream buf;
-    buf << file.rdbuf();
-    // close file. data is in the buffer now.
-    file.close();
-
-    // convert stringstream buffer to uchar vector buffer
-    std::string bufstr = buf.str();
-    bytes data(bufstr.begin(), bufstr.end());
-
-    if (!_processRawBytes(data, texture)) {
-        return nullptr;
-    }
+    int x, y, c;
+    auto bytes = stbi_load(path.string().c_str(), &x, &y, &c, 4);
+    texture->m_channelCount = c;
+    texture->m_txSize = {static_cast<unsigned int>(x), static_cast<unsigned int>(y)};
 
     // initialise texture with stbi data
-    texture->_initTextureWithSTBIData(data, mipmap, format, filtering, internalFormat, wrapping, type);
+    texture->_initTextureWithData(bytes, false, mipmap, format, filtering, internalFormat, wrapping, type);
+    txPathToIDMap().emplace(texture->m_path, texture->getCacheID());
     return texture;
 }
 
-void Texture2D::_initTextureWithSTBIData(bytes &data, bool mipmap, GLuint format, GLuint filtering, GLuint internalFormat, GLuint wrapping, GLuint type) {
+void Texture2D::_initTextureWithData(const unsigned char* data, bool dontfree, bool mipmap, GLuint format, GLuint filtering, GLuint internalFormat, GLuint wrapping, GLuint type) {
 
     // set the texture values
     m_format            = format;
@@ -137,13 +253,18 @@ void Texture2D::_initTextureWithSTBIData(bytes &data, bool mipmap, GLuint format
     m_useMipmapping     = mipmap;
 
     // generate the texture.
-    genTexture(&data);
+    genTexture(data);
 
+    if (!dontfree) {
+        // free the data, we are done with it.
+        stbi_image_free(const_cast<unsigned char*>(data));
+
+    }
     // register this texture with the ObjectRegistry
     _register();
 }
 
-void Texture2D::genTexture(bytes* data) {
+void Texture2D::genTexture(const unsigned char* data) {
 
     // TODO : incorporate pixel buffer objects
     // for videos later. check if the image is static.
@@ -182,7 +303,7 @@ void Texture2D::genTexture(bytes* data) {
     glTexParameteri(m_txType, GL_TEXTURE_MAG_FILTER, m_filtering);
     
     //                                                                                         // data might not be set, account for that
-    glTexImage2D(m_txType, 0, m_internalFormat, m_txSize.x, m_txSize.y, 0, m_format, GL_UNSIGNED_BYTE, (data != nullptr) ? data->data() : NULL);
+    glTexImage2D(m_txType, 0, m_internalFormat, m_txSize.x, m_txSize.y, 0, m_format, GL_UNSIGNED_BYTE, (data != nullptr) ? data : NULL);
     if (m_useMipmapping) {
         glGenerateMipmap(m_txType);
     }
@@ -206,6 +327,24 @@ std::shared_ptr<Texture2D> Texture2D::getTextureViaID(GLuint tid) {
             // instance is null, texture must have been destroyed or is invalid.
             // delete this entry from the map
             txIDToIDMap().erase(it);
+            return nullptr;
+        }
+        return inst;
+    }
+    // no texture with that key in cache.
+    return nullptr;
+}
+
+std::shared_ptr<Texture2D> Texture2D::getTextureViaPath(std::string tpath) {
+    auto it = txPathToIDMap().find(tpath);
+    if (it != txPathToIDMap().end()) {
+        
+        // got a cache id, try get an instance 
+        auto inst = ICachable::getCachedInstance(it->second);
+        if (!inst) {
+            // instance is null, texture must have been destroyed or is invalid.
+            // delete this entry from the map
+            txPathToIDMap().erase(it);
             return nullptr;
         }
         return inst;
