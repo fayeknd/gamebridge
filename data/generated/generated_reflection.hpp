@@ -5,11 +5,11 @@
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
 
 using namespace Engine;
-#include "/home/faye/projects/gamebridge/data/component/camera.hpp"
-#include "/home/faye/projects/gamebridge/data/component/collider.hpp"
-#include "/home/faye/projects/gamebridge/data/component/main_comp.hpp"
-#include "/home/faye/projects/gamebridge/data/component/renderable.hpp"
-#include "/home/faye/projects/gamebridge/data/physics/rigidbody.hpp"
+#include "C:\projects\gamebridge\gamebridge\data\component\camera.hpp"
+#include "C:\projects\gamebridge\gamebridge\data\component\collider.hpp"
+#include "C:\projects\gamebridge\gamebridge\data\component\main_comp.hpp"
+#include "C:\projects\gamebridge\gamebridge\data\component\renderable.hpp"
+#include "C:\projects\gamebridge\gamebridge\data\physics\rigidbody.hpp"
 
 void Engine::initializeReflectionData() {
     Camera::_reflectionName = "Camera";

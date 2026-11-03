@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.24) 
+
 set(CMAKE_CXX_STANDARD 20)
 
 if (WIN32)
@@ -143,10 +144,14 @@ file(GLOB_RECURSE REFLECTABLE_HEADERS CONFIGURE_DEPENDS
 
 set(GENERATED_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/data/generated/generated_reflection.hpp")
 
+list(REMOVE_ITEM REFLECTABLE_HEADERS "${GENERATED_HEADER}")
+
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
 add_custom_command(
     OUTPUT ${GENERATED_HEADER}
-    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen.py ${GENERATED_HEADER} ${REFLECTABLE_HEADERS}
-    DEPENDS ${COMPONENT_HEADERS} ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen.py
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen.py ${GENERATED_HEADER} ${REFLECTABLE_HEADERS}
+    DEPENDS ${REFLECTABLE_HEADERS} ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen.py
     COMMENT "Generating reflection header map..."
     VERBATIM
 )
@@ -206,8 +211,8 @@ set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
-if (COMMAND copy_dlls)
+#if (COMMAND copy_dlls)
 
-    copy_dlls(gamebridge)
+    #copy_dlls(gamebridge)
 
-endif()
+#endif()
