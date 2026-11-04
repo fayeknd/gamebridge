@@ -8,8 +8,10 @@ using namespace Engine;
 #include "C:\projects\gamebridge\gamebridge\data\component\camera.hpp"
 #include "C:\projects\gamebridge\gamebridge\data\component\collider.hpp"
 #include "C:\projects\gamebridge\gamebridge\data\component\main_comp.hpp"
+#include "C:\projects\gamebridge\gamebridge\data\component\player.hpp"
 #include "C:\projects\gamebridge\gamebridge\data\component\renderable.hpp"
 #include "C:\projects\gamebridge\gamebridge\data\physics\rigidbody.hpp"
+#include "C:\projects\gamebridge\gamebridge\data\utils\debugcamera.hpp"
 
 void Engine::initializeReflectionData() {
     Camera::_reflectionName = "Camera";
@@ -87,6 +89,31 @@ void Engine::initializeReflectionData() {
         return fields;
     };
 
+    Player::_reflectionName = "Player";
+    Player::_reflectionFieldQuery = []() -> const std::vector<ReflectableField>& {
+        using parent = IComponent;
+        static std::vector<ReflectableField> fields = []() {
+            std::vector<ReflectableField> localFields = {
+                { "sensitivity", offsetof(Player, sensitivity), "float" },
+                { "speed", offsetof(Player, speed), "float" },
+                { "toggleMovement", offsetof(Player, toggleMovement), "bool" },
+                { "toggleMouseMovement", offsetof(Player, toggleMouseMovement), "bool" },
+            };
+            
+            // Check if the parent class has fields bound to its reflection slot
+            if constexpr (requires { parent::_reflectionFieldQuery; }) {
+                if (parent::_reflectionFieldQuery != nullptr) {
+                    const auto& parentFields = parent::_reflectionFieldQuery();
+                    localFields.insert(localFields.begin(), parentFields.begin(), parentFields.end());
+                }
+            }
+            
+            return localFields;
+        }();
+        
+        return fields;
+    };
+
     IRenderable::_reflectionName = "IRenderable";
     IRenderable::_reflectionFieldQuery = []() -> const std::vector<ReflectableField>& {
         using parent = IComponent;
@@ -118,6 +145,29 @@ void Engine::initializeReflectionData() {
                 { "m_drag", offsetof(Rigidbody, m_drag), "float" },
                 { "m_mass", offsetof(Rigidbody, m_mass), "float" },
                 { "m_bounciness", offsetof(Rigidbody, m_bounciness), "float" },
+            };
+            
+            // Check if the parent class has fields bound to its reflection slot
+            if constexpr (requires { parent::_reflectionFieldQuery; }) {
+                if (parent::_reflectionFieldQuery != nullptr) {
+                    const auto& parentFields = parent::_reflectionFieldQuery();
+                    localFields.insert(localFields.begin(), parentFields.begin(), parentFields.end());
+                }
+            }
+            
+            return localFields;
+        }();
+        
+        return fields;
+    };
+
+    DebugCam::_reflectionName = "DebugCam";
+    DebugCam::_reflectionFieldQuery = []() -> const std::vector<ReflectableField>& {
+        using parent = IComponent;
+        static std::vector<ReflectableField> fields = []() {
+            std::vector<ReflectableField> localFields = {
+                { "cameraSpeed", offsetof(DebugCam, cameraSpeed), "float" },
+                { "sensitivity", offsetof(DebugCam, sensitivity), "float" },
             };
             
             // Check if the parent class has fields bound to its reflection slot

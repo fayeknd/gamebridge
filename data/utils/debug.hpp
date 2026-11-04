@@ -5,6 +5,8 @@
 #include <fm/fmath.hpp>
 #include <shader.hpp>
 #include <vertex.hpp>
+#include <component/component.hpp>
+#include <component/camera.hpp>
 
 namespace Engine{
 
@@ -69,5 +71,6 @@ namespace Engine{
             void draw(std::vector<Vertex> points, fm::mat4 model = fm::mat4::identity());
 
         };
+
     }
 }

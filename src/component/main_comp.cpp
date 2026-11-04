@@ -17,6 +17,8 @@
 #include <texture.hpp>
 #include <utils/debug.hpp>
 #include <physics/rigidbody.hpp>
+#include <component/player.hpp>
+#include <utils/debugcamera.hpp>
 
 using namespace Engine;
 using namespace Physics;
@@ -24,7 +26,8 @@ using namespace Engine::Debug;
 
 Entity* square;
 Entity* square2; 
-Entity* cam;
+Entity* player;
+Player* playerComponent;
 Entity* square3;
 Rigidbody* rb;
 float sensitivity = 0.45;
@@ -40,6 +43,7 @@ void MainComponent::init() {
     square = Entity::create("Test Square").get(); 
     square2 = Entity::create("Test Square 2").get();
     square3 = Entity::create("Test Square 3").get();
+    player = Entity::create("Player").get();
 
     rb = square->addComponent<Rigidbody>();
     auto box = square->addComponent<Collider>(ColliderShape::Cylinder);
@@ -63,6 +67,8 @@ void MainComponent::init() {
     rb2->m_mass = 1000.f;
     rb2->m_useGravity = true;
 
+    playerComponent = player->addComponent<Player>();
+
 
     square->transform.addPositionY(-10.0f);
     square3->transform.addPositionY(-20.0f);
@@ -85,16 +91,6 @@ void MainComponent::init() {
     //square->setLayer(Layer::create("TestLayer", 1));
     //square->getLayer()->m_ignoreRaycast = true;
 
-    // create the camera entity
-    cam = Entity::create("Camera").get();
-    // add a camera component
-    auto camComponent = cam->addComponent<Camera>();
-
-    // push the camera back a bit in the world
-    cam->transform.addPositionZ(-5);
-    // set the clear colour on the camera
-    camComponent->m_clearCol = {0.1f, 0.1f, 0.1f, 1.0f};
-
     // set the target fps
     //Renderer::get().setVSyncMode(VSyncMode::On);
     Renderer::get().setTargetFPS(240);
@@ -107,45 +103,25 @@ void MainComponent::update(double delta) {
     //square2->transform.addRotation(delta * 10.0f);
 
     if (Input::getActionDown(Key::F1)) {
-        DebugUI::get().m_drawDebugger = !DebugUI::get().m_drawDebugger;
-    }
-
-    if (DebugUI::get().m_drawDebugger && Input::getAction(MouseBtn::RightMouse) || 
-       (!DebugUI::get().m_drawDebugger)) {
+        Entity* debugCam = Entity::create("Debug Camera").get();
+        debugCam->transform.setGlobalPosition(playerComponent->camObject->transform.getGlobalPosition());
+        DebugCam* debugCamComponent = debugCam->addComponent<DebugCam>();
+        playerComponent->toggleMouseMovement = !DebugUI::get().m_drawDebugger;
+        playerComponent->toggleMovement = !DebugUI::get().m_drawDebugger;
+        Camera* activeCam;
         
-        if (!DebugUI::get().getIO().WantCaptureMouse) Input::setMouseHidden(true);
-
-        auto mdelta = Input::getMouseDelta();
-        if (mdelta != fm::dvec2::zero()) {
-            cam->transform.addRotationX(mdelta.y * sensitivity);
-            cam->transform.addRotationY(mdelta.x * sensitivity);
-            cam->transform.setRotationX(std::clamp(cam->transform.getRotationX(), -90.0f, 90.0f));
+        if (DebugUI::get().m_drawDebugger)
+            activeCam = debugCamComponent->cam;
+        else {
+            activeCam = playerComponent->cam;
+            debugCam->release();
         }
-    }
-    else {
-        Input::setMouseHidden(false);
-    }
-    // basic input handling test
-    if (Input::getAction(Key::W)) {
-        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getFront() * speed);
-    }
-    if (Input::getAction(Key::D)) {
-        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getRight() * speed);
-    }
-    if (Input::getAction(Key::E)) {
-        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getUp() * speed);
+
+        Camera::setActiveCamera(activeCam);
     }
 
-    if (Input::getAction(Key::S)) {
-        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getBack() * speed);
-    }
-    if (Input::getAction(Key::A)) {
-        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getLeft() * speed);
-    }
-    if (Input::getAction(Key::Q)) {
-        cam->transform.addPosition(static_cast<float>(1.0f * delta) * cam->transform.getDown() * speed);
-    }
 
+    // test
     if (Input::getActionDown(Key::F)) {
         RaycastHit out = Physics::Raycast({cam->transform.getGlobalPosition(), cam->transform.getGlobalFront()}, LayerMasks::All);
 

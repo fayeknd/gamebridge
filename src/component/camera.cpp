@@ -113,7 +113,7 @@ fm::mat4 Camera::getProjectionMat() {
 }
 fm::mat4 Camera::getViewMat() {
     // return if the transform was not touched this frame
-    if (!entity.wasTransformDirty() || m_lastCalculatedFrame_v == Renderer::get().getFrame()) return m_viewMatrix;
+    //if (!entity.wasTransformDirty() || m_lastCalculatedFrame_v == Renderer::get().getFrame()) return m_viewMatrix;
     entity.m_queueTransformReset = true;
     // (pos, pos + front, up)
 
@@ -127,7 +127,7 @@ fm::mat4 Camera::getViewMat() {
 }
 
 fm::mat4 Camera::getVPMatrix() {
-    if (!entity.wasTransformDirty() && !m_projectionDirty) return m_vpMatrixCache;
+    //if (!entity.wasTransformDirty() && !m_projectionDirty) return m_vpMatrixCache;
     m_vpMatrixCache = getProjectionMat() * getViewMat();
     return m_vpMatrixCache;
 }
