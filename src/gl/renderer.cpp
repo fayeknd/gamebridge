@@ -425,7 +425,6 @@ void Renderer::beginGameLoop() {
 void Renderer::preFramePollEvents() {
     // poll glfw events.
     glfwPollEvents(); 
-    ObjectRegistry::pollGC();
     Input::pollStart();
     PhysicsImpl::pollPhysics();
 }
@@ -437,7 +436,9 @@ void Renderer::postFramePollEvents() {
     Debug::DebugUI::get().drawImGuiInterface_framebegin();
     Debug::DebugUI::get().drawImGuiInterface_frameend();
     Entity::_transformFlagReset();
+    Entity::_releaseQueuedEntities();
     Input::pollEnd();
+    ObjectRegistry::pollGC();
 }
 
 // clean up the program after exiting
@@ -594,7 +595,6 @@ void Renderer::_drawView(Framebuffer *fb) {
 
     // draw the stuff!
     m_mainFramebufferModel->draw(m_mainFramebufferMaterial, fm::mat4::identity(), fm::mat4::identity());
-
 }
 
 // needs to be a setter because the fb material is private

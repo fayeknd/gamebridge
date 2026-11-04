@@ -186,7 +186,7 @@ file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
 
 
 add_executable(gamebridge ${PROJECT_SOURCES})
-add_compile_options(gamebridge -O3)
+add_compile_options(gamebridge -O3 -fsanitize=address -fno-omit-frame-pointer)
 add_dependencies(gamebridge resources reflect_codegen)
 
 #debug stuff

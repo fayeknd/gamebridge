@@ -120,6 +120,7 @@ void Model::_drawImpl(const std::vector<std::shared_ptr<Material>>& materials, f
             materials[i]->m_program->setUniform(shader_ViewProjectionMatrix, vp);
 
         }
+        
         // draw the mesh itself
         m_meshes[i]->bindMesh();
         glDrawElements(m_meshes[i]->getTopology(), m_meshes[i]->getIndexCount(), GL_UNSIGNED_INT, 0);

@@ -33,7 +33,7 @@ const ComponentTypeID IComponent::getTypeID() const {
 }
 
 void IComponent::drawImpl(const Layer *layer) {
-    if (!m_render || !Camera::activeCamera()) return;
+    if (!m_render || !Camera::activeCamera() || !entity.isRenderable()) return;
 
     bool hasTransparency = false; // true if any material has transparency
     DepthType dt;

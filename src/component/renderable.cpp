@@ -13,6 +13,7 @@ void IRenderable::init() {
     // if we replace this, then the old reference will automatically
     // get discarded.
     m_materials.push_back(Material::create());
+    entity.m_isRenderable = true;
 }
 
 

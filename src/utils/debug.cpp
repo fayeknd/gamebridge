@@ -486,7 +486,7 @@ void DebugUI::_drawTreeRow(std::weak_ptr<Entity> e) {
     // Recurse straight down into the engine's sub-structures
     if (!isLeaf && isOpen) {
         for (auto& child : entityPtr->getChildren()) {
-            _drawTreeRow(child);
+            _drawTreeRow(child.second);
         }
         ImGui::TreePop();
     }

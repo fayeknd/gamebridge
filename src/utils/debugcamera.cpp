@@ -9,7 +9,6 @@ using namespace Engine::Debug;
 
 void DebugCam::init() {
     cam = getEntity().addComponent<Camera>();
-    DebugUI::get().m_drawDebugger = !DebugUI::get().m_drawDebugger;
 }
 
 void DebugCam::lateUpdate(double delta) {
@@ -17,7 +16,7 @@ void DebugCam::lateUpdate(double delta) {
 }
 
 void DebugCam::update(double delta) {
-    if (DebugUI::get().m_drawDebugger && Input::getAction(MouseBtn::RightMouse)) {
+    if (Input::getAction(MouseBtn::RightMouse)) {
         if (!DebugUI::get().getIO().WantCaptureMouse) Input::setMouseHidden(true);
         mouseInput(delta);
     }

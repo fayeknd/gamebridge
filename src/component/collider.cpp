@@ -865,8 +865,6 @@ void Collider::init() {
 
 // DESTROYS EVERYTHING MWHAHAHA and destroys the collider
 void Collider::onDestroy() {
-    // release our id 
-    s_colliderIDPool.releaseID(m_ColliderID);
 
     // removes the world collider
     CollisionWorld::get().remove(this);

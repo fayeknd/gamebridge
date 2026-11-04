@@ -55,68 +55,62 @@ void Entity::_init() {
 
 Entity::~Entity() {
     log().logInfo("Entity {} with EntityID {} was destroyed.", m_name, m_id);
-    if (!m_released) {
-        // if this entity hasn't been released yet, do that.
-        release();
-    }
+    release();
 }
 
 // remove this instance from the parent's children vector
 void Entity::_removeSelfFromParentChildren() {
-
-    // get a shared ptr to this (easier. we don't really have to do this but it looks nicer)
-    auto _this = shared_from_this();
-
-    // get shared_ptr to parent (remember its a weak_ptr)
-    if (auto parent = m_parent.lock()) {
-
-        // get all children from parent 
-        auto& pChildren = parent->m_children;
-
-        // erase the child from the children vector if the child is this entity.
-        std::erase_if(pChildren, [&_this](const std::weak_ptr<Entity>& weakChild) {
-
-            // get a temporary shared_ptr from the weak_ptr
-            auto shared = weakChild.lock();
-
-            // contirm it is valid and that it is equal to this entity
-            return shared && (shared == _this); // this is a boolean
-        });
-
-        // update the parent's other children
-        parent->_updateChildrenIndices();
-    }
+    if (!getParent()) return;
+    getParent()->getChildren().erase(m_id);
 }
 
 EntityID Entity::getID() {
     return m_id;
 }
 
-// release this shared_ptr. (remove all references of it.)
+void Entity::_releaseQueuedEntities() {
+    // while the queue is not empty
+    while (!s_releaseQueue.empty()) {
+        // call release impl to actually release the entity
+        getEntityViaID(s_releaseQueue.front())->_releaseImpl();
+        // pop the front of the queue
+        s_releaseQueue.pop();
+    }
+}
+
 void Entity::release() {
-    
-    if (this->weak_from_this().expired()) {
+    if (this->weak_from_this().expired() || m_released || m_queueReleased) {
         // if shared_ptr is expired, shared_from_this will throw an error
         // and complain so we have to be safe.
         return; 
     }
-    if (shared_from_this() == s_root) return; // don't delete the root entity 
+    if (this == s_root.get()) return; // don't delete the root entity 
+    m_queueReleased = true;
+    // push this to the release queue
+    s_releaseQueue.push(m_id);
+}
+
+// release this shared_ptr. (remove all references of it.)
+void Entity::_releaseImpl() {
+    
 
     // release all children
-
-    // loop through all children
-    for (auto& child : m_children) {
+    // make a temporary copy of the children list.
+    // this prevents the children removing themselves
+    // from a list that is BEING iterated over.
+    auto childrenToRelease = std::move(getChildren()); 
+    for (auto& child : childrenToRelease) {
 
         // if child is not null (also get the child)
         // (really just a "just in case" check)
-        if (auto sharedChild = child.lock()) {
+        if (auto sharedChild = child.second.lock()) {
 
             // delete the child too.
             // we don't need to remove it 
             // from the child list,
             // it will do that itself in it's
             // release function.
-            sharedChild->release();
+            sharedChild->_releaseImpl();
         }
     }
 
@@ -129,18 +123,6 @@ void Entity::release() {
     s_entityPool.releaseID(m_id);
     // released is now true. this is so the destructor doesn't call release again.
     m_released = true;
-}
-
-// update the entityIndexToParent of all children
-void Entity::_updateChildrenIndices() {
-    // loop through all children with a basic index loop
-    for (size_t i = 0; i < m_children.size(); i++) {
-        // if child is valid
-        if (auto child = m_children[i].lock()) {
-            // set the index to parent to the current loop index
-            child->m_entityIndexToParent = i;
-        }
-    }
 }
 
 // get an entity via id.
@@ -170,34 +152,34 @@ Entity* Entity::getParent() {
 Entity* Entity::getChildAt(int index) {
     // if size is 1, 1st index is 0. 
     // to account, just add 1 to the index.
-    if (m_children.size() > index + 1) {
+    if (getChildren().size() > index + 1) {
         // vector is big enough for this potential
         // object, so return the object at index.
-        return m_children[index].lock().get();
+        if (getChildren()[index].expired()) {
+            log().logError("On Entity {} with ID {}, child at {} was null or dangling.", m_name, m_id, index);
+        }
+        return getChildren()[index].lock().get();
     }
     // index was bigger than the object.
-    log().logError("On Entity {}, Index of {} was outside the bounds of the child vector, which has a size of {}.", m_id, index, m_children.size());
+    log().logError("On Entity {} with ID {}, Index of {} was outside the bounds of the child vector, which has a size of {}.", m_name, m_id, index, getChildren().size());
     return nullptr;
 }
 
 // get the number of children
 size_t Entity::getChildCount() {
-    return m_children.size();
+    return getChildren().size();
 }
 
 // get child by first reference of name. Potentially
 // inefficient if the entity has a lot of children.
 Entity* Entity::getChildByName(std::string name) {
     // loop through all children with a basic index loop
-    for (size_t i = 0; i < m_children.size(); i++) {
-        // if child is valid
-        if (auto child = m_children[i].lock()) {
-            // if child name is correct
-            if (child->m_name == name) {
-                // return the child
-                return child.get();
-            }
-        }
+    for (const auto& child : getChildren()) {
+        // skip over any expired children
+        if (child.second.expired()) continue;
+        // shared ref to child
+        auto shared = child.second.lock();
+        if (shared->m_name == name) return shared.get();
     }
     // no child was found.
     log().logError("On Entity {}, no child named {} was found.", m_id, name);
@@ -210,7 +192,7 @@ void Entity::setLayer(LayerID id,       bool cascade) {
 
     // cascade down and register all children under this layer too.
     if (cascade) {
-        for (const auto& e : m_children) {
+        for (const auto& e : getChildren()) {
             setLayer(id, true);
         }
     }
@@ -224,18 +206,13 @@ void Entity::setLayer(std::string name, bool cascade) {
 
     // same thing, still setting these via id though.
     if (cascade) {
-        for (const auto& e : m_children) {
+        for (const auto& e : getChildren()) {
             setLayer(m_layer, true);
         }
     }
 }
 void Entity::setLayer(Layer* layer,     bool cascade) {
     setLayer(layer->m_layerID, cascade);
-}
-
-// get the index of this entity in it's parent's child vector
-size_t Entity::getIndex() {
-    return m_entityIndexToParent;
 }
 
 // set this entity's parent
@@ -249,15 +226,20 @@ void Entity::setParent(Entity* e) {
     _removeSelfFromParentChildren();
 
     // add this entity to the new parent's children vector
-    e->m_children.push_back(shared_from_this());
-    // set this entity's index to parent
-    m_entityIndexToParent = e->getChildCount() - 1;
+    e->getChildren().emplace(this->m_id, weak_from_this());
 
     // m_parent is a weak_ptr, e is a raw ptr.
     // get the shared_ptr from the entity list.
     // getting the shared_ptr this way is 
     // actually the cheapest way of doing this.
     // (O(logN))
+    // to clarify, you might think that 
+    // m_parent = std::shared_ptr<Entity>(e) 
+    // would be better, which is good thinking,
+    // but it actually causes the parent to get
+    // deleted at the end of scope.
+    // it shouldn't, but for some reason it does.
+    // idk why.
     m_parent = s_entityList[e->m_id];
     _invalidateChildTransforms();
 }

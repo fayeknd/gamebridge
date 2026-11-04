@@ -381,6 +381,7 @@ void Texture2D::_unqueue() {
 }
 
 void Texture2D::bindTexture() {
+    if (m_invalid) return;
     if (m_inQueue) {
         // set active texture to this
         GLuint unit = GL_TEXTURE0 + m_unitID;
@@ -413,7 +414,6 @@ void Texture2D::bindTexture() {
 
 // destructor. delete this texture if it exists.
 Texture2D::~Texture2D() {
-    if (m_unitID) s_unitPool.releaseID(m_unitID);
     if (m_txGenerated) {
         glDeleteTextures(1, &m_txID);
     }

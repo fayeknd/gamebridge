@@ -88,6 +88,9 @@ namespace Engine {
         // is this texture in the texture queue?
         bool m_inQueue = false;
 
+        // true if this texture is invalid and should not be bound
+        bool m_invalid = false;
+
         // just cheeky little path storage
         std::string m_path;
 

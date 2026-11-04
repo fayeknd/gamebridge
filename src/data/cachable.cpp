@@ -25,25 +25,32 @@ void ObjectRegistry::cleanup() {
     // track the erased object count
     int erasedObjs = 0;
 
-    // loop through every item in the cache
-    for (auto it = registry().begin(); it != registry().end();) {
+    // a vector to hold the IDs of objects we need to delete
+    std::vector<CacheID> objectsToDelete;
+    
+    // loop through 
+    for (const auto& object : registry()) {
         // if the instance total references is less than or equal to 1,
         // (that 1 being the cache itself) and the object is not marked
         // as don't delete, then is viable for cleanup.
-        if (it->second.use_count() <= 1 && !it->second->m_dontDelete) {
-            // delete the instance.
-            // this forces the count to drop to 0
-            // and the smart pointer automatically
-            // deletes the program. 
-            it->second->_unregister();
-            erasedObjs++; // we erased an object, increment.
-        }
-        else {
-            // this instance is referenced, 
-            // continue to the next instance.
-            it++;
+        if (object.second.use_count() <= 1 && !object.second->m_dontDelete) {
+            // add this object to the objectsToDelete vector.
+            objectsToDelete.push_back(object.first);
         }
     }
+    // no objects to delete, return early.
+    if (objectsToDelete.size() == 0) return;
+
+    // NOW loop through all the objects marked for deletion.
+    for (unsigned int id : objectsToDelete) {
+        auto it = registry().find(id);
+        if (it != registry().end()) {
+            // found an object, unregister it.
+            it->second->_unregister();
+            erasedObjs++;
+        }
+    }
+
     // if erased objects is at least 1 and logging is enabled for GC
     if (erasedObjs > 0 && s_logGC) {
         log().logInfo("Cleaned up {} unused ref(s).", erasedObjs);
@@ -69,6 +76,11 @@ void ObjectRegistry::_unregister() {
 
 // run the garbage collector every x minutes
 void ObjectRegistry::pollGC() {
+
+    ObjectRegistry::cleanup();
+    return;
+
+
     // begin the timer if it hasn't started
     if (!s_gcTimer.isCounting()) s_gcTimer.start();
     

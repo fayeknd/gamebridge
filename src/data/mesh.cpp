@@ -71,6 +71,7 @@ std::shared_ptr<Mesh> Mesh::createMeshWithData(std::vector<Vertex>& vertices, st
 void Mesh::bindMesh() {
     // if the currently bound mesh is this, return early.
     if (GLContext::get().glState.m_currentMesh == m_vao) return;
+
     // else, bind the mesh. 
     glBindVertexArray(m_vao);
 }

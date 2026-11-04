@@ -50,10 +50,7 @@ namespace Engine {
         // parent
         std::weak_ptr<Entity> m_parent;
         // list of children
-        std::vector<std::weak_ptr<Entity>> m_children;
-
-        // the index of this entity in the parent's child vector.
-        size_t m_entityIndexToParent;
+        std::unordered_map<EntityID, std::weak_ptr<Entity>> m_children;
 
         // create the entity ID pool
         // responsible for allocating and deallocating IDs
@@ -64,11 +61,21 @@ namespace Engine {
         // if an entity exists, it is referenced in this unordered map.
         static inline std::unordered_map<EntityID, std::shared_ptr<Entity>> s_entityList;
 
+        // where the entities that release() is called on are queued in.
+        static inline std::queue<EntityID> s_releaseQueue;
+
+        // the actual release function called.
+        void _releaseImpl();
+
+        // release the entities in the release queue
+        static void _releaseQueuedEntities();
+
         // determines if the entity has been released or not.
         bool m_released = false;
 
-        // update the entityIndexToParent of all children
-        void _updateChildrenIndices();
+        // has this entity been queued to be released?
+        bool m_queueReleased = false;
+
         // basic initialisation
         void _init();
         // remove this instance from the parent's children vector
@@ -135,9 +142,13 @@ namespace Engine {
 
         bool m_isTreeLeaf;
 
+        bool m_isRenderable = false;
+
         // update loop happens in Renderer, allow private function calling from
         // the Renderer class.
         friend class Renderer; 
+
+        friend class IRenderable;
         // let the transform call _invalidateChildTransforms();
         friend class Transform;
 
@@ -155,9 +166,11 @@ namespace Engine {
             return s_entityList;
         }
 
-        std::vector<std::weak_ptr<Entity>>& getChildren() {
+        std::unordered_map<EntityID, std::weak_ptr<Entity>>& getChildren() {
             return m_children;
         }
+
+        const bool isRenderable() { return m_isRenderable; }
 
         // get the real transform matrix taking physics interpolation into account
         fm::mat4 getRealMatrix();

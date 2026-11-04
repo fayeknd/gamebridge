@@ -66,7 +66,8 @@ namespace Engine {
 
             // if uid is less than or equal to nextID, then the uid cannot have possibly been assigned to anything.
             if (uid >= m_nextID) {
-                throw std::invalid_argument("Attempted to release an ID that has not been allocated yet!");
+                std::string s = std::string("Attempted to release an ID (" + std::to_string(uid) + ") that has not been allocated yet! ");
+                throw std::invalid_argument(s.c_str());
             }
 
             // add this id to the list of free ones. 

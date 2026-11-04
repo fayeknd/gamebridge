@@ -63,6 +63,7 @@ namespace Engine {
 
     protected:
 
+        // ignore this
         static inline std::string_view _reflectionName = "IComponent";
         static inline const std::vector<ReflectableField>& (*_reflectionFieldQuery)() = nullptr;
 

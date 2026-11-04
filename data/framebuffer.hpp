@@ -31,7 +31,7 @@ namespace Engine {
         Camera* m_camera = nullptr;
 
         // our framebuffer id
-        FramebufferID m_framebufferID;
+        FramebufferID m_fbMapID;
 
         // framebuffer id
         GLuint m_bufferID;
@@ -95,7 +95,7 @@ namespace Engine {
         void setResizeWithWnd(bool v); 
 
         // get our framebuffer cache id 
-        const FramebufferID getFramebufferMapID() const { return m_framebufferID; }
+        const FramebufferID getFramebufferMapID() const { return m_fbMapID; }
         // get our framebuffer id 
         const FramebufferID getFramebufferID() const { return m_bufferID; }
 

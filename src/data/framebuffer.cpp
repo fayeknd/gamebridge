@@ -49,6 +49,7 @@ void Framebuffer::_genBuffer(fm::uvec2 size) {
         _deleteBuffer(); // free the buffers; they aren't doing anything. 
     }
 
+    m_initialised = true;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -60,14 +61,14 @@ std::shared_ptr<Framebuffer> Framebuffer::create(fm::uvec2 size, GLuint format) 
     fb->_genBuffer(size);
     // register it to the objectregistry
     fb->_register();
-    // get a new framebuffer id
-    fb->m_framebufferID = framebufferIDPool().getNewID();
+    // get a new framebuffer map id
+    fb->m_fbMapID = framebufferIDPool().getNewID();
     // set the format
     fb->m_format = format;
     // add the framebuffer id to the map
-    framebufferMap().emplace(fb->m_framebufferID, fb);
+    framebufferMap().emplace(fb->m_fbMapID, fb);
 
-    log().logInfo("Created new Framebuffer with size {} and ID {}.", fb->m_size, fb->m_bufferID);
+    log().logInfo("Created new Framebuffer with size {} and ID {}. (CacheID: {})", fb->m_size, fb->m_fbMapID, fb->getCacheID());
 
     return fb;
 }
@@ -116,9 +117,20 @@ void Framebuffer::setResizeWithWnd(bool v) {
 
 void Framebuffer::_deleteBuffer() {
 
+    if (!m_initialised) return;
+    m_initialised = false;
+
+    // BULLSHIT NVIDIA BUG
+    // if a vertex array is bound when
+    // the fb is deleted, OPENGL CRASHES!
+    glBindVertexArray(0); 
+
     // delete the gl buffers
     glDeleteBuffers(1, &m_bufferID);
     glDeleteBuffers(1, &m_renderBufferID);
+
+    // rebind the stupid mesh
+    glBindVertexArray(GLContext::get().glState.m_currentMesh);
     // make sure the IDs are 0.
     // we do this because the framebuffer
     // might be being remade or something.
@@ -127,12 +139,25 @@ void Framebuffer::_deleteBuffer() {
 }
 
 Framebuffer::~Framebuffer() {
+
+    FramebufferID id = m_fbMapID;
+    // erase this framebuffer from the fb map
+    framebufferMap().erase(id);
+    // release the framebuffer id
+    framebufferIDPool().releaseID(id);
+    // set the current framebuffer to 0 if this fb is bound
+    auto& fb = GLContext::get().glState.m_currentFramebuffer;
+    if (fb == m_bufferID) {
+        fb = 0;
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+    // remove the render texture from the texture queue
+    if (m_renderTexture->m_inQueue) {
+        m_renderTexture->_unqueue();
+        m_renderTexture->m_invalid = true;
+    }
     // free this buffer data
     _deleteBuffer();
-    // erase this framebuffer from the fb map
-    framebufferMap().erase(m_framebufferID);
-    // release the framebuffer id
-    framebufferIDPool().releaseID(m_framebufferID);
 }
 
 void Framebuffer::bindFramebuffer() {

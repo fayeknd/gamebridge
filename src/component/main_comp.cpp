@@ -103,27 +103,30 @@ void MainComponent::update(double delta) {
     //square2->transform.addRotation(delta * 10.0f);
 
     if (Input::getActionDown(Key::F1)) {
-        Entity* debugCam = Entity::create("Debug Camera").get();
-        debugCam->transform.setGlobalPosition(playerComponent->camObject->transform.getGlobalPosition());
-        DebugCam* debugCamComponent = debugCam->addComponent<DebugCam>();
+        DebugUI::get().m_drawDebugger = !DebugUI::get().m_drawDebugger;
         playerComponent->toggleMouseMovement = !DebugUI::get().m_drawDebugger;
         playerComponent->toggleMovement = !DebugUI::get().m_drawDebugger;
-        Camera* activeCam;
         
-        if (DebugUI::get().m_drawDebugger)
-            activeCam = debugCamComponent->cam;
+        static EntityID debugCamID;
+
+        if (DebugUI::get().m_drawDebugger) {
+            Entity* debugCam = Entity::create("Debug Camera").get();
+            debugCam->transform.setGlobalPosition(playerComponent->camObject->transform.getGlobalPosition());
+            DebugCam* debugCamComponent = debugCam->addComponent<DebugCam>();
+            debugCamID = debugCam->getID();
+            Camera::setActiveCamera(debugCamComponent->cam);
+        }
         else {
-            activeCam = playerComponent->cam;
-            debugCam->release();
+            Camera::setActiveCamera(playerComponent->cam);
+            Entity::getEntityViaID(debugCamID)->release();
         }
 
-        Camera::setActiveCamera(activeCam);
     }
 
 
     // test
     if (Input::getActionDown(Key::F)) {
-        RaycastHit out = Physics::Raycast({cam->transform.getGlobalPosition(), cam->transform.getGlobalFront()}, LayerMasks::All);
+        RaycastHit out = Physics::Raycast({Camera::activeCamera()->getEntity().transform.getGlobalPosition(), Camera::activeCamera()->getEntity().transform.getGlobalFront()}, LayerMasks::All);
 
         ray_start = cam->transform.getGlobalPosition();
         ray_end = ray_start + (cam->transform.getGlobalFront() * out.m_hitInfo.m_distance);
