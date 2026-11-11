@@ -8,9 +8,17 @@ if [ "$1" == "-win" ]; then
     if [ "$2" == "-fresh" ]; then
         echo "Fresh build! This might take a minute..."
         rm -rf ./build/windows 
-        cmake -B build/windows -DCMAKE_TOOLCHAIN_FILE="$PWD/windows-toolchain.cmake" --fresh
+        if [ "$3" == "-release" ]; then
+            cmake -B build/windows -DCMAKE_TOOLCHAIN_FILE="$PWD/windows-toolchain.cmake" --fresh -DCMAKE_BUILD_TYPE=MinSizeRel
+        else
+            cmake -B build/windows -DCMAKE_TOOLCHAIN_FILE="$PWD/windows-toolchain.cmake" --fresh
+        fi
     else
-        cmake -B build/windows -DCMAKE_TOOLCHAIN_FILE="$PWD/windows-toolchain.cmake"
+        if [ "$3" == "-release" ]; then
+            cmake -B build/windows -DCMAKE_TOOLCHAIN_FILE="$PWD/windows-toolchain.cmake" -DCMAKE_BUILD_TYPE=MinSizeRel
+        else
+            cmake -B build/windows -DCMAKE_TOOLCHAIN_FILE="$PWD/windows-toolchain.cmake" 
+        fi
     fi
     cmake --build build/windows
     
@@ -19,12 +27,20 @@ if [ "$1" == "-win" ]; then
 else
     echo "Building for Linux, then running..."
     
-    if [ "$2" == "-fresh" ]; then
+    if [ "$1" == "-fresh" ]; then
         echo "Fresh build! This might take a minute..."
         rm -rf ./build/linux
-        cmake -B build/linux --fresh
+        if [ "$2" == "-release" ]; then
+            cmake -B build/linux --fresh -DCMAKE_BUILD_TYPE=MinSizeRel
+        else
+            cmake -B build/linux --fresh
+        fi
     else
-        cmake -B build/linux
+        if [ "$2" == "-release" ]; then
+            cmake -B build/linux -DCMAKE_BUILD_TYPE=MinSizeRel
+        else
+            cmake -B build/linux
+        fi
     fi
     cmake --build build/linux 
     echo "Launching binary..."

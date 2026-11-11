@@ -4,6 +4,7 @@
 #include <utils/debug.hpp>
 #include <component/collider.hpp>
 #include <physics/rigidbody.hpp>
+#include <logger.hpp>
 
 using namespace Engine;
 using namespace Physics;
@@ -24,7 +25,6 @@ void Player::init() {
 
     toggleMouseMovement = true;
     toggleMovement = true;
-    Input::setMouseHidden(false);
 }
 
 void Player::lateUpdate(double delta) {
@@ -50,26 +50,35 @@ void Player::draw() {
 
 void Player::movementInput(double delta) {
 
-    if (toggleMovement)
-    {
-        //WASD Movement
-        if (Input::getAction(Key::W)) {
-            getEntity().transform.addPosition(static_cast<float>(delta) * fm::vec3(camObject->transform.getFront().x, 0 , camObject->transform.getFront().z) * speed);
-        }
-        if (Input::getAction(Key::A)) {
-            getEntity().transform.addPosition(static_cast<float>(delta) * fm::vec3(camObject->transform.getLeft().x, 0 , camObject->transform.getLeft().z) * speed);
-        }
-        if (Input::getAction(Key::S)) {
-            getEntity().transform.addPosition(static_cast<float>(delta) * fm::vec3(camObject->transform.getBack().x, 0 , camObject->transform.getBack().z) * speed);
-        }
-        if (Input::getAction(Key::D)) {
-            getEntity().transform.addPosition(static_cast<float>(delta) * fm::vec3(camObject->transform.getRight().x, 0 , camObject->transform.getRight().z) * speed);
-        }
+    if (!toggleMovement) return;
+
+    // actual player front
+    fm::vec3 front = camObject->transform.getRight().cross(fm::vec3::yAxis());
+    // movement direction this frame (normalized)
+    fm::vec3 mov = fm::vec3::zero();
+
+    //WASD Movement
+    if (Input::getAction(Key::W)) {
+        mov += front;
     }
+    if (Input::getAction(Key::A)) {
+        mov += camObject->transform.getLeft();
+    }
+    if (Input::getAction(Key::S)) {
+        mov += -front;
+    }
+    if (Input::getAction(Key::D)) {
+        mov += camObject->transform.getRight();
+    }
+    // add the normalized movement vector to the position, multiplied by speed
+    mov = static_cast<float>(delta) * mov.normalized() * speed;
+    // NaN check. if a number is NaN, num == num will be false. 
+    if (mov == mov) getEntity().transform.addPosition(mov);
 }
 
 void Player::mouseInput(double delta) {
     if (toggleMouseMovement) {
+        Input::setMouseHidden(true);
         auto mdelta = Input::getMouseDelta();
         if (mdelta != fm::dvec2::zero()) {
             camObject->transform.addRotationX(mdelta.y * sensitivity);

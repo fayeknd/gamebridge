@@ -200,6 +200,7 @@ namespace Engine {
     };
 }
 
+// use this instead of "public:" in components
 #define component_public \
     public: \
         friend void Engine::initializeReflectionData(); \
@@ -212,7 +213,7 @@ namespace Engine {
         std::string_view getTypename() const override { \
             if (!_reflectionName.empty()) return _reflectionName; \
 \
-            return "UninitializedComponent"; \
+            return "UninitialisedComponent"; \
         } \
         std::vector<std::pair<ReflectableField, void*>> getFields() override { \
             using ComponentType = std::decay_t<std::remove_pointer_t<decltype(this)>>; \

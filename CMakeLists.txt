@@ -158,13 +158,7 @@ add_custom_command(
 
 add_custom_target(reflect_codegen DEPENDS ${GENERATED_HEADER})
 
-project(gamebridge VERSION 0.1.0 LANGUAGES C CXX)
-add_library(glad STATIC 
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/glad.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/glad/glad.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/KHR/khrplatform.h"
-)
-target_include_directories(glad PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+project(engine VERSION 0.1.0 LANGUAGES C CXX)
 
 # add any folders with source files here
 file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS 
@@ -182,24 +176,28 @@ file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/data/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/data/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/data/*.hpp"
+
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/glad.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/glad/glad.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/KHR/khrplatform.h"
 )
 
 
-add_executable(gamebridge ${PROJECT_SOURCES})
-add_compile_options(gamebridge -O3 -fsanitize=address -fno-omit-frame-pointer)
-add_dependencies(gamebridge resources reflect_codegen)
+add_library(engine ${PROJECT_SOURCES})
+add_compile_options(engine -O3 -fsanitize=address -fno-omit-frame-pointer)
+add_dependencies(engine resources reflect_codegen)
 
 #debug stuff
-#target_compile_options(gamebridge PRIVATE -fsanitize=address,undefined -g)
-#target_link_libraries(gamebridge PRIVATE -fsanitize=address,undefined)
+#target_compile_options(engine PRIVATE -fsanitize=address,undefined -g)
+#target_link_libraries(engine PRIVATE -fsanitize=address,undefined)
 
 
-target_link_libraries(gamebridge PRIVATE glfw zip assimp)
+target_link_libraries(engine PRIVATE glfw zip assimp)
 include(CTest)
 enable_testing()
 
 #include dirs
-target_include_directories(gamebridge PRIVATE 
+target_include_directories(engine PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/data
     ${CMAKE_CURRENT_SOURCE_DIR}/data/utils
@@ -213,6 +211,6 @@ include(CPack)
 
 #if (COMMAND copy_dlls)
 
-    #copy_dlls(gamebridge)
+    #copy_dlls(engine)
 
 #endif()

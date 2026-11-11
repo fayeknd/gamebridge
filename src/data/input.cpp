@@ -7,6 +7,8 @@ using namespace Engine::Debug;
 
 void Input::setMouseHidden(bool v) {
 
+    if (s_mouseHidden == v) return;
+
     if (v) glfwSetInputMode(s_wnd, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     else   glfwSetInputMode(s_wnd, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 

@@ -5,9 +5,17 @@ if "%~1"=="-fresh" (
     echo Fresh build! This might take a minute...
     if exist compile_commands.json del compile_commands.json
     if exist build\windows rmdir /s /q build\windows
-    cmake -B build/windows -G "Ninja" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="%CD%/windows-toolchain.cmake" --fresh
+    if "%~2"=="-release" (
+        cmake -B build/windows -G "Ninja" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="%CD%/windows-toolchain.cmake" --fresh -DCMAKE_BUILD_TYPE=MinSizeRel
+    ) else (
+        cmake -B build/windows -G "Ninja" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="%CD%/windows-toolchain.cmake" --fresh
+    )
 ) else (
-    cmake -B build/windows -G "Ninja" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="%CD%/windows-toolchain.cmake"
+    if "%~2"=="-release" (
+        cmake -B build/windows -G "Ninja" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="%CD%/windows-toolchain.cmake" -DCMAKE_BUILD_TYPE=MinSizeRel
+    ) else (
+        cmake -B build/windows -G "Ninja" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="%CD%/windows-toolchain.cmake"
+    )
 )
 
 if %ERRORLEVEL% NEQ 0 (
