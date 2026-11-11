@@ -93,6 +93,8 @@ void Entity::release() {
 // release this shared_ptr. (remove all references of it.)
 void Entity::_releaseImpl() {
     
+    // keep a reference alive until end of scope
+    auto _ = shared_from_this();
 
     // release all children
     // make a temporary copy of the children list.

@@ -6,14 +6,18 @@ if "%~1"=="-fresh" (
     if exist compile_commands.json del compile_commands.json
     if exist build\windows rmdir /s /q build\windows
     if "%~2"=="-release" (
+        echo Release build
         cmake -B build/windows -G "Ninja" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="%CD%/windows-toolchain.cmake" --fresh -DCMAKE_BUILD_TYPE=MinSizeRel
     ) else (
+        echo Debug build
         cmake -B build/windows -G "Ninja" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="%CD%/windows-toolchain.cmake" --fresh
     )
 ) else (
     if "%~2"=="-release" (
+        echo Release build
         cmake -B build/windows -G "Ninja" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="%CD%/windows-toolchain.cmake" -DCMAKE_BUILD_TYPE=MinSizeRel
     ) else (
+        echo Debug build
         cmake -B build/windows -G "Ninja" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="%CD%/windows-toolchain.cmake"
     )
 )
@@ -35,5 +39,5 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b %ERRORLEVEL%
 )
 
-echo Launching executable...
-build\windows\gamebridge.exe
+echo Launching Editor executable...
+build\windows\editor.exe

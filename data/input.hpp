@@ -5,7 +5,7 @@
 
 namespace Engine {
 
-    #define _INTERNAL_KEY_COUNT 298
+    #define _INTERNAL_KEY_COUNT 512
 
     // Input Class, handles input by storing the flag state of every key in the game and allows
     // for input to be handled by GetKeyPressed, GetKeyDown & GetKeyUp

@@ -67,6 +67,10 @@ void ObjectRegistry::_register() {
 
 // unregister this instance from the registry
 void ObjectRegistry::_unregister() {
+
+    // keep a reference until end of scope
+    auto _ = shared_from_this();
+
     log().logInfo("Unregistering cached instance with CacheID {}.", m_cacheID);
     // remove this from the registry
     registry().erase(m_cacheID);

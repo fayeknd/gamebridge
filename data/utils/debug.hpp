@@ -62,6 +62,8 @@ namespace Engine{
             void _genLine();
             void _deleteLine();
 
+            bool m_hasInit = false;
+
         public:
 
             RenderData m_renderData;

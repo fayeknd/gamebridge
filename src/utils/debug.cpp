@@ -250,9 +250,11 @@ void DebugLine::_genLine() {
     glEnableVertexAttribArray(shaderVertexAttrib_Colour);
 
     glBindVertexArray(0);
+    m_hasInit = true;
 }
 
 void DebugLine::_deleteLine() {
+    if (!m_hasInit) return;
     glDeleteBuffers(1, &m_vbo);
     glDeleteVertexArrays(1, &m_vao);
 }

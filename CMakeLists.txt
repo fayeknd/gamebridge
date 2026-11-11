@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.24) 
+project(drawbridge VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -31,6 +32,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glfw)
 
+# for c++26
 #message(NOTICE "Fetching and building Boost PFR Reflection module...")
 #
 #FetchContent_Declare(
@@ -158,52 +160,56 @@ add_custom_command(
 
 add_custom_target(reflect_codegen DEPENDS ${GENERATED_HEADER})
 
-project(engine VERSION 0.1.0 LANGUAGES C CXX)
+# configure what we're linking
 
-# add any folders with source files here
-file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS 
+file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS 
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
-
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp"
-
     "${CMAKE_CURRENT_SOURCE_DIR}/data/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/data/*.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/data/*.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/data/*.hpp"
-
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/glad.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/glad/glad.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/KHR/khrplatform.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.c"
 )
 
+file(GLOB_RECURSE PROJECT_HEADERS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/data/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/data/*.hpp"
+)
 
-add_library(engine ${PROJECT_SOURCES})
-add_compile_options(engine -O3 -fsanitize=address -fno-omit-frame-pointer)
-add_dependencies(engine resources reflect_codegen)
-
-#debug stuff
-#target_compile_options(engine PRIVATE -fsanitize=address,undefined -g)
-#target_link_libraries(engine PRIVATE -fsanitize=address,undefined)
-
-
-target_link_libraries(engine PRIVATE glfw zip assimp)
-include(CTest)
-enable_testing()
-
-#include dirs
-target_include_directories(engine PRIVATE 
+set(TARGET_INCLUDES 
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/data
     ${CMAKE_CURRENT_SOURCE_DIR}/data/utils
     ${CMAKE_CURRENT_SOURCE_DIR}/data/generated
-    BOOST_INCLUDE
+    ${BOOST_INCLUDE}
 )
+
+set(TARGET_LIBS glfw zip assimp)
+
+#add_compile_options(-O1 -g -fsanitize=address -fno-omit-frame-pointer)
+add_compile_options(-O3 -fsanitize=address -fno-omit-frame-pointer)
+add_link_options(-fsanitize=address)
+
+# core engine lib
+add_library(engine ${PROJECT_HEADERS} ${ENGINE_SOURCES})
+add_dependencies(engine resources reflect_codegen)
+target_link_libraries(engine PUBLIC ${TARGET_LIBS})
+target_include_directories(engine PUBLIC ${TARGET_INCLUDES})
+
+# editor lib
+file(GLOB_RECURSE EDITOR_SOURCES CONFIGURE_DEPENDS 
+    "${CMAKE_CURRENT_SOURCE_DIR}/editor/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/editor/*.c"
+)
+
+add_executable(editor ${EDITOR_SOURCES})
+target_link_libraries(editor PRIVATE engine)
+include(CTest)
+enable_testing()
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

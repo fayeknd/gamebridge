@@ -39,12 +39,14 @@ void Input::onActionUp(int key) {
 
 //Sets the key down and key up states using GLFW's actions
 void Input::_key_callback(GLFWwindow*, int code, int, int action, int) {
+    if (code < 0 || code > GLFW_KEY_LAST) return;
     if (action == GLFW_PRESS)        onActionDown(code);
     else if (action == GLFW_RELEASE) onActionUp(code);
 }
 
 // Sets the key down and key up states with GLFW's mouse button actions
 void Input::_mouse_button_callback(GLFWwindow*, int code, int action, int) {
+    if (code < 0 || code > GLFW_MOUSE_BUTTON_LAST) return;
     if (action == GLFW_PRESS)        onActionDown(code);
     else if (action == GLFW_RELEASE) onActionUp(code);
 }
