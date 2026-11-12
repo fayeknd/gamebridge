@@ -296,9 +296,6 @@ int Renderer::createWnd(fm::uvec2 size, std::string title, FullscreenMode fsMode
     // create the default shaders
     ShaderProgram::_createDefaultShaders();
 
-    // add the main entrypoint component to the root entity.
-    Entity::s_root->addComponent<MainComponent>();
-
     // Renderer creation succeeded!!
     return WINDOW_CREATION_SUCCESS;
 }

@@ -227,4 +227,6 @@ namespace Engine {
             } \
             return _; \
         } public
-        
+
+// if you don't like how long component_public is
+#define cpublic component_public

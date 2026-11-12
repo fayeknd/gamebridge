@@ -254,7 +254,7 @@ void DebugLine::_genLine() {
 }
 
 void DebugLine::_deleteLine() {
-    if (!m_hasInit) return;
+    if (!m_hasInit || !GLContext::get().isGLReady()) return;
     glDeleteBuffers(1, &m_vbo);
     glDeleteVertexArrays(1, &m_vao);
 }

@@ -63,6 +63,7 @@ unsigned char* Texture2D::_processRawBytes(bytes& bytes, std::shared_ptr<Texture
     return out;
 }
 
+// ASSIMP, NOT ARTIFICIAL INTELLIGENCE - faye
 std::shared_ptr<Texture2D> Texture2D::createTextureFromAi(aiMaterial* mat, const aiScene* scene, TextureType type) {
     
     // to store the out path
@@ -101,7 +102,6 @@ std::shared_ptr<Texture2D> Texture2D::createTextureFromAi(aiMaterial* mat, const
         return tx;
     }
 
-    // old way failed, attempt modern way. 
     auto embeddedTx = scene->GetEmbeddedTexture(path.c_str());
     if (embeddedTx != nullptr) {
         // yes! create the texture
@@ -128,11 +128,12 @@ std::shared_ptr<Texture2D> Texture2D::createTextureFromAi(aiMaterial* mat, const
         else {
 
             // not compressed, we can just make the texture as normal
+            bytes = reinterpret_cast<unsigned char*>(embeddedTx->pcData);
             tx->m_txSize = {embeddedTx->mWidth, embeddedTx->mHeight};
             tx->m_channelCount = 4;
         }
 
-        tx->_initTextureWithData(bytes, true);
+        tx->_initTextureWithData(bytes, !isCompressed);
         txPathToIDMap().emplace(tx->m_path, tx->getCacheID());
         return tx;
     }

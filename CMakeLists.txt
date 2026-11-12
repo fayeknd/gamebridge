@@ -180,7 +180,13 @@ file(GLOB_RECURSE PROJECT_HEADERS CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/data/*.hpp"
 )
 
-set(TARGET_INCLUDES 
+# editor lib
+file(GLOB_RECURSE EDITOR_SOURCES CONFIGURE_DEPENDS 
+    "${CMAKE_CURRENT_SOURCE_DIR}/editor/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/editor/*.hpp"
+)
+
+set(ENGINE_TARGET_INCLUDES 
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/data
     ${CMAKE_CURRENT_SOURCE_DIR}/data/utils
@@ -188,26 +194,28 @@ set(TARGET_INCLUDES
     ${BOOST_INCLUDE}
 )
 
+set(EDITOR_TARGET_INCLUDES
+    ${CMAKE_CURRENT_SOURCE_DIR}/editor
+)
+
 set(TARGET_LIBS glfw zip assimp)
 
 #add_compile_options(-O1 -g -fsanitize=address -fno-omit-frame-pointer)
-add_compile_options(-O3 -fsanitize=address -fno-omit-frame-pointer)
-add_link_options(-fsanitize=address)
+add_compile_options(-O3 -fno-omit-frame-pointer)
+#add_link_options(-fsanitize=address) # more detailed memory leak and segfault errors
 
 # core engine lib
 add_library(engine ${PROJECT_HEADERS} ${ENGINE_SOURCES})
 add_dependencies(engine resources reflect_codegen)
 target_link_libraries(engine PUBLIC ${TARGET_LIBS})
-target_include_directories(engine PUBLIC ${TARGET_INCLUDES})
+target_include_directories(engine PUBLIC ${ENGINE_TARGET_INCLUDES})
 
-# editor lib
-file(GLOB_RECURSE EDITOR_SOURCES CONFIGURE_DEPENDS 
-    "${CMAKE_CURRENT_SOURCE_DIR}/editor/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/editor/*.c"
-)
-
+# editor binary
 add_executable(editor ${EDITOR_SOURCES})
 target_link_libraries(editor PRIVATE engine)
+target_include_directories(editor PUBLIC ${EDITOR_TARGET_INCLUDES})
+
+
 include(CTest)
 enable_testing()
 
