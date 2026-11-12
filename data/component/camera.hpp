@@ -10,7 +10,7 @@ namespace Engine {
     using CameraID = uint8_t; // if there are more than 255 cameras we are doing something wrong
     
     // the camera projection mode
-    enum ProjectionMode {
+    enum class ProjectionMode {
 
         Perspective     = 0x00,
     

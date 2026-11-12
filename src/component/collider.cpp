@@ -850,14 +850,14 @@ void Collider::init() {
     // get the next box id
     m_ColliderID = s_colliderIDPool.getNewID();
 
-    // create a static material to satisfy IRenderable.
+    // create a static material to satisfy ModelDraw.
     // this does not need to exist really. it just holds 
     // colour. 
     m_materials.push_back(Material::create());
     m_material->m_data.m_albedoFac = {1.0f, 0.9f, 0.8f, 1.0f};
 
     // gets the rigidbody from the entity and sets the static variable based on that then creates the world collider
-    m_rb = getEntity().getComponent<Physics::Rigidbody>();
+    m_rb = getEntity().getComponent<Physics::Rigidbody>().get();
     m_isStatic = (m_rb == nullptr);
     CollisionWorld::get().add(this);
     entity.transform.m_lockTransform = m_isStatic;

@@ -151,7 +151,7 @@ void DebugUI::drawDebugger() {
             float nc = cam->getNearClip();
             float fc = cam->getFarClip();
             float ortho = cam->getOrthoSize();
-            int proj = cam->getProjectionMode();
+            int proj = static_cast<int>(cam->getProjectionMode());
             std::string projFormat;
             switch (proj) {
                 case (1):  projFormat = "Orthographic";      break;
@@ -200,7 +200,7 @@ void DebugUI::drawDebugger() {
         ImGui::Separator();
 
         float fps = Renderer::get().getTargetFPS();
-        int vsm = Renderer::get().getVSyncMode();
+        int vsm = static_cast<int>(Renderer::get().getVSyncMode());
         std::string vsmFormat;
 
         switch (vsm) {

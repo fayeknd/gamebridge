@@ -6,7 +6,7 @@
 namespace Engine {
 
     // the primitive models
-    enum Primitive {
+    enum class Primitive {
         Cube     = 0x01,
         Plane    = 0x02
     };

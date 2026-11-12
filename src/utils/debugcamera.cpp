@@ -8,7 +8,7 @@ using namespace Engine;
 using namespace Engine::Debug;
 
 void DebugCam::init() {
-    cam = getEntity().addComponent<Camera>();
+    cam = getEntity().addComponent<Camera>().get();
 }
 
 void DebugCam::lateUpdate(double delta) {

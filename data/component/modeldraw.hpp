@@ -10,7 +10,7 @@ namespace Engine {
     // a basic renderable interface.
     // will take a mesh and shader (to be material w/ shader)
     // and draws them.
-    class IRenderable : public IComponent {
+    class ModelDraw : public IComponent {
     protected:
 
     component_public:

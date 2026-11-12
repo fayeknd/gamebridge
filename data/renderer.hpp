@@ -15,14 +15,14 @@ namespace Engine {
 
     // FullscreenMode is just an enumerator to store different Renderer states.
     // pretty self explanitory.
-    enum FullscreenMode {
+    enum class FullscreenMode {
         Fullscreen              = 0x01,
         Borderless              = 0x02,
         BorderlessRenderered      = 0x03,
         Renderered                = 0x04
     };
 
-    enum VSyncMode {
+    enum class VSyncMode {
         On                      = 1,
         Off                     = 0,
         Adaptive                =-1,

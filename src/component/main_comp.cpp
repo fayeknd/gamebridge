@@ -8,7 +8,7 @@
 #include <entity.hpp>
 #include <physics/physics.hpp>
 
-#include <component/renderable.hpp>
+#include <component/modeldraw.hpp>
 #include <resources.hpp>
 #include <renderer.hpp>
 #include <component/camera.hpp>
@@ -45,9 +45,9 @@ void MainComponent::init() {
     square3 = Entity::create("Test Square 3").get();
     player = Entity::create("Player").get();
 
-    rb = square->addComponent<Rigidbody>();
+    rb = square->addComponent<Rigidbody>().get();
     auto box = square->addComponent<Collider>(ColliderShape::Cylinder);
-    auto renderer = square->addComponent<IRenderable>();
+    auto renderer = square->addComponent<ModelDraw>();
     rb->m_mass = 1000.f;
     rb->m_useGravity = true;
 
@@ -59,15 +59,15 @@ void MainComponent::init() {
     Renderer::get().setWndTransparent(false);
 
     auto box2 = square2->addComponent<Collider>(ColliderShape::Box);
-    auto renderer2 = square2->addComponent<IRenderable>();
+    auto renderer2 = square2->addComponent<ModelDraw>();
 
     auto rb2 = square3->addComponent<Rigidbody>();
     auto box3 = square3->addComponent<Collider>(ColliderShape::Box);
-    auto renderer3 = square3->addComponent<IRenderable>();
+    auto renderer3 = square3->addComponent<ModelDraw>();
     rb2->m_mass = 1000.f;
     rb2->m_useGravity = true;
 
-    playerComponent = player->addComponent<Player>();
+    playerComponent = player->addComponent<Player>().get();
 
 
     square->transform.addPositionY(-10.0f);
@@ -112,7 +112,7 @@ void MainComponent::update(double delta) {
         if (DebugUI::get().m_drawDebugger) {
             Entity* debugCam = Entity::create("Debug Camera").get();
             debugCam->transform.setGlobalPosition(playerComponent->camObject->transform.getGlobalPosition());
-            DebugCam* debugCamComponent = debugCam->addComponent<DebugCam>();
+            DebugCam* debugCamComponent = debugCam->addComponent<DebugCam>().get();
             debugCamID = debugCam->getID();
             Camera::setActiveCamera(debugCamComponent->cam);
         }

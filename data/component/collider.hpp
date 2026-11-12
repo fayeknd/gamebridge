@@ -2,7 +2,7 @@
 #include <fm/fmath.hpp>
 #include <debug.hpp>
 #include <component/component.hpp>
-#include <component/renderable.hpp>
+#include <component/modeldraw.hpp>
 #include <physics/ray.hpp>
 #include <physics/boundingbox.hpp>
 #include <layer.hpp>
@@ -20,7 +20,7 @@ namespace Engine
         Box, Sphere, Cylinder, Capsule
     };
 
-    class Collider : public IRenderable
+    class Collider : public ModelDraw
     {
         component_public:
             // contact point, stores the normal to where it was penetrated and how deep it penetrated

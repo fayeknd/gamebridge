@@ -148,7 +148,7 @@ namespace Engine {
         // the Renderer class.
         friend class Renderer; 
 
-        friend class IRenderable;
+        friend class ModelDraw;
         // let the transform call _invalidateChildTransforms();
         friend class Transform;
 
@@ -252,7 +252,7 @@ namespace Engine {
         // args through as parameters. for example: 
         // auto player = entity->addComponent<Player>("PlayerName", playerHealth, canDoubleJump);
         template <typename T, typename ... Args>
-        T* addComponent(Args&& ... targs) {
+        std::shared_ptr<T> addComponent(Args&& ... targs) {
             // does this entity already have a component with this type?
             if (getComponent<T>()) {
                 log().logError("Entity {} already has a component with that type!", m_name);
@@ -291,12 +291,12 @@ namespace Engine {
             // return a pointer to the component we just made.
             // allows for instant assignment.
             // (auto c = e->addComponent<Component>(), c is the component) 
-            return static_cast<T*>(m_componentMap[id].get());
+            return std::static_pointer_cast<T>(m_componentMap[id]);
         }
 
         // get a component from the entity.
         template <typename T>
-        T* getComponent() {
+        std::shared_ptr<T> getComponent() {
 
             // try find a component with the type given in the component man
             auto it = m_componentMap.find(IComponent::getComponentTypeID<T>());
@@ -305,7 +305,7 @@ namespace Engine {
                 
                 // we know what type of component this is
                 // (static cast is much cheaper than dynamic_cast)
-                return static_cast<T*>(it->second.get());
+                return std::static_pointer_cast<T>(it->second);
             }
 
             // no component was found.

@@ -8,8 +8,8 @@ using namespace Engine;
 #include "/home/faye/projects/gamebridge/data/component/camera.hpp"
 #include "/home/faye/projects/gamebridge/data/component/collider.hpp"
 #include "/home/faye/projects/gamebridge/data/component/main_comp.hpp"
+#include "/home/faye/projects/gamebridge/data/component/modeldraw.hpp"
 #include "/home/faye/projects/gamebridge/data/component/player.hpp"
-#include "/home/faye/projects/gamebridge/data/component/renderable.hpp"
 #include "/home/faye/projects/gamebridge/data/physics/rigidbody.hpp"
 #include "/home/faye/projects/gamebridge/data/utils/debugcamera.hpp"
 
@@ -39,7 +39,7 @@ void Engine::initializeReflectionData() {
 
     Collider::_reflectionName = "Collider";
     Collider::_reflectionFieldQuery = []() -> const std::vector<ReflectableField>& {
-        using parent = IRenderable;
+        using parent = ModelDraw;
         static std::vector<ReflectableField> fields = []() {
             std::vector<ReflectableField> localFields = {
                 { "m_drawCol", offsetof(Collider, m_drawCol), "fm::vec4" },
@@ -89,15 +89,12 @@ void Engine::initializeReflectionData() {
         return fields;
     };
 
-    Player::_reflectionName = "Player";
-    Player::_reflectionFieldQuery = []() -> const std::vector<ReflectableField>& {
+    ModelDraw::_reflectionName = "ModelDraw";
+    ModelDraw::_reflectionFieldQuery = []() -> const std::vector<ReflectableField>& {
         using parent = IComponent;
         static std::vector<ReflectableField> fields = []() {
             std::vector<ReflectableField> localFields = {
-                { "sensitivity", offsetof(Player, sensitivity), "float" },
-                { "speed", offsetof(Player, speed), "float" },
-                { "toggleMovement", offsetof(Player, toggleMovement), "bool" },
-                { "toggleMouseMovement", offsetof(Player, toggleMouseMovement), "bool" },
+                { "m_renderData", offsetof(ModelDraw, m_renderData), "RenderData" },
             };
             
             // Check if the parent class has fields bound to its reflection slot
@@ -114,12 +111,15 @@ void Engine::initializeReflectionData() {
         return fields;
     };
 
-    IRenderable::_reflectionName = "IRenderable";
-    IRenderable::_reflectionFieldQuery = []() -> const std::vector<ReflectableField>& {
+    Player::_reflectionName = "Player";
+    Player::_reflectionFieldQuery = []() -> const std::vector<ReflectableField>& {
         using parent = IComponent;
         static std::vector<ReflectableField> fields = []() {
             std::vector<ReflectableField> localFields = {
-                { "m_renderData", offsetof(IRenderable, m_renderData), "RenderData" },
+                { "sensitivity", offsetof(Player, sensitivity), "float" },
+                { "speed", offsetof(Player, speed), "float" },
+                { "toggleMovement", offsetof(Player, toggleMovement), "bool" },
+                { "toggleMouseMovement", offsetof(Player, toggleMouseMovement), "bool" },
             };
             
             // Check if the parent class has fields bound to its reflection slot

@@ -2,6 +2,7 @@
 #include <renderer.hpp>
 #include <generated/generated_reflection.hpp>
 #include <entity.hpp>
+#include <editorui/editorui.hpp>
 
 using namespace Engine;
 
@@ -13,6 +14,7 @@ int main(int, char** args){
 
     // add the main entrypoint component to the root entity.
     //Entity::s_root->addComponent<MainComponent>();
+    Entity::s_root->addComponent<EditorUI>();
 
     Renderer::get().beginGameLoop();
 }

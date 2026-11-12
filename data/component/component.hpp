@@ -108,7 +108,7 @@ namespace Engine {
 
         // material(s) to use
         // this was moved here so we don't have to dyanmic
-        // cast to an IRenderable when sending render data.
+        // cast to an ModelDraw when sending render data.
         // if the material is null, no render data.
         // else, we can determine if the material is transparent,
         // and use the appropriate depth function.

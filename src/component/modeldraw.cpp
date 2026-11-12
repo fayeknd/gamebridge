@@ -1,13 +1,13 @@
 #include <logger.hpp>
 #include <shader.hpp>
-#include <component/renderable.hpp>
+#include <component/modeldraw.hpp>
 #include <entity.hpp>
 #include <component/camera.hpp>
 #include <renderer.hpp>
 
 using namespace Engine;
 
-void IRenderable::init() {
+void ModelDraw::init() {
 
     // initialise the material so we don't have to do this manually.
     // if we replace this, then the old reference will automatically
@@ -18,7 +18,7 @@ void IRenderable::init() {
 
 
 // draw
-void IRenderable::draw() {
+void ModelDraw::draw() {
     // if the model or material or shader is null, or if the renderer is disabled, return early
     if (!m_model) return;
     m_renderData.useRenderData(); // use our render data

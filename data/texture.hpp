@@ -18,7 +18,7 @@ namespace Engine {
 
     class Framebuffer;
 
-    enum TextureType {
+    enum class TextureType {
         Albedo          = 0x00,
         Normal          = 0x01,
         Metallic        = 0x02,

@@ -13,13 +13,13 @@ using namespace Engine::Debug;
 void Player::init() {
     camObject = Entity::create("Camera").get();
     camObject->setParent(&entity);
-    rb = entity.addComponent<Rigidbody>();
+    rb = entity.addComponent<Rigidbody>().get();
 
     rb->m_mass = 1000000000000000000.f;
     rb->m_useGravity = true;
 
-    collider = entity.addComponent<Collider>(ColliderShape::Capsule);
-    cam = camObject->addComponent<Camera>();
+    collider = entity.addComponent<Collider>(ColliderShape::Capsule).get();
+    cam = camObject->addComponent<Camera>().get();
     camObject->transform.addPositionY(collider->m_height / -2.f);
     cam->m_clearCol = {0.1f, 0.1f, 0.1f, 1.0f};
 

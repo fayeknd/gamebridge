@@ -1,6 +1,5 @@
 #pragma once
 #include <component/component.hpp>
-#include <entity.hpp>
 #include <component/camera.hpp>
 #include <imgui/imgui.h>
 
@@ -12,12 +11,11 @@ namespace Engine {
         // camera used for the ui
         std::shared_ptr<Camera> m_uiCam = nullptr;
         // shortcut to the imgui IO
-        ImGuiIO& m_io;
+        ImGuiIO* m_io;
 
         void init() override;
         void lateUpdate(double delta) override;
-        void draw() override;
-        
+
         void drawUI();
 
     private:

@@ -38,7 +38,7 @@ namespace Engine {
             PUBLIC float m_bounciness = 0.2f; // 0 = no bounce, 1 = perfectly elastic will be funny i guarentee
 
             // force modes for force application
-            enum ForceMode
+            enum class ForceMode
             {
                 // Continuous force ignoring mass
                 Acceleration,

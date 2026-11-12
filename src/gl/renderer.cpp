@@ -275,7 +275,7 @@ int Renderer::createWnd(fm::uvec2 size, std::string title, FullscreenMode fsMode
     setVSyncMode(VSyncMode::On);
 
     // create the plane to render the main framebuffer to
-    m_mainFramebufferModel = Model::primitive(Plane);
+    m_mainFramebufferModel = Model::primitive(Primitive::Plane);
 
     // create the material for rendering the framebuffer
     m_mainFramebufferMaterial = Material::create();
@@ -422,6 +422,7 @@ void Renderer::beginGameLoop() {
 void Renderer::preFramePollEvents() {
     // poll glfw events.
     glfwPollEvents(); 
+    Debug::DebugUI::get().drawImGuiInterface_framebegin();
     Input::pollStart();
     PhysicsImpl::pollPhysics();
 }
@@ -430,7 +431,6 @@ void Renderer::preFramePollEvents() {
 void Renderer::postFramePollEvents() {
     // update the input system
     flushRenderCommands(); // draw using the render commands and flush them after.
-    Debug::DebugUI::get().drawImGuiInterface_framebegin();
     Debug::DebugUI::get().drawImGuiInterface_frameend();
     Entity::_transformFlagReset();
     Entity::_releaseQueuedEntities();
@@ -460,7 +460,10 @@ void Renderer::flushRenderCommands() {
     // LayerRegistry::get() is annoying to type
     LayerRegistry& registry = LayerRegistry::get();
 
-    // iterate through all our layers
+    // store a ptr to the active camera to rebind it after. 
+    auto activeCam = Camera::activeCamera();
+
+    // first, sort all the buckets
     for (const auto& layer : registry.getLayerStack()) {
         // if there is no data for this layer, skip it.
         if (!m_bucketHasData[layer.m_layerID]) continue;
@@ -472,74 +475,69 @@ void Renderer::flushRenderCommands() {
         std::sort(bucket.begin(), bucket.end(), [](const RenderCommand& a, const RenderCommand& b) {
             return a.m_sortKey < b.m_sortKey;
         });
+    }
 
-        // store a ptr to the actual active cam
-        auto activeCam = Camera::activeCamera();
-        // store the active framebuffer
-        auto camFB = Camera::activeCamera()->m_framebuffer;
+    // loop through every framebuffer
+    for (const auto& fb : Framebuffer::framebufferMap()) {
+        auto fbPtr = fb.second.lock();
+        if (!fbPtr) continue;    
+
+        // get this cam instance
+        auto thisCam = fbPtr->getCamera();
         
-        // to avoid any desync in something like portals or mirrors,
-        // or whatever you may use framebuffers for, we render the
-        // other cameras first, so their views are up-to-date.
-        // then we render the actual camera view last.
+        // null check
+        if (!thisCam) continue;
+        
+        // no point rendering for a camera that isn't enabled
+        if (!thisCam->getEntity().m_enabled) continue; 
 
-        for (const auto& fb : Framebuffer::framebufferMap()) {
-            if (!fb.second.lock()) continue;
-            
-            auto fbPtr = fb.second.lock();
-            // the main camera view gets rendered last
-            
-            if (fbPtr == camFB) continue;
-            
-            // get this cam instance
-            auto thisCam = fbPtr->getCamera();
-            // this is for cameras, if the framebuffer is on something else,
-            // the user has to sort that out
-            if (!thisCam) continue;
+        // set this as the active camera just to render.
+        Camera::setActiveCamera(thisCam);
+        
+        // bind the framebuffer
+        fbPtr->bindFramebuffer();
 
-            // no point rendering for a camera that isn't enabled
-            if (!thisCam->getEntity().m_enabled) continue; 
+        // clear the screen
+        glClearColor(thisCam->m_clearCol.x, thisCam->m_clearCol.y, thisCam->m_clearCol.z, thisCam->m_clearCol.w);
+        glClear(thisCam->m_clearFlags);
 
-            // set this as the active camera just to render.
-            Camera::setActiveCamera(thisCam);
-         
-            // bind the framebuffer
-            fbPtr->bindFramebuffer();
+        // iterate through all our layers
+        for (const auto& layer : registry.getLayerStack()) {
+            // if there is no data for this layer, skip it.
+            if (!m_bucketHasData[layer.m_layerID]) continue;
 
-            // clear the screen
-            glClear(thisCam->m_clearFlags);
-            glClearColor(thisCam->m_clearCol.x, thisCam->m_clearCol.y, thisCam->m_clearCol.z, thisCam->m_clearCol.w);
+            // get the render command bucket
+            auto& bucket = m_commandBuckets[layer.m_layerID];
 
-            // run the draw functions 
+            // call the draw callbacks, drawing onto this cam view
             for (const auto& command : bucket) {
                 command.drawCallback(command.m_component);
             }
-            
         }
+    }
 
-        // reset the active camera
-        Camera::setActiveCamera(activeCam);
-        camFB->bindFramebuffer();
-        
-        // clear the screen 
-        glClearColor(activeCam->m_clearCol.x, activeCam->m_clearCol.y, activeCam->m_clearCol.z, activeCam->m_clearCol.w);
-        glClear(activeCam->m_clearFlags);
+    // clear the render buckets
+    for (const auto& layer : registry.getLayerStack()) {
+        // if there is no data for this layer, skip it.
+        if (!m_bucketHasData[layer.m_layerID]) continue;
 
-        // run the draw functions once more 
-        for (const auto& command : bucket) {
-            command.drawCallback(command.m_component);
-        }
-
-        GLContext::get().glState.m_currentFramebuffer = 0;
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        _drawView(camFB.get());
+        // get the render command bucket
+        auto& bucket = m_commandBuckets[layer.m_layerID];
 
         // draw callbacks ran, we can clear the bucket now.
         bucket.clear(); 
         m_bucketHasData[layer.m_layerID] = false;
-
     }
+
+    // set the active framebuffer to the screen default framebuffer
+    GLContext::get().glState.m_currentFramebuffer = 0;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    Camera::setActiveCamera(activeCam);
+
+    // draw the main camera's view onto the screen
+    _drawView(Camera::activeCamera()->m_framebuffer.get());
+
 }
 
 uint64_t Renderer::genSortKey(bool transparent, Material *mat, float depth) {

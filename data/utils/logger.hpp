@@ -33,7 +33,7 @@ namespace Engine {
     
     namespace Logging {
 
-        enum LogSeverity {
+        enum class LogSeverity {
             None        = 0x00,
             Warning     = 0x01,
             Error       = 0x02,

@@ -3,7 +3,7 @@
 
 namespace Engine {
     
-    enum DepthType {
+    enum class DepthType {
         Planar, // used for opaque sorting (clipping planes and such)
         SquaredRadial // used for transparent sorting
     };
