@@ -11,5 +11,5 @@ vec4 albedo(vec2 uv) {
 }
 
 void main() {
-    fragCol = albedo(v_uv);
+    fragCol = albedo(v_uv) + vec4(v_position, 1);
 }

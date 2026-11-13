@@ -10,7 +10,7 @@ namespace Engine {
         // which direction defines "front" faces.
         // GL_CW for clockwise face winding.
         // GL_CCW for ant-clockwise face winding.
-        unsigned int m_frontFace = GL_CW;
+        unsigned int m_frontFace = GL_CCW;
 
         // which face direction to cull.
         unsigned int m_cullFace = GL_BACK;

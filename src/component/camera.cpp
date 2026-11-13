@@ -85,12 +85,18 @@ fm::mat4 Camera::getProjectionMat() {
 
      m_lastCalculatedFrame_p = Renderer::get().getFrame();
 
-    // switch projection mode cases
+    // calculate ratio based on framebuffer render texture size
+    float asp_width = m_framebuffer->getRenderTexture()->getSize().x;
+    float asp_height = m_framebuffer->getRenderTexture()->getSize().y;
+    
+    float ratio = asp_width / asp_height;
+
+     // switch projection mode cases
     switch (m_projMode) {
         case ProjectionMode::Orthographic: {
 
             float height = m_orthoSize;
-            float width = height * Renderer::get().getAspectRatio();
+            float width = height * ratio;
 
             // make the projection matrix
             m_projectionMatrix = fm::orthographic<float>(
@@ -104,7 +110,7 @@ fm::mat4 Camera::getProjectionMat() {
         default: // ProjectionMode::Perspective
             m_projectionMatrix = fm::perspective<float>(
                 m_fov,
-                Renderer::get().getAspectRatio(),
+                ratio,
                 m_nearClip,
                 m_farClip);
             break;

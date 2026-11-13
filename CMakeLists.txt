@@ -178,6 +178,7 @@ file(GLOB_RECURSE PROJECT_HEADERS CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/data/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/data/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/editor/*.hpp"
 )
 
 # editor lib

@@ -111,6 +111,9 @@ namespace Engine {
 
     public:
 
+        // mark if the texture unit state was broken this frame
+        static inline bool m_unitStateBroken = false;
+
         // generate a texture from all the values on this texture (+data).
         void genTexture(const unsigned char* data); 
 
@@ -183,6 +186,11 @@ namespace Engine {
 
         // set the filtering mode
         void setFiltering(GLuint filtering);
+
+        // restore the texture unit state.
+        // use this if a texture was bound via
+        // it's texture id and NOT unit id.
+        static void restoreTextureUnitState();
 
     };
 }

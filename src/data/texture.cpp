@@ -193,7 +193,7 @@ std::shared_ptr<Texture2D> Texture2D::createTextureFromPath(std::filesystem::pat
     }
     // no existing texture.
 
-    stbi_set_flip_vertically_on_load(flipY);
+    stbi_set_flip_vertically_on_load(!flipY);
     std::shared_ptr<Texture2D> texture = std::shared_ptr<Texture2D>(new Texture2D);
     texture->m_path = path.string();
     // TODO : In case of error, return a default "error" texture instead.
@@ -444,4 +444,48 @@ void Texture2D::setFiltering(GLuint filtering) {
 
     glTexParameteri(m_txType, GL_TEXTURE_MIN_FILTER, mini_filter);
     glTexParameteri(m_txType, GL_TEXTURE_MAG_FILTER, m_filtering);
+}
+
+void Texture2D::restoreTextureUnitState() {
+
+    if (!m_unitStateBroken) return;
+    m_unitStateBroken = false;
+
+    // get the gl state
+    auto& state = GLContext::get().glState;
+
+    // reset the active texture to GL_TEXTURE0
+    glActiveTexture(GL_TEXTURE0);
+    // what id / type we are working with
+    GLuint unit0TexID = 0;
+    GLenum unit0TexType = GL_TEXTURE_2D;
+
+    // find which texture is meant to be on unit 0
+    auto queueCopy = state.m_txQueue;
+    while (!queueCopy.empty()) {
+        // front id
+        GLuint id = queueCopy.front();
+        queueCopy.pop();
+
+        // get the texture that was at the front of the queue via id
+        auto tx = Texture2D::getTextureViaID(id);
+        // is this texture:
+        // 1. valid
+        // 2. in the queue
+        // 3. is on unit 0
+        if (tx != nullptr && tx->m_inQueue && tx->m_unitID == 0) {
+            // yes, store this texture info
+            unit0TexID = tx->m_txID;
+            unit0TexType = tx->m_txType;
+            break;
+        }
+    }
+
+    // bind the texture we may or may not have
+    glBindTexture(unit0TexType, unit0TexID);
+
+    // set the active texture back to what we should expect
+    glActiveTexture(state.m_activeTextureUnit);
+
+
 }

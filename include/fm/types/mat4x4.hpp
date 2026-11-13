@@ -156,8 +156,8 @@ namespace fm {
         for (int i = 0; i < 4; ++i) {
             T y = _.m_data[1][i];
             T z = _.m_data[2][i];
-            _.m_data[1][i] = y * c - z * s;
-            _.m_data[2][i] = y * s + z * c;
+            _.m_data[1][i] = y * c + z * s;
+            _.m_data[2][i] = -y * s + z * c;
         }
         return _;
     }
@@ -196,8 +196,8 @@ namespace fm {
         for (int i = 0; i < 4; ++i) {
             T x = _.m_data[0][i];
             T y = _.m_data[1][i];
-            _.m_data[0][i] = x * c + y * s;
-            _.m_data[1][i] = -x * s + y * c;
+            _.m_data[0][i] = x * c - y * s;
+            _.m_data[1][i] = x * s + y * c;
         }
         return _;
     }
@@ -286,7 +286,8 @@ namespace fm {
     } 
     template <typename T>
     inline _mat4x4<T> model(_vec3<T> pos, _vec3<T> scale, _vec3<T> rotation, _vec3<T> skew = {0}) {
-        return _mat4x4<T>::identity().scale(scale).skew(skew).rotate(rotation).translate(pos);
+        //return _mat4x4<T>::identity().scale(scale).skew(skew).rotate(rotation).translate(pos);
+        return _mat4x4<T>::identity().translate(pos).rotate(rotation).skew(skew).scale(scale);
     }
     template <typename T>
     inline _mat4x4<T> lookAt(_vec3<T> pos, _vec3<T> target, _vec3<T> up = {0.0f, 1.0f, 0.0f}) {
@@ -302,7 +303,7 @@ namespace fm {
 
         if (flipZ) { f = -f; translateZ = -translateZ; }
         if (flipX) { r = -r; translateX = -translateX; }
-        if (flipY) { u = -u; translateY = -translateY; }
+        if (!flipY) { u = -u; translateY = -translateY; }
 
         _.m_data[0][0] = r.x; _.m_data[0][1] = u.x; _.m_data[0][2] = f.x; _.m_data[0][3] = 0.0f;
         _.m_data[1][0] = r.y; _.m_data[1][1] = u.y; _.m_data[1][2] = f.y; _.m_data[1][3] = 0.0f;

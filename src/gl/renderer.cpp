@@ -274,12 +274,12 @@ int Renderer::createWnd(fm::uvec2 size, std::string title, FullscreenMode fsMode
     // set the vsync mode
     setVSyncMode(VSyncMode::On);
 
-    // create the plane to render the main framebuffer to
-    m_mainFramebufferModel = Model::primitive(Primitive::Plane);
+    // create the default shaders
+    ShaderProgram::_createDefaultShaders();
 
     // create the material for rendering the framebuffer
     m_mainFramebufferMaterial = Material::create();
-    m_mainFramebufferMaterial->m_program = ShaderProgram::createProgramFromPath("stuff=>shaders/postprocess.glsl");
+    m_mainFramebufferMaterial->m_program = ShaderProgram::getShaderViaKey(shader_unlitShader);
     // costs no extra to make this material transparent
     m_mainFramebufferMaterial->m_data.m_hasTransparency = true;
 
@@ -292,9 +292,6 @@ int Renderer::createWnd(fm::uvec2 size, std::string title, FullscreenMode fsMode
     GLint maxSlots;
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxSlots); 
     GLContext::get().m_maxTextureSlots = maxSlots; 
-
-    // create the default shaders
-    ShaderProgram::_createDefaultShaders();
 
     // Renderer creation succeeded!!
     return WINDOW_CREATION_SUCCESS;
@@ -436,6 +433,7 @@ void Renderer::postFramePollEvents() {
     Entity::_releaseQueuedEntities();
     Input::pollEnd();
     ObjectRegistry::pollGC();
+    Texture2D::restoreTextureUnitState();
 }
 
 // clean up the program after exiting
@@ -500,6 +498,8 @@ void Renderer::flushRenderCommands() {
         // clear the screen
         glClearColor(thisCam->m_clearCol.x, thisCam->m_clearCol.y, thisCam->m_clearCol.z, thisCam->m_clearCol.w);
         glClear(thisCam->m_clearFlags);
+        
+        glViewport(0, 0, fbPtr->getRenderTexture()->getSize().x, fbPtr->getRenderTexture()->getSize().y);
 
         // iterate through all our layers
         for (const auto& layer : registry.getLayerStack()) {
@@ -514,6 +514,9 @@ void Renderer::flushRenderCommands() {
                 command.drawCallback(command.m_component);
             }
         }
+
+        // do any post process stages
+        fbPtr->doPostProcess();
     }
 
     // clear the render buckets
@@ -530,9 +533,7 @@ void Renderer::flushRenderCommands() {
     }
 
     // set the active framebuffer to the screen default framebuffer
-    GLContext::get().glState.m_currentFramebuffer = 0;
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    Framebuffer::unbindFramebuffers();
     Camera::setActiveCamera(activeCam);
 
     // draw the main camera's view onto the screen
@@ -578,6 +579,13 @@ uint16_t Renderer::compressPtrToHash(const void* ptr) {
 
 void Renderer::_drawView(Framebuffer *fb) {
 
+    // return if we aren't drawing the main view
+    if (!m_drawView) {
+        glClearColor(0,0,0,1);
+        glClear(GL_COLOR_BUFFER_BIT);
+        return;
+    }
+
     glDisable(GL_DEPTH_TEST);
     // set the viewport size to fit the window
     glViewport(0, 0, m_wndSize.x, m_wndSize.y);
@@ -586,10 +594,10 @@ void Renderer::_drawView(Framebuffer *fb) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     // set the material texture to the rendertexture
-    m_mainFramebufferMaterial->setAlbedoTx(fb->m_renderTexture);
+    m_mainFramebufferMaterial->setAlbedoTx(fb->getRenderTexture());
 
     // draw the stuff!
-    m_mainFramebufferModel->draw(m_mainFramebufferMaterial, fm::mat4::identity(), fm::mat4::identity());
+    Model::primitive(Primitive::InvertedPlane)->draw(m_mainFramebufferMaterial);
 }
 
 // needs to be a setter because the fb material is private

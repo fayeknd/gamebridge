@@ -7,8 +7,9 @@ using namespace Engine;
 _ModelPtr Primitives::getPrimitive(Primitive p) {
 
     switch (p) {
-        case Primitive::Cube: return cube();  break;
-        default:              return plane(); break;
+        case Primitive::Cube:          return cube();     break;
+        case Primitive::InvertedPlane: return invPlane(); break;
+        default:                       return plane();    break;
     }
 
     // key was not valid
@@ -18,6 +19,11 @@ _ModelPtr Primitives::getPrimitive(Primitive p) {
 
 _ModelPtr Primitives::plane() {
     static _ModelPtr plane = _generatePlaneImpl();
+    return plane;
+}
+
+_ModelPtr Primitives::invPlane() {
+    static _ModelPtr plane = _generateInvPlaneImpl();
     return plane;
 }
 
@@ -40,6 +46,24 @@ _ModelPtr Primitives::_generatePlaneImpl() {
     indices = {
         0, 1, 3,
         1, 2, 3 
+    };
+    return Model::createModelWithData(vertices, indices);
+}
+
+_ModelPtr Primitives::_generateInvPlaneImpl() {
+    std::vector<Vertex> vertices;
+    std::vector<GLuint> indices;
+    vertices = {
+        // Position                Colour       UV              Normal
+        {fm::vec3(-1.0f, 1.0f, 0), fm::vec4(1), fm::vec2(0, 1), fm::vec3::zAxis()},
+        {fm::vec3( 1.0f, 1.0f, 0), fm::vec4(1), fm::vec2(1, 1), fm::vec3::zAxis()},
+        {fm::vec3( 1.0f,-1.0f, 0), fm::vec4(1), fm::vec2(1, 0), fm::vec3::zAxis()},
+        {fm::vec3(-1.0f,-1.0f, 0), fm::vec4(1), fm::vec2(0, 0), fm::vec3::zAxis()},
+    };
+
+    indices = {
+        0, 3, 1,
+        1, 3, 2 
     };
     return Model::createModelWithData(vertices, indices);
 }
@@ -86,23 +110,23 @@ _ModelPtr Primitives::_generateCubeImpl() {
     };
 
     indices = {
-        0, 1, 2,  
-        0, 2, 3,
+        0, 1, 3,  
+        1, 2, 3,
 
-        4, 5, 6, 
-        4, 6, 7,
+        4, 5, 7, 
+        5, 6, 7,
         
-        8, 9, 10, 
-        8, 10, 11,
+        8, 9, 11, 
+        9, 10, 11,
 
-        12, 13, 14,
-        12, 14, 15,
+        12, 13, 15,
+        13, 14, 15,
 
-        16, 17, 18,
-        16, 18, 19,
+        16, 17, 19,
+        17, 18, 19,
 
-        20, 21, 22,
-        20, 22, 23 
+        20, 21, 23,
+        21, 22, 23 
     };
 
     return Model::createModelWithData(vertices, indices, GL_TRIANGLES);

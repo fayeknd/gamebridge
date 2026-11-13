@@ -15,7 +15,7 @@ namespace Engine {
 
         void init() override;
         void lateUpdate(double delta) override;
-
+        void drawViewport(ImGuiWindowFlags flags);
         void drawUI();
 
     private:

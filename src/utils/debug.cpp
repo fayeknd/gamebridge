@@ -301,7 +301,7 @@ ImGuiID dockerID;
 void DebugUI::drawPropertyEditor() {
     //ImGui::ShowDemoWindow();
 
-    ImGuiWindowFlags parentFlags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_MenuBar;
+    ImGuiWindowFlags parentFlags = ImGuiWindowFlags_MenuBar;
     ImGui::Begin("Tools", nullptr, parentFlags);
 
     ImGuiTableFlags tableFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerV;

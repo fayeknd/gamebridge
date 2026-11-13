@@ -25,6 +25,9 @@ void ShaderProgram::_createDefaultShaders() {
     // and this is cooler i think. 
     lit->m_dontDelete = true;
 
+    std::shared_ptr<ShaderProgram> unlit = createProgramFromPath("stuff=>shaders/shader_unlit.glsl", shader_unlitShader);
+    unlit->m_dontDelete = true;
+
     std::shared_ptr<ShaderProgram> col = createProgramFromPath("stuff=>shaders/collider.glsl", shader_colliderShader);
     col->m_dontDelete = true;
 

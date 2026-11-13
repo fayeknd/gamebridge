@@ -15,6 +15,7 @@ namespace Engine {
 
         static _ModelPtr _generateCubeImpl();
         static _ModelPtr _generatePlaneImpl();
+        static _ModelPtr _generateInvPlaneImpl();
 
         static Logging::Logger& log() {
             static Logging::Logger instance("PRIMITIVE");
@@ -29,6 +30,7 @@ namespace Engine {
 
         static _ModelPtr cube();
         static _ModelPtr plane();
+        static _ModelPtr invPlane();
 
     };
 }

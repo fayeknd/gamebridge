@@ -4,6 +4,7 @@
 #include <logger.hpp>
 #include <cachable.hpp>
 #include <idpool.hpp>
+#include <material.hpp>
 
 namespace Engine {
 
@@ -33,10 +34,10 @@ namespace Engine {
         // our framebuffer id
         FramebufferID m_fbMapID;
 
-        // framebuffer id
-        GLuint m_bufferID;
+        // primary framebuffer id
+        FramebufferID m_bufferID;
 
-        // renderbuffer id
+        // primary renderbuffer id
         GLuint m_renderBufferID;
 
         // generate the buffer
@@ -59,11 +60,36 @@ namespace Engine {
         // the same as the render texture size.
         fm::uvec2 m_size;
 
+        // framebuffer format
         GLuint m_format = GL_DEPTH24_STENCIL8;
+
+        // the primary render texture
+        std::shared_ptr<Texture2D> m_pingRenderTexture;
+
+        // the secondary render texture
+        std::shared_ptr<Texture2D> m_pongRenderTexture;
+
+        // 0 for ping, 1 for pong
+        bool m_pingPongState = 0;
+
+        // set a specific render texture's size
+        void _setSpecificTexSize(fm::uvec2 size, std::shared_ptr<Texture2D> tex);
+
+        // run individual post process step
+        void _doPostProcessImpl(std::shared_ptr<ShaderProgram> postprocess, std::shared_ptr<Texture2D> tex);
 
         friend class Camera;
 
     public:
+
+        // postprocess material
+        std::shared_ptr<Material> m_postProcessMaterial = nullptr;
+
+        // the postprocess steps
+        std::vector<std::shared_ptr<ShaderProgram>> m_postProcessSteps;
+
+        // apply post processing effects to this framebuffer
+        void doPostProcess();
 
         // the framebuffer map. a weak_ptr so it does not contribute to the ref count.
         static std::unordered_map<FramebufferID, std::weak_ptr<Framebuffer>>& framebufferMap() {
@@ -77,16 +103,16 @@ namespace Engine {
         ~Framebuffer();
 
         // use this framebuffer
-        void bindFramebuffer();
+        void bindFramebuffer(bool pong = false);
 
-        // the render texture
-        std::shared_ptr<Texture2D> m_renderTexture;
+        // unbind any currently bound framebuffers 
+        static void unbindFramebuffers();
 
         // get the framebuffer size
         const fm::uvec2 getSize() const { return m_size; }
 
-        // set the size
-        void setSize(fm::uvec2 size);
+        // set the size. returns true if it actually did something.
+        bool setSize(fm::uvec2 size);
 
         // does this framebuffer resize with the window?
         const bool doesResizeWithWnd() const { return m_resizeWithWnd; }
@@ -95,9 +121,11 @@ namespace Engine {
         void setResizeWithWnd(bool v); 
 
         // get our framebuffer cache id 
-        const FramebufferID getFramebufferMapID() const { return m_fbMapID; }
+        const FramebufferID getFramebufferMapID()  const { return m_fbMapID; }
         // get our framebuffer id 
-        const FramebufferID getFramebufferID() const { return m_bufferID; }
+        const FramebufferID getFramebufferID()     const { return m_bufferID; }
+
+        std::shared_ptr<Texture2D> getRenderTexture();
 
         // return a raw ptr to the camera.
         Camera* getCamera() { return m_camera; }

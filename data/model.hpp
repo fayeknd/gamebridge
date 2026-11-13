@@ -7,8 +7,9 @@ namespace Engine {
 
     // the primitive models
     enum class Primitive {
-        Cube     = 0x01,
-        Plane    = 0x02
+        Cube          = 0x01,
+        Plane         = 0x02,
+        InvertedPlane = 0x03,
     };
 
     using ModelID = uint16_t;
@@ -46,10 +47,10 @@ namespace Engine {
         static std::shared_ptr<Model> createModelFromPath(std::filesystem::path path, std::vector<std::shared_ptr<Material>>* materials = nullptr, unsigned int flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipWindingOrder);
 
         // draw the model (multi-materials)
-        void draw(const std::vector<std::shared_ptr<Material>>& materials, fm::mat4 model, fm::mat4 vp);
+        void draw(const std::vector<std::shared_ptr<Material>>& materials, fm::mat4 model = fm::mat4::identity(), fm::mat4 vp = fm::mat4::identity());
 
         // draw the model (single-material)
-        void draw(const std::shared_ptr<Material>& material, fm::mat4 model, fm::mat4 vp);
+        void draw(const std::shared_ptr<Material>& material, fm::mat4 model = fm::mat4::identity(), fm::mat4 vp = fm::mat4::identity());
 
     };
 }
